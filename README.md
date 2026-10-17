@@ -17,6 +17,8 @@ A daily murder-mystery logic game. Read true statements, work the notebook, name
 - `node mine.js <tier> <count> <startIndex> <out.json>` mines more verified cases (tiers: constable, detective, inspector, mastermind)
 - `node test-engine.js 30` checks every generated case has exactly one answer, no redundant clues, and is deterministic; it also re-imports every shipped bank case and the tutorial
 - `node test-ui.js` runs the game in a simulated browser (run `node build.js` first; it reads `dist/test.html`, which build.js creates)
+- `node test-variants.js` checks clue rewording kept each clue type's number of variants and their voice (`clue-variants.json`), and that every shipped clue still points at a valid variant
+- `node shots.js [page.html]` screenshots a page (default `dist/index.html`) at 1366px and 390px, light and dark, into `playtest/latest/`, and fails on horizontal scroll, script errors or unnamed buttons. It uses the installed Edge or Chrome via `playwright-core`
 
 Case No. 1 is 15 October 2026. The daily case is picked from the bank by date.
 
