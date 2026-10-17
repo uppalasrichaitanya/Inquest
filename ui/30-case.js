@@ -163,7 +163,7 @@ function paintPlan() {
       const there = yes(d.wr[w][r]) || [...Array(n).keys()].some((s) => yes(d.sr[s][r]) && yes(d.sw[s][w]));
       if (!there) continue;
       const x = row ? gx + gw - 20 - Math.max(k, 1) * 26 - 16 - q * 26 : gx + gw - 30 - q * 24, y = row ? gy + gh / 2 - 11 : gy + gh - 31; q++;
-      out += `<g class="wpin"><title>${esc(ctx.weapons[w].name)}</title><rect x="${x}" y="${y}" width="22" height="22" rx="3"/><svg x="${x + 3}" y="${y + 3}" width="16" height="16" viewBox="0 0 24 24">${GLYPHS[ctx.types[w]]}</svg></g>`;
+      out += `<g class="wpin"><title>${esc(ctx.weapons[w].name)}</title><rect x="${x}" y="${y}" width="22" height="22" rx="3"/><use href="#k-${ctx.types[w]}" x="${x + 3}" y="${y + 3}" width="16" height="16"/></g>`;
     }
   }
   pins.innerHTML = out;

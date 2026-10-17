@@ -10,9 +10,9 @@ const tutorialDone = () => !!LS.get('inq1:tutorial', 0);
 
 function folderState(spec) {
   const s = LS.get(caseKey(spec), null);
-  if (s && s.solved) return `<span class="stamp blue">Closed ${fmtTime(s.elapsed)}</span>`;
-  if (s && (s.elapsed > 20 || s.struck && s.struck.length)) return `<span>In progress, ${fmtTime(s.elapsed)}</span>`;
-  return '<span>Unopened</span>';
+  if (s && s.solved) return '<span class="state done">Closed</span>';
+  if (s && (s.elapsed > 20 || s.struck && s.struck.length)) return '<span class="state">Started</span>';
+  return '<span class="state">Not started</span>';
 }
 
 function renderHome() {
@@ -22,38 +22,37 @@ function renderHome() {
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   const solved = Object.values(st.solved).reduce((a, b) => a + b, 0);
-  const folders = TIER_ORDER.map((t) => {
+  const rows = TIER_ORDER.map((t) => {
     const spec = dailySpec(t), T = TIERS[t], w = WORLDS[spec.w];
-    const start = t === 'constable' && !solved ? '<span class="ribbon">Start here</span>' : '';
-    return `<button class="folder" data-act="open-daily" data-tier="${t}">
-      <span class="tab">${TIER_COPY[t].tab}</span>
-      <span class="sheet paper">${start}
-        <span><h2>${T.name}</h2>
-          <p class="meta">${esc(TIER_COPY[t].line)}</p>
-          <p class="meta">Today: ${esc(spec.ti)}, ${esc(w.name)}, ${w.year}</p></span>
-        <span class="state"><span class="stars" aria-label="Difficulty ${spec.r} of 5">${stars(spec.r)}</span>${folderState(spec)}</span>
-      </span></button>`;
+    const start = t === 'constable' && !solved ? '<span class="start">Start here</span>' : '';
+    return `<li><button class="case-row" data-act="open-daily" data-tier="${t}">
+      <span class="who"><span class="tier">${T.name}</span>${start}<span class="line">${TIER_COPY[t].tab}. ${esc(TIER_COPY[t].line)}</span></span>
+      <span class="today"><span class="title">${esc(spec.ti)}</span><span class="line">${esc(w.name)}, ${w.year}</span></span>
+      <span class="how"><span aria-label="Difficulty ${spec.r} of 5">${stars(spec.r)}</span>${folderState(spec)}</span>
+    </button></li>`;
   }).join('');
   const learn = tutorialDone()
     ? ''
-    : '<div class="cta"><button class="btn red big" data-act="tutorial">Learn to play in two minutes</button><span>A tiny case with three suspects, solved together, step by step.</span></div>';
+    : '<div class="cta"><button class="btn" data-act="tutorial">Learn to play</button><span class="soft">A three-suspect case, solved together in about two minutes.</span></div>';
   app().innerHTML = `
+    <div class="bar"><button class="mark" data-act="home">Inquest</button>
+      <button class="quiet" data-act="how">How to play</button><button class="quiet" data-act="stats">Your record</button>${themeButton()}</div>
     <main class="home">
       <header>
-        <h1>Inquest</h1>
-        <p class="lede">A murder mystery you solve with logic. A new case every day.</p>
-        <p class="sub">Read what the witnesses say, rule things out in your notebook, and name the killer, the weapon and the room. Every case has exactly one answer.</p>
+        <p class="date">${esc(dateStr)}, case ${dayNumber()}</p>
+        <h1>One murder. A few true statements. Exactly one answer.</h1>
+        <p class="lede">Read what the witnesses say, rule things out in your notebook, and name the killer, the weapon and the room.</p>
         ${learn}
-        <p class="dateline">${esc(dateStr)}. Case No. ${dayNumber()} is open.</p>
       </header>
-      <section class="drawer" aria-label="Today's cases, easiest first">${folders}</section>
+      <section aria-labelledby="today-label">
+        <p class="label" id="today-label">Today's cases, easiest first</p>
+        <ol class="cases">${rows}</ol>
+      </section>
       <div class="row">
-        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the tutorial</button>' : ''}
-        <button class="link" data-act="how">How to play</button>
-        <button class="link" data-act="random">Open a different case</button>
-        <button class="link" data-act="stats">Your record</button>
+        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the lesson</button>' : ''}
+        <button class="link" data-act="random">Play an older case</button>
         <span class="grow"></span>
-        <span class="statline">Streak <b>${st.streak}</b> &nbsp; Best <b>${st.bestStreak}</b> &nbsp; Closed <b>${solved}</b></span>
+        <span class="soft">Streak ${st.streak}, best ${st.bestStreak}, ${solved} closed</span>
       </div>
     </main>`;
   window.scrollTo(0, 0);

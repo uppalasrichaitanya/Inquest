@@ -14,7 +14,7 @@ for (const t in bank) { const seen = new Set(); bank[t] = bank[t].filter((c) => 
 const css = dir('ui', '.css');
 const engine = read('dist/engine.js').replace(/if \(typeof module[\s\S]*$/, '');
 const ui = dir('ui', '.js');
-const fonts = 'https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Limelight&family=Reenie+Beanie&display=swap';
+const fonts = 'https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap';
 const frag = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Inquest</title>

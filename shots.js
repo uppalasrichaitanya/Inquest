@@ -2,18 +2,21 @@
 // and checks the basics every screen must pass: no horizontal scroll, no script errors, every button named.
 //   node shots.js                      -> dist/index.html
 //   node shots.js mockup/casebook.html -> any page in this folder
+//   node shots.js --set inq1:tutorial=1 -> seed localStorage first (repeatable), e.g. to skip the first-visit lesson
 // Writes playtest/latest/<page>-<size>-<scheme>.png (and -full.png for the whole page). Exit code 1 on any failure.
 // Drives the Edge or Chrome already installed (playwright-core, no browser download).
 const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright-core');
 
-const page = process.argv[2] || 'dist/index.html';
+const args = process.argv.slice(2), seed = {};
+for (let i = 0; i < args.length; i++) if (args[i] === '--set') { const [k, ...v] = args.splice(i, 2)[1].split('='); seed[k] = v.join('='); i--; }
+const page = args[0] || 'dist/index.html';
 const file = path.resolve(__dirname, page);
 if (!fs.existsSync(file)) { console.log('no such page:', page); process.exit(1); }
 const url = 'file:///' + file.replace(/\\/g, '/');
 const out = path.join(__dirname, 'playtest', 'latest');
 fs.mkdirSync(out, { recursive: true });
-const name = path.basename(page, '.html');
+const name = path.basename(page, '.html') + (Object.keys(seed).length ? '-seeded' : '');
 
 const SIZES = { desktop: { width: 1366, height: 850 }, phone: { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } };
 const SCHEMES = ['light', 'dark'];
@@ -33,6 +36,7 @@ async function launch() {
     for (const scheme of SCHEMES) {
       const { width, height, ...rest } = vp;
       const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, ...rest });
+      await ctx.addInitScript((s) => { for (const k in s) localStorage.setItem(k, s[k]); }, seed);
       const p = await ctx.newPage();
       const errors = [];
       p.on('pageerror', (e) => errors.push(e.message));

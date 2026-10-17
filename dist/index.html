@@ -3,171 +3,128 @@
 <title>Inquest</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Limelight&family=Reenie+Beanie&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
 <style>
-/* Layout concept: a detective's desk seen from above. Dark baize, one lamp-pool of light, and paper
-   objects lying on it: the case file (left), the notebook and floor plan (right). Red is only ever a
-   rubber stamp. Blue is only ever your own ink. */
+/* Casebook: a printed page. Everything printed is ink on paper and keeps still; the only colour that moves is
+   the vermilion pen, and it is used only for what the player does (marks, ticks, the statement in hand).
+   One typeface, Newsreader, in its optical sizes. Labels are italic, as a book would set them. */
 :root {
-  --desk: #14211b;
-  --desk-deep: #0c1612;
-  --paper: #d8cdb0;
-  --paper-hi: #e5dcc4;
-  --paper-lo: #c7bb98;
-  --ink: #1b1a1d;
-  --ink-soft: #4b463d;
-  --pencil: #66645f;
-  --blue: #25427a;
-  --stamp: #9b2b22;
-  --brass: #b79a5b;
-  --rule: rgba(27, 26, 29, .2);
-  --glow: rgba(214, 178, 96, .16);
-  --vignette: rgba(0, 0, 0, .45);
-  /* things written straight onto the desk (not on paper) */
-  --on-desk: #d8cdb0;
-  --on-desk-soft: #b9b49e;
-  --on-desk-accent: #b79a5b;
-  --desk-line: rgba(216, 205, 176, .35);
-  --f-display: 'Limelight', 'Bodoni 72', Didot, 'Times New Roman', serif;
-  --f-type: 'Courier Prime', 'Courier New', Courier, monospace;
-  --f-hand: 'Reenie Beanie', 'Bradley Hand', 'Segoe Script', cursive;
-  --cell: 34px;
-  --rhw: 150px;
-  color-scheme: dark;
-}
-/* Light mode: the same desk under daylight. A pale blotter, brighter paper, darker brass. */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    --desk: #c9cdbf; --desk-deep: #b7bcac;
-    --paper: #ece3cb; --paper-hi: #f5efdf; --paper-lo: #ddd1b3;
-    --glow: rgba(255, 246, 214, .55); --vignette: rgba(60, 60, 40, .16);
-    --on-desk: #1d2620; --on-desk-soft: #3f4a42; --on-desk-accent: #6e5520; --desk-line: rgba(29, 38, 32, .35);
-    color-scheme: light;
-  }
-}
-:root[data-theme='light'] {
-  --desk: #c9cdbf; --desk-deep: #b7bcac;
-  --paper: #ece3cb; --paper-hi: #f5efdf; --paper-lo: #ddd1b3;
-  --glow: rgba(255, 246, 214, .55); --vignette: rgba(60, 60, 40, .16);
-  --on-desk: #1d2620; --on-desk-soft: #3f4a42; --on-desk-accent: #6e5520; --desk-line: rgba(29, 38, 32, .35);
+  --paper: #F1F2EE;
+  --ink: #1D2430;
+  --muted: #5D6571;
+  --rule: #CDD1CB;
+  --wash: #E3E6E0;
+  --ghost: #B4B9B3;
+  --pen: #CF3F28;
+  --pen-faint: rgba(207, 63, 40, .34);
+  --scrim: rgba(29, 36, 48, .42);
+  --serif: 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --gutter: 40px;
   color-scheme: light;
 }
+/* Night: a redrawn page, not a dimmed one. The pen lightens so it still reads as the warm thing on the page. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #15181D; --ink: #E5E2D9; --muted: #9AA0A8; --rule: #343841; --wash: #23272E; --ghost: #4A4F58;
+    --pen: #F0694E; --pen-faint: rgba(240, 105, 78, .38); --scrim: rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --paper: #15181D; --ink: #E5E2D9; --muted: #9AA0A8; --rule: #343841; --wash: #23272E; --ghost: #4A4F58;
+  --pen: #F0694E; --pen-faint: rgba(240, 105, 78, .38); --scrim: rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
+
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
 html, body { margin: 0; }
 body {
-  background: var(--desk);
-  color: var(--on-desk);
-  font: 15px/1.5 var(--f-type);
-  padding-block: 0 56px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  min-height: 100%;
-  position: relative;
-  overflow-x: hidden;
+  background: var(--paper); color: var(--ink);
+  font: 400 18px/1.5 var(--serif); font-optical-sizing: auto;
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+  min-height: 100vh;
 }
-body::before { /* lamp pool and vignette */
-  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background:
-    radial-gradient(ellipse 70% 55% at 28% 0%, var(--glow), transparent 70%),
-    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 55%, var(--vignette) 100%);
-}
-#app { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; overflow-x: clip; }
+#app { max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter) 64px; }
 button { font: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--on-desk-accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.label { margin: 0; font-style: italic; font-weight: 400; color: var(--muted); font-size: 16px; }
+.soft { color: var(--muted); font-size: 15.5px; }
 
-/* paper: grain via SVG turbulence, edge wear via inset shadows */
-.paper {
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
-  background: var(--grain), linear-gradient(172deg, var(--paper-hi), var(--paper) 40%, var(--paper-lo));
-  color: var(--ink);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, .35) inset, 0 0 0 1px rgba(0, 0, 0, .25), 0 18px 36px rgba(0, 0, 0, .42), 0 2px 4px rgba(0, 0, 0, .4);
+/* the top line of every screen: the name, and a few quiet tools */
+.bar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 6px 18px; padding: calc(14px + env(safe-area-inset-top, 0px)) 0 12px; background: var(--paper); }
+.bar .mark { margin-right: auto; background: none; border: 0; padding: 4px 0; font-size: 24px; font-weight: 600; font-variation-settings: 'opsz' 72; letter-spacing: .005em; color: var(--ink); }
+.quiet, .tool { background: none; border: 0; padding: 6px 2px; color: var(--muted); font-size: 17px; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.quiet:hover, .tool:hover { color: var(--ink); text-decoration-color: currentColor; }
+.theme { width: 36px; height: 36px; padding: 0; border: 1px solid var(--rule); border-radius: 50%; background: none; display: inline-grid; place-items: center; color: var(--muted); }
+.theme:hover { color: var(--ink); border-color: var(--ink); }
+.theme svg { width: 18px; height: 18px; }
+
+/* buttons: ink is the only fill; the pen never fills a button */
+.btn { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); border-radius: 2px; padding: 11px 22px 12px; font-size: 18px; font-weight: 500; line-height: 1.2; }
+.btn:hover { opacity: .88; }
+.btn.ghost { background: none; color: var(--ink); border-color: var(--rule); }
+.btn.ghost:hover { border-color: var(--ink); opacity: 1; }
+.btn[disabled] { opacity: .35; cursor: not-allowed; }
+.link { background: none; border: 0; padding: 4px 0; color: var(--ink); font-size: 17px; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.link:hover { text-decoration-color: currentColor; }
+
+/* a suspect's colour: a small printed dot, nothing more */
+.dot { --h: 20; display: inline-block; flex: none; width: .5em; height: .5em; border-radius: 50%; background: hsl(var(--h) 34% 52%); vertical-align: .08em; margin-right: .45em; }
+/* weapon kinds: printer's marks, drawn from the symbols in KIND_DEFS */
+.kg { width: 1em; height: 1em; flex: none; vertical-align: -.12em; color: var(--muted); }
+/* the pen */
+.pen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+.toast { position: fixed; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 2px; max-width: min(520px, calc(100vw - 32px)); font-size: 16px; }
+
+@media (max-width: 760px) {
+  :root { --gutter: 16px; }
+  body { font-size: 17px; }
+  .bar { gap: 4px 14px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
+  .bar .mark { font-size: 21px; }
+  .quiet, .tool { font-size: 16px; }
 }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 
-/* top bar */
-.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; gap: 14px; padding: 12px 0; margin-bottom: 8px; background: linear-gradient(var(--desk) 70%, transparent); }
-.bar .mark { font: 22px/1 var(--f-display); letter-spacing: .04em; color: var(--on-desk); background: none; border: 0; padding: 4px 0; text-align: left; }
-.bar .mark:hover { color: var(--on-desk-accent); }
-.bar .mid { flex: 1; min-width: 0; color: var(--on-desk-accent); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar .clock { font-variant-numeric: tabular-nums; color: var(--on-desk); font-size: 15px; letter-spacing: .06em; }
-.tool { background: transparent; border: 1px solid var(--desk-line); color: var(--on-desk); border-radius: 2px; padding: 6px 11px; font-size: 13px; }
-.tool:hover { border-color: var(--on-desk-accent); color: var(--on-desk-accent); }
-.tool[aria-pressed='true'] { background: var(--desk-deep); }
-.tool.go { background: var(--stamp); border-color: var(--stamp); color: #f3e6d2; font-weight: 700; letter-spacing: .03em; }
-.tool.go:hover { background: #b3342a; color: #fff; }
-
-/* rubber stamp */
-.stamp {
-  display: inline-block; font: 700 22px/1 var(--f-type); letter-spacing: .12em; text-transform: uppercase;
-  color: var(--stamp); border: 3px solid var(--stamp); border-radius: 4px; padding: 8px 14px 6px;
-  transform: rotate(-6deg); opacity: .88; mix-blend-mode: multiply;
-  box-shadow: inset 0 0 0 2px rgba(155, 43, 34, .0);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23m)'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23m)'/%3E%3C/svg%3E");
-}
-.stamp.blue { color: var(--blue); border-color: var(--blue); }
-@keyframes slam { 0% { transform: scale(2.4) rotate(-14deg); opacity: 0; } 55% { transform: scale(.94) rotate(-5deg); opacity: .95; } 100% { transform: scale(1) rotate(-6deg); opacity: .88; } }
-.stamp.slam { animation: slam .38s cubic-bezier(.2, .9, .3, 1.1) both; }
-
-/* wax seal monogram for suspects */
-.seal { --h: 20; display: inline-grid; place-items: center; width: 1.7em; height: 1.7em; flex: none; border-radius: 50%; font: 700 .72em/1 var(--f-type); letter-spacing: 0; color: hsl(var(--h) 60% 92%);
-  background: radial-gradient(circle at 35% 30%, hsl(var(--h) 45% 46%), hsl(var(--h) 52% 30%) 70%); box-shadow: 0 0 0 .12em hsl(var(--h) 40% 24% / .55) inset, 0 1px 2px rgba(0, 0, 0, .5); }
-
-/* weapon type glyphs */
-.wg { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-
-@media (prefers-reduced-motion: reduce) { .stamp.slam { animation: none; } * { scroll-behavior: auto !important; transition: none !important; } }
-
-.tool.jump { display: none; }
-@media (max-width: 1060px) { .tool.jump { display: inline-block; } }
-@media (max-width: 520px) {
-  .bar { gap: 6px; }
-  .bar .mark { font-size: 19px; }
-  .bar .clock { font-size: 13px; letter-spacing: .02em; }
-  .tool { padding: 6px 8px; font-size: 12.5px; }
-}
-
-.home { padding-top: clamp(20px, 6vw, 64px); display: grid; gap: 36px; }
-.home h1 { font: 400 clamp(54px, 11vw, 112px)/.95 var(--f-display); margin: 0; letter-spacing: .02em; color: var(--on-desk); text-shadow: 0 2px 0 var(--vignette); }
-.home .lede { max-width: 40ch; margin: 18px 0 0; font: 700 clamp(19px, 2.6vw, 24px)/1.3 var(--f-type); color: var(--on-desk); text-wrap: balance; }
-.home .sub { max-width: 52ch; margin: 10px 0 0; color: var(--on-desk-soft); font-size: 16px; }
-.home .cta { margin: 22px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
-.home .cta span { color: var(--on-desk-soft); font-size: 14px; max-width: 34ch; }
-.btn.big { font-size: 16px; padding: 12px 20px; box-shadow: 0 6px 16px rgba(0, 0, 0, .35); }
-.ribbon { position: absolute; top: -12px; right: 18px; background: var(--stamp); color: #f6ead6; font: 700 12px/1 var(--f-type); letter-spacing: .08em; text-transform: uppercase; padding: 6px 10px; transform: rotate(2deg); box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
-.home .dateline { margin: 22px 0 0; color: var(--on-desk-accent); font-size: 14px; }
-.drawer { display: grid; gap: 0; max-width: 880px; }
-.folder { position: relative; display: block; width: 100%; text-align: left; border: 0; padding: 0; background: none; margin-top: -10px; }
-.folder:first-child { margin-top: 0; }
-.folder .tab { position: absolute; top: 0; height: 26px; padding: 4px 16px 0; background: var(--paper-lo); color: var(--ink); font-size: 13px; border-radius: 8px 8px 0 0; box-shadow: 0 -1px 0 rgba(255, 255, 255, .25) inset; z-index: 1; }
-.folder:nth-child(1) .tab { left: 18px; }
-.folder:nth-child(2) .tab { left: 26%; }
-.folder:nth-child(3) .tab { left: 50%; }
-.folder:nth-child(4) .tab { left: 74%; }
-.folder .sheet { position: relative; margin-top: 25px; padding: 18px 22px 24px; border-radius: 0 6px 6px 6px; display: grid; grid-template-columns: 1fr auto; gap: 8px 20px; align-items: center; transition: transform .15s ease; }
-.folder:hover .sheet, .folder:focus-visible .sheet { transform: translateY(-5px); }
-.folder h2 { margin: 0; font: 400 28px/1.1 var(--f-display); }
-.folder .meta { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
-.folder .state { text-align: right; min-height: 44px; display: grid; justify-items: end; align-content: center; gap: 4px; font-size: 13px; }
-.folder .state .stamp { font-size: 15px; padding: 5px 10px 3px; }
-.stars { letter-spacing: .15em; color: var(--ink); font-size: 15px; }
-.stars i { font-style: normal; opacity: .22; }
-.home .row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; max-width: 880px; }
+.home { padding-top: clamp(24px, 6vw, 56px); display: grid; gap: 44px; max-width: 920px; }
+.home .date { margin: 0 0 8px; font-style: italic; color: var(--muted); }
+.home h1 { margin: 0; max-width: 15em; font-size: clamp(38px, 6vw, 62px); line-height: 1.02; font-weight: 500; letter-spacing: -.015em; font-variation-settings: 'opsz' 72; text-wrap: balance; }
+.home .lede { margin: 18px 0 0; max-width: 34em; font-size: 20px; }
+.home .cta { margin: 24px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.cases { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.cases li { border-bottom: 1px solid var(--rule); }
+.case-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 6px 28px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; padding: 18px 8px 20px 0; color: var(--ink); }
+.case-row:hover { background: linear-gradient(90deg, var(--wash), transparent 90%); }
+.case-row .tier { font-size: 26px; font-weight: 500; font-variation-settings: 'opsz' 48; margin-right: 12px; }
+.case-row .start { font-style: italic; color: var(--pen); font-size: 16px; }
+.case-row .line { display: block; color: var(--muted); font-size: 16px; }
+.case-row .title { display: block; font-style: italic; font-size: 18px; }
+.case-row .how { display: grid; justify-items: end; gap: 2px; font-size: 15px; color: var(--muted); }
+.case-row .state.done { color: var(--ink); }
+.level { display: inline-flex; gap: 4px; }
+.level i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--muted); }
+.level i.on { background: var(--ink); border-color: var(--ink); }
+.home .row { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; }
 .home .row .grow { flex: 1; min-width: 12px; }
-.link { background: none; border: 0; padding: 4px 0; color: var(--on-desk); border-bottom: 1px solid var(--desk-line); font-size: 14px; }
-.link:hover { color: var(--on-desk-accent); border-color: var(--on-desk-accent); }
-.statline { color: var(--on-desk-soft); font-size: 14px; }
-.statline b { color: var(--on-desk); font-weight: 700; }
-@media (max-width: 640px) {
-  .folder .sheet { grid-template-columns: 1fr; }
-  .folder .state { justify-items: start; text-align: left; min-height: 0; }
-  .folder:nth-child(1) .tab { left: 4%; }
-  .folder:nth-child(2) .tab { left: 22%; }
-  .folder:nth-child(3) .tab { left: 40%; }
-  .folder:nth-child(4) .tab { left: 58%; }
-  .home { gap: 28px; }
+@media (max-width: 760px) {
+  .home { gap: 32px; padding-top: 16px; }
+  .home .lede { font-size: 18px; }
+  .case-row { grid-template-columns: minmax(0, 1fr) auto; padding: 14px 0 16px; }
+  .case-row .today { grid-column: 1; grid-row: 2; }
+  .case-row .how { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+  .case-row .tier { font-size: 22px; }
 }
 
+/* TEMPORARY (milestone 3): old case-screen names mapped onto the Casebook tokens. Removed in milestone 4. */
+:root { --desk: var(--paper); --desk-deep: var(--wash); --paper-hi: var(--paper); --paper-lo: var(--paper); --ink-soft: var(--muted); --pencil: var(--muted);
+  --blue: var(--pen); --stamp: var(--ink); --brass: var(--muted); --on-desk: var(--ink); --on-desk-soft: var(--muted); --on-desk-accent: var(--ink); --desk-line: var(--rule);
+  --f-display: var(--serif); --f-type: var(--serif); --f-hand: var(--serif); --cell: 34px; --rhw: 150px; }
+.paper { background: var(--paper); color: var(--ink); }
+.bar .clock { display: none; }
+.tool.go { background: var(--ink); color: var(--paper); text-decoration: none; padding: 8px 16px; border-radius: 2px; }
 .case { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 28px; align-items: start; }
 .case > section { min-width: 0; }
 @media (max-width: 1060px) { .case { grid-template-columns: minmax(0, 1fr); } }
@@ -308,56 +265,49 @@ body.coached { padding-bottom: 260px; }
 @media (min-width: 1061px) { .coach { width: 420px; } }
 @media (prefers-reduced-motion: reduce) { .coach-target, .plan.flash { animation: none; } }
 
-.scrim { position: fixed; inset: 0; z-index: 50; background: rgba(5, 10, 8, .72); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
-.sheetbox { width: min(620px, 100%); padding: 24px 26px 24px; border-radius: 2px; position: relative; max-height: calc(100vh - 32px); overflow-y: auto; }
-.sheetbox h2 { font: 400 30px/1.05 var(--f-display); margin: 0 0 12px; }
-.sheetbox .x { position: absolute; top: 10px; right: 12px; background: none; border: 0; font-size: 20px; color: var(--ink-soft); padding: 4px 8px; }
-.sheetbox p { margin: 8px 0; max-width: 56ch; }
-.sheetbox ol { padding-left: 20px; margin: 8px 0; }
-.sheetbox li { margin: 6px 0; }
-.pick { margin: 14px 0 0; }
-.pick h4 { margin: 0 0 6px; font: 700 14px var(--f-type); }
+.scrim { position: fixed; inset: 0; z-index: 50; background: var(--scrim); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+.sheetbox { width: min(620px, 100%); padding: 26px 30px 26px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; position: relative; max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 24px 60px rgba(0, 0, 0, .18); }
+.sheetbox h2 { margin: 0 40px 10px 0; font-size: 34px; line-height: 1.05; font-weight: 500; letter-spacing: -.01em; font-variation-settings: 'opsz' 60; }
+.sheetbox .x { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; background: none; border: 0; font-size: 26px; line-height: 1; color: var(--muted); }
+.sheetbox .x:hover { color: var(--ink); }
+.sheetbox p { margin: 10px 0; max-width: 34em; }
+.sheetbox ol { padding-left: 22px; margin: 10px 0; }
+.sheetbox li { margin: 8px 0; }
+.btn.red { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.pick { margin: 18px 0 0; }
+.pick h4 { margin: 0 0 8px; font-weight: 400; font-style: italic; color: var(--muted); font-size: 16px; }
 .pick .opts { display: flex; flex-wrap: wrap; gap: 8px; }
-.opt { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--rule); padding: 6px 10px; font-size: 13.5px; color: var(--ink); border-radius: 2px; text-align: left; }
+.opt { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; background: none; border: 1px solid var(--rule); padding: 8px 14px; font-size: 17px; color: var(--ink); border-radius: 2px; text-align: left; }
+.opt .kg { margin-right: 6px; }
 .opt:hover { border-color: var(--ink); }
 .opt[aria-pressed='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.opt .seal { font-size: 13px; }
-.said { margin: 18px 0 4px; padding: 10px 12px; border: 1px dashed var(--rule); min-height: 3.2em; }
-.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
-.btn { background: var(--ink); color: var(--paper); border: 0; border-radius: 2px; padding: 9px 16px; font-weight: 700; font-size: 14px; letter-spacing: .02em; }
-.btn:hover { background: #2c2b30; }
-.btn.red { background: var(--stamp); color: #f6ead6; }
-.btn.red:hover { background: #b3342a; }
-.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
-.btn[disabled] { opacity: .4; cursor: not-allowed; }
-.verdict { text-align: left; }
-.verdict .stampbox { margin: 8px 0 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.verdict .tale { margin: 10px 0; padding: 12px 14px; background: rgba(27, 26, 29, .06); border-left: 3px solid var(--ink); }
-.verdict table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 8px; }
-.verdict td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--rule); vertical-align: middle; }
-.verdict tr.killer td { font-weight: 700; }
-.share { white-space: pre-wrap; background: rgba(27, 26, 29, .06); padding: 10px 12px; margin: 10px 0 0; font-size: 13.5px; }
-.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--paper-hi); color: var(--ink); padding: 10px 16px; border-radius: 2px; box-shadow: 0 10px 28px rgba(0, 0, 0, .5); max-width: min(520px, calc(100vw - 32px)); font-size: 14px; }
-.hintbox { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid var(--blue); background: rgba(37, 66, 122, .08); font-size: 14px; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
-.stats div { border: 1px solid var(--rule); padding: 8px 10px; }
-.stats b { display: block; font: 400 26px/1.1 var(--f-display); }
-.stats span { font-size: 12.5px; color: var(--ink-soft); }
-@media (max-width: 1060px) {
-  .plan { margin-top: 20px; }
-  .lg .ch { height: 138px; }
-  :root { --cell: 31px; --rhw: 124px; }
+.opt[aria-pressed='true'] .kg { color: var(--paper); }
+.said { margin: 20px 0 4px; padding: 12px 0 0; border-top: 1px solid var(--rule); min-height: 3.2em; font-style: italic; }
+.said b { font-style: normal; font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 18px; }
+.closed { margin: 4px 0 14px; font-style: italic; color: var(--pen); font-size: 20px; }
+.miss { margin: 14px 0 0; }
+.miss b:first-child { color: var(--pen); font-weight: 500; font-style: italic; }
+.verdict .tale { margin: 10px 0; font-size: 21px; line-height: 1.4; }
+.verdict .tale b { font-weight: 600; }
+.verdict table { border-collapse: collapse; width: 100%; font-size: 16px; margin-top: 8px; }
+.verdict td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.verdict thead td { font-style: italic; color: var(--muted); }
+.verdict tr.killer td { font-weight: 600; }
+.verdict summary { cursor: pointer; color: var(--muted); font-style: italic; }
+.share { white-space: pre-wrap; border-left: 2px solid var(--rule); padding: 4px 0 4px 14px; margin: 16px 0 0; font-size: 16px; font-variant-numeric: lining-nums tabular-nums; }
+.hintbox { margin: 12px 0 0; font-size: 19px; line-height: 1.45; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+.stats div { border-top: 1px solid var(--rule); padding: 8px 0 0; }
+.stats b { display: block; font-size: 34px; line-height: 1.1; font-weight: 500; font-variant-numeric: lining-nums; }
+.stats span { font-size: 15px; font-style: italic; color: var(--muted); }
+.next { margin: 18px 0 0; padding: 14px 0 0; border-top: 1px solid var(--rule); }
+.next p { margin: 0 0 12px; }
+@media (max-width: 760px) {
+  .scrim { place-items: end stretch; padding: 0; }
+  .sheetbox { width: 100%; max-height: 92vh; padding: 22px 16px calc(22px + env(safe-area-inset-bottom, 0px)); border-width: 1px 0 0; }
+  .sheetbox h2 { font-size: 28px; }
 }
-@media (max-width: 520px) {
-  .dossier { padding: 18px 16px 22px; }
-  .notebook { padding: 14px 10px 16px; }
-  .bar .mid { display: none; }
-  .bar { gap: 8px; }
-  .sheetbox { padding: 20px 16px; }
-  :root { --rhw: 106px; }
-}
-.next { margin: 14px 0 0; padding: 12px 14px; border: 1px dashed var(--rule); }
-.next p { margin: 0 0 10px; }
 
 </style>
 <div id="app"></div>
@@ -1345,22 +1295,73 @@ function randomSpec(tier) {
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtTime = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 const zeros = (n) => Array.from({ length: n }, () => new Array(n).fill(0));
-const stars = (k) => '★'.repeat(k) + `<i>${'★'.repeat(5 - k)}</i>`;
+// difficulty as a row of printed dots: filled for each level of five
+const stars = (k) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(k)}${'<i></i>'.repeat(5 - k)}</span>`;
 
 function initials(name) {
   const w = name.split(' ').filter((x) => !TITLES_RANK.includes(x));
   return (w[0][0] + w[w.length - 1][0]).toUpperCase();
 }
-const seal = (s) => `<span class="seal" style="--h:${s.hue}" aria-hidden="true">${initials(s.name)}</span>`;
+// a suspect is marked by a small dot in their colour (the name always travels with it)
+const seal = (s) => `<span class="dot" style="--h:${s.hue}" aria-hidden="true"></span>`;
 
-const GLYPHS = {
-  blade: '<path d="M20 4 9 15M6 12l6 6M8 16l-4 4"/>',
-  blunt: '<path d="m14 4 6 6-4 4-6-6zM11 11 4 18l2 2 7-7"/>',
-  poison: '<path d="M9 3h6M10 3v5l-4 8a3 3 0 0 0 3 4h6a3 3 0 0 0 3-4l-4-8V3M8.5 15h7"/>',
-  cord: '<circle cx="12" cy="9" r="5"/><path d="M12 14v5M9 18l3 3 3-3"/>',
-  firearm: '<path d="M3 9h13l2 2h3v3h-6l-1 4H9l1-4H6L3 12z"/>',
-};
-const glyph = (t) => `<svg class="wg" viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[t] || ''}</svg>`;
+// Weapon kinds, as printer's marks: a dagger, a weight, a loop, a drop, a pistol. Defined once, used by reference.
+const KIND_DEFS = `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="k-blade" viewBox="0 0 16 16"><path d="M8 1 10 9.5H6Z" fill="currentColor"/><path d="M4.5 10.5h7M8 11v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="k-blunt" viewBox="0 0 16 16"><circle cx="8" cy="8.5" r="5" fill="currentColor"/></symbol>
+  <symbol id="k-cord" viewBox="0 0 16 16"><path d="M2 10c2-6 5-6 6-2s4 4 6-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="k-poison" viewBox="0 0 16 16"><path d="M8 2.5c2.8 3.6 4.2 6 4.2 7.8a4.2 4.2 0 0 1-8.4 0C3.8 8.5 5.2 6.1 8 2.5z" fill="currentColor"/></symbol>
+  <symbol id="k-firearm" viewBox="0 0 16 16"><path d="M2 5.5h12v3H7.5l-1 4.5H4l1-4.5H2z" fill="currentColor"/></symbol>
+</svg>`;
+const glyph = (t) => `<svg class="kg" aria-hidden="true"><use href="#k-${t}"/></svg>`;
+// how the notebook names a kind: the words the statements use
+const KIND_WORD = { blade: 'Sharp', blunt: 'Blunt', cord: 'Cord', poison: 'Poison', firearm: 'Gun' };
+const shortName = (x) => x.short || x.name;
+
+// ---- the pen: every mark is drawn by hand, slightly differently for each square, and the same way every time
+function penRng(key) {
+  let h = 2166136261;
+  for (const c of key) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296;
+}
+// v: 1 your cross, 2 your circle, 3 a cross that follows, 4 a circle that follows (fainter). size: the square's side.
+function penMark(v, key, size) {
+  if (!v) return '';
+  const r = penRng(key), j = (a) => (r() - 0.5) * a, c = size / 2, faint = v >= 3;
+  const sw = (faint ? 1.6 : 2.3) * Math.max(0.55, Math.min(1, size / 40));
+  let d;
+  if (v === 1 || v === 3) {
+    const p = size * 0.27, q = size - p, w = size / 46;
+    d = `M${p + j(4 * w)} ${p + j(4 * w)} Q${c + j(5 * w)} ${c + j(5 * w)} ${q + j(4 * w)} ${q + j(3 * w)} M${q + j(4 * w)} ${p + j(4 * w)} Q${c + j(5 * w)} ${c + j(5 * w)} ${p + j(3 * w)} ${q + j(4 * w)}`;
+  } else {
+    const rad = size * 0.3, a0 = r() * 6.28, pts = [];
+    for (let i = 0; i <= 26; i++) {
+      const a = a0 + (i / 24) * 6.28, rr = rad * (1 + j(0.12) + (i > 23 ? 0.08 : 0));
+      pts.push(`${(c + Math.cos(a) * rr * 1.06).toFixed(1)} ${(c + Math.sin(a) * rr).toFixed(1)}`);
+    }
+    d = 'M' + pts.join(' L');
+  }
+  return `<svg class="pen" viewBox="0 0 ${size} ${size}" aria-hidden="true"><path d="${d}" fill="none" stroke="${faint ? 'var(--pen-faint)' : 'var(--pen)'}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+// a tick in the margin: this statement has been used
+function penTick(key) {
+  const r = penRng(key), j = (a) => (r() - 0.5) * a;
+  return `<svg class="tick" viewBox="0 0 22 20" aria-hidden="true"><path d="M3 ${11 + j(2)} Q7 ${15 + j(2)} 8.5 ${17 + j(1)} Q12 ${8 + j(3)} 19 ${3 + j(2)}" fill="none" stroke="var(--pen)" stroke-width="2.1" stroke-linecap="round"/></svg>`;
+}
+// a bracket in the margin: the statement in hand
+const penBrace = () => '<svg class="brace" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M10 2 Q3 3 3.5 12 L4 88 Q3.5 98 10.5 98" fill="none" stroke="var(--pen)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+
+// ---- light or dark: follows the device until the player picks one, then remembers it
+function applyTheme() {
+  const t = LS.get('inq1:theme', null);
+  if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+}
+const isDark = () => (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+function toggleTheme() { LS.set('inq1:theme', isDark() ? 'light' : 'dark'); applyTheme(); refreshThemeButton(); }
+function themeButton() {
+  return `<button type="button" class="theme" data-act="theme" aria-label="${isDark() ? 'Switch to light pages' : 'Switch to dark pages'}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 3a7 7 0 0 1 0 14z" fill="currentColor"/></svg></button>`;
+}
+function refreshThemeButton() { document.querySelectorAll('[data-act="theme"]').forEach((b) => b.setAttribute('aria-label', isDark() ? 'Switch to light pages' : 'Switch to dark pages')); }
 
 // Turns {s:i} {w:i} {r:i} in a clue into highlightable spans.
 function tokens(text, ctx) {
@@ -1452,9 +1453,9 @@ const tutorialDone = () => !!LS.get('inq1:tutorial', 0);
 
 function folderState(spec) {
   const s = LS.get(caseKey(spec), null);
-  if (s && s.solved) return `<span class="stamp blue">Closed ${fmtTime(s.elapsed)}</span>`;
-  if (s && (s.elapsed > 20 || s.struck && s.struck.length)) return `<span>In progress, ${fmtTime(s.elapsed)}</span>`;
-  return '<span>Unopened</span>';
+  if (s && s.solved) return '<span class="state done">Closed</span>';
+  if (s && (s.elapsed > 20 || s.struck && s.struck.length)) return '<span class="state">Started</span>';
+  return '<span class="state">Not started</span>';
 }
 
 function renderHome() {
@@ -1464,38 +1465,37 @@ function renderHome() {
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   const solved = Object.values(st.solved).reduce((a, b) => a + b, 0);
-  const folders = TIER_ORDER.map((t) => {
+  const rows = TIER_ORDER.map((t) => {
     const spec = dailySpec(t), T = TIERS[t], w = WORLDS[spec.w];
-    const start = t === 'constable' && !solved ? '<span class="ribbon">Start here</span>' : '';
-    return `<button class="folder" data-act="open-daily" data-tier="${t}">
-      <span class="tab">${TIER_COPY[t].tab}</span>
-      <span class="sheet paper">${start}
-        <span><h2>${T.name}</h2>
-          <p class="meta">${esc(TIER_COPY[t].line)}</p>
-          <p class="meta">Today: ${esc(spec.ti)}, ${esc(w.name)}, ${w.year}</p></span>
-        <span class="state"><span class="stars" aria-label="Difficulty ${spec.r} of 5">${stars(spec.r)}</span>${folderState(spec)}</span>
-      </span></button>`;
+    const start = t === 'constable' && !solved ? '<span class="start">Start here</span>' : '';
+    return `<li><button class="case-row" data-act="open-daily" data-tier="${t}">
+      <span class="who"><span class="tier">${T.name}</span>${start}<span class="line">${TIER_COPY[t].tab}. ${esc(TIER_COPY[t].line)}</span></span>
+      <span class="today"><span class="title">${esc(spec.ti)}</span><span class="line">${esc(w.name)}, ${w.year}</span></span>
+      <span class="how"><span aria-label="Difficulty ${spec.r} of 5">${stars(spec.r)}</span>${folderState(spec)}</span>
+    </button></li>`;
   }).join('');
   const learn = tutorialDone()
     ? ''
-    : '<div class="cta"><button class="btn red big" data-act="tutorial">Learn to play in two minutes</button><span>A tiny case with three suspects, solved together, step by step.</span></div>';
+    : '<div class="cta"><button class="btn" data-act="tutorial">Learn to play</button><span class="soft">A three-suspect case, solved together in about two minutes.</span></div>';
   app().innerHTML = `
+    <div class="bar"><button class="mark" data-act="home">Inquest</button>
+      <button class="quiet" data-act="how">How to play</button><button class="quiet" data-act="stats">Your record</button>${themeButton()}</div>
     <main class="home">
       <header>
-        <h1>Inquest</h1>
-        <p class="lede">A murder mystery you solve with logic. A new case every day.</p>
-        <p class="sub">Read what the witnesses say, rule things out in your notebook, and name the killer, the weapon and the room. Every case has exactly one answer.</p>
+        <p class="date">${esc(dateStr)}, case ${dayNumber()}</p>
+        <h1>One murder. A few true statements. Exactly one answer.</h1>
+        <p class="lede">Read what the witnesses say, rule things out in your notebook, and name the killer, the weapon and the room.</p>
         ${learn}
-        <p class="dateline">${esc(dateStr)}. Case No. ${dayNumber()} is open.</p>
       </header>
-      <section class="drawer" aria-label="Today's cases, easiest first">${folders}</section>
+      <section aria-labelledby="today-label">
+        <p class="label" id="today-label">Today's cases, easiest first</p>
+        <ol class="cases">${rows}</ol>
+      </section>
       <div class="row">
-        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the tutorial</button>' : ''}
-        <button class="link" data-act="how">How to play</button>
-        <button class="link" data-act="random">Open a different case</button>
-        <button class="link" data-act="stats">Your record</button>
+        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the lesson</button>' : ''}
+        <button class="link" data-act="random">Play an older case</button>
         <span class="grow"></span>
-        <span class="statline">Streak <b>${st.streak}</b> &nbsp; Best <b>${st.bestStreak}</b> &nbsp; Closed <b>${solved}</b></span>
+        <span class="soft">Streak ${st.streak}, best ${st.bestStreak}, ${solved} closed</span>
       </div>
     </main>`;
   window.scrollTo(0, 0);
@@ -1686,7 +1686,7 @@ function paintPlan() {
       const there = yes(d.wr[w][r]) || [...Array(n).keys()].some((s) => yes(d.sr[s][r]) && yes(d.sw[s][w]));
       if (!there) continue;
       const x = row ? gx + gw - 20 - Math.max(k, 1) * 26 - 16 - q * 26 : gx + gw - 30 - q * 24, y = row ? gy + gh / 2 - 11 : gy + gh - 31; q++;
-      out += `<g class="wpin"><title>${esc(ctx.weapons[w].name)}</title><rect x="${x}" y="${y}" width="22" height="22" rx="3"/><svg x="${x + 3}" y="${y + 3}" width="16" height="16" viewBox="0 0 24 24">${GLYPHS[ctx.types[w]]}</svg></g>`;
+      out += `<g class="wpin"><title>${esc(ctx.weapons[w].name)}</title><rect x="${x}" y="${y}" width="22" height="22" rx="3"/><use href="#k-${ctx.types[w]}" x="${x + 3}" y="${y + 3}" width="16" height="16"/></g>`;
     }
   }
   pins.innerHTML = out;
@@ -1934,8 +1934,7 @@ function submitAccuse() {
   G.wrong++; persist();
   const k = firstContradiction(G.puzzle, p);
   const box = document.getElementById('accuse-result');
-  box.innerHTML = `<div class="stampbox" style="margin:12px 0 0"><span class="stamp slam">Not quite</span></div>
-    <p>${k ? `That story breaks against statement <b>${k}</b>.` : 'The statements do not support that.'} Wrong accusations so far: ${G.wrong}.</p>`;
+  box.innerHTML = `<p class="miss"><b>Not quite.</b> ${k ? `That story breaks against statement <b>${k}</b>.` : 'The statements do not support that.'} Wrong accusations so far: ${G.wrong}.</p>`;
 }
 
 function solveCase() {
@@ -1954,7 +1953,7 @@ function solveCase() {
     LS.set('inq1:stats', st);
   }
   const cs = document.getElementById('closed-stamp');
-  if (cs) cs.innerHTML = '<span class="stamp on-file slam">Case closed</span>';
+  if (cs) cs.textContent = 'Case closed.';
   openVerdict();
 }
 
@@ -1970,12 +1969,12 @@ function openVerdict() {
   const P = G.puzzle, ctx = P.ctx, s = P.solution, t = P.truth;
   const rows = ctx.suspects.map((su, i) => `<tr class="${i === s.killer ? 'killer' : ''}"><td>${seal(su)} ${esc(su.name)}</td><td>${esc(ctx.rooms[t.pr[i]].name)}</td><td>${esc(ctx.weapons[t.pw[i]].name)}</td></tr>`).join('');
   openModal(`<div class="verdict"><h2>${esc(P.title)}</h2>
-    <div class="stampbox"><span class="stamp slam">Case closed</span></div>
+    <p class="closed">Case closed.</p>
     <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
     <p>Closed in ${fmtTime(G.elapsed)}. ${G.hints} hint${G.hints === 1 ? '' : 's'}, ${G.wrong} wrong accusation${G.wrong === 1 ? '' : 's'}.</p>
     <details><summary>The night as it really happened</summary>
       <table><thead><tr><td></td><td>Was in</td><td>Held</td></tr></thead><tbody>${rows}</tbody></table>
-      <p style="font-size:13px;color:var(--ink-soft)">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
+      <p class="soft">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
     <div class="share" id="share">${esc(shareText())}</div>
     ${nextStepHTML()}
     <div class="actions"><button class="btn" data-act="copy-share">Copy result</button><button class="btn ghost" data-act="home">Back to the cases</button><button class="btn ghost" data-act="random">Another case</button></div></div>`);
@@ -2225,13 +2224,13 @@ function finishTutorial() {
   endCoach();
   const ctx = G.puzzle.ctx, s = G.puzzle.solution;
   openModal(`<div class="verdict"><h2>You've got it</h2>
-    <div class="stampbox"><span class="stamp slam">Case closed</span></div>
+    <p class="closed">Case closed.</p>
     <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
     <p>That's the whole game. Real cases have more suspects and trickier statements, but every one is solved the same way: read a statement, cross out what it rules out, circle what it proves, then accuse.</p>
     <p class="soft">If you get stuck, the <b>Hint</b> button points you to the next step, and tells you if a square in your notebook doesn't add up.</p>
     <div class="actions"><button class="btn red" data-act="open-daily" data-tier="constable">Start your first real case</button><button class="btn ghost" data-act="home">Back to the cases</button></div></div>`);
   const cs = document.getElementById('closed-stamp');
-  if (cs) cs.innerHTML = '<span class="stamp on-file slam">Case closed</span>';
+  if (cs) cs.textContent = 'Case closed.';
 }
 
 // ---- events
@@ -2244,6 +2243,7 @@ document.addEventListener('click', (e) => {
 // first visit: go straight into the guided case (it opens with a welcome and a way to skip)
 if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial(); }
     else if (act === 'how') openModal(howToHTML());
+    else if (act === 'theme') toggleTheme();
     else if (act === 'tutorial') startTutorial();
     else if (act === 'coach-next') coachNext();
     else if (act === 'coach-skip') { LS.set('inq1:tutorial', 1); endCoach(); renderHome();
@@ -2318,6 +2318,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) persi
 let rz = null;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (VIEW === 'case') { buildPlan(); chooseGridMode(); } }, 120); });
 
+applyTheme();
+document.body.insertAdjacentHTML('afterbegin', KIND_DEFS);
 renderHome();
 // first visit: go straight into the guided case (it opens with a welcome and a way to skip)
 if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();

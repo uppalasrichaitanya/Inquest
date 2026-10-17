@@ -124,11 +124,11 @@ function finishTutorial() {
   endCoach();
   const ctx = G.puzzle.ctx, s = G.puzzle.solution;
   openModal(`<div class="verdict"><h2>You've got it</h2>
-    <div class="stampbox"><span class="stamp slam">Case closed</span></div>
+    <p class="closed">Case closed.</p>
     <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
     <p>That's the whole game. Real cases have more suspects and trickier statements, but every one is solved the same way: read a statement, cross out what it rules out, circle what it proves, then accuse.</p>
     <p class="soft">If you get stuck, the <b>Hint</b> button points you to the next step, and tells you if a square in your notebook doesn't add up.</p>
     <div class="actions"><button class="btn red" data-act="open-daily" data-tier="constable">Start your first real case</button><button class="btn ghost" data-act="home">Back to the cases</button></div></div>`);
   const cs = document.getElementById('closed-stamp');
-  if (cs) cs.innerHTML = '<span class="stamp on-file slam">Case closed</span>';
+  if (cs) cs.textContent = 'Case closed.';
 }

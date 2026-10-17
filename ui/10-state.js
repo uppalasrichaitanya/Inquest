@@ -29,22 +29,73 @@ function randomSpec(tier) {
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtTime = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 const zeros = (n) => Array.from({ length: n }, () => new Array(n).fill(0));
-const stars = (k) => '★'.repeat(k) + `<i>${'★'.repeat(5 - k)}</i>`;
+// difficulty as a row of printed dots: filled for each level of five
+const stars = (k) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(k)}${'<i></i>'.repeat(5 - k)}</span>`;
 
 function initials(name) {
   const w = name.split(' ').filter((x) => !TITLES_RANK.includes(x));
   return (w[0][0] + w[w.length - 1][0]).toUpperCase();
 }
-const seal = (s) => `<span class="seal" style="--h:${s.hue}" aria-hidden="true">${initials(s.name)}</span>`;
+// a suspect is marked by a small dot in their colour (the name always travels with it)
+const seal = (s) => `<span class="dot" style="--h:${s.hue}" aria-hidden="true"></span>`;
 
-const GLYPHS = {
-  blade: '<path d="M20 4 9 15M6 12l6 6M8 16l-4 4"/>',
-  blunt: '<path d="m14 4 6 6-4 4-6-6zM11 11 4 18l2 2 7-7"/>',
-  poison: '<path d="M9 3h6M10 3v5l-4 8a3 3 0 0 0 3 4h6a3 3 0 0 0 3-4l-4-8V3M8.5 15h7"/>',
-  cord: '<circle cx="12" cy="9" r="5"/><path d="M12 14v5M9 18l3 3 3-3"/>',
-  firearm: '<path d="M3 9h13l2 2h3v3h-6l-1 4H9l1-4H6L3 12z"/>',
-};
-const glyph = (t) => `<svg class="wg" viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[t] || ''}</svg>`;
+// Weapon kinds, as printer's marks: a dagger, a weight, a loop, a drop, a pistol. Defined once, used by reference.
+const KIND_DEFS = `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="k-blade" viewBox="0 0 16 16"><path d="M8 1 10 9.5H6Z" fill="currentColor"/><path d="M4.5 10.5h7M8 11v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="k-blunt" viewBox="0 0 16 16"><circle cx="8" cy="8.5" r="5" fill="currentColor"/></symbol>
+  <symbol id="k-cord" viewBox="0 0 16 16"><path d="M2 10c2-6 5-6 6-2s4 4 6-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="k-poison" viewBox="0 0 16 16"><path d="M8 2.5c2.8 3.6 4.2 6 4.2 7.8a4.2 4.2 0 0 1-8.4 0C3.8 8.5 5.2 6.1 8 2.5z" fill="currentColor"/></symbol>
+  <symbol id="k-firearm" viewBox="0 0 16 16"><path d="M2 5.5h12v3H7.5l-1 4.5H4l1-4.5H2z" fill="currentColor"/></symbol>
+</svg>`;
+const glyph = (t) => `<svg class="kg" aria-hidden="true"><use href="#k-${t}"/></svg>`;
+// how the notebook names a kind: the words the statements use
+const KIND_WORD = { blade: 'Sharp', blunt: 'Blunt', cord: 'Cord', poison: 'Poison', firearm: 'Gun' };
+const shortName = (x) => x.short || x.name;
+
+// ---- the pen: every mark is drawn by hand, slightly differently for each square, and the same way every time
+function penRng(key) {
+  let h = 2166136261;
+  for (const c of key) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296;
+}
+// v: 1 your cross, 2 your circle, 3 a cross that follows, 4 a circle that follows (fainter). size: the square's side.
+function penMark(v, key, size) {
+  if (!v) return '';
+  const r = penRng(key), j = (a) => (r() - 0.5) * a, c = size / 2, faint = v >= 3;
+  const sw = (faint ? 1.6 : 2.3) * Math.max(0.55, Math.min(1, size / 40));
+  let d;
+  if (v === 1 || v === 3) {
+    const p = size * 0.27, q = size - p, w = size / 46;
+    d = `M${p + j(4 * w)} ${p + j(4 * w)} Q${c + j(5 * w)} ${c + j(5 * w)} ${q + j(4 * w)} ${q + j(3 * w)} M${q + j(4 * w)} ${p + j(4 * w)} Q${c + j(5 * w)} ${c + j(5 * w)} ${p + j(3 * w)} ${q + j(4 * w)}`;
+  } else {
+    const rad = size * 0.3, a0 = r() * 6.28, pts = [];
+    for (let i = 0; i <= 26; i++) {
+      const a = a0 + (i / 24) * 6.28, rr = rad * (1 + j(0.12) + (i > 23 ? 0.08 : 0));
+      pts.push(`${(c + Math.cos(a) * rr * 1.06).toFixed(1)} ${(c + Math.sin(a) * rr).toFixed(1)}`);
+    }
+    d = 'M' + pts.join(' L');
+  }
+  return `<svg class="pen" viewBox="0 0 ${size} ${size}" aria-hidden="true"><path d="${d}" fill="none" stroke="${faint ? 'var(--pen-faint)' : 'var(--pen)'}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+// a tick in the margin: this statement has been used
+function penTick(key) {
+  const r = penRng(key), j = (a) => (r() - 0.5) * a;
+  return `<svg class="tick" viewBox="0 0 22 20" aria-hidden="true"><path d="M3 ${11 + j(2)} Q7 ${15 + j(2)} 8.5 ${17 + j(1)} Q12 ${8 + j(3)} 19 ${3 + j(2)}" fill="none" stroke="var(--pen)" stroke-width="2.1" stroke-linecap="round"/></svg>`;
+}
+// a bracket in the margin: the statement in hand
+const penBrace = () => '<svg class="brace" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M10 2 Q3 3 3.5 12 L4 88 Q3.5 98 10.5 98" fill="none" stroke="var(--pen)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+
+// ---- light or dark: follows the device until the player picks one, then remembers it
+function applyTheme() {
+  const t = LS.get('inq1:theme', null);
+  if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+}
+const isDark = () => (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+function toggleTheme() { LS.set('inq1:theme', isDark() ? 'light' : 'dark'); applyTheme(); refreshThemeButton(); }
+function themeButton() {
+  return `<button type="button" class="theme" data-act="theme" aria-label="${isDark() ? 'Switch to light pages' : 'Switch to dark pages'}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 3a7 7 0 0 1 0 14z" fill="currentColor"/></svg></button>`;
+}
+function refreshThemeButton() { document.querySelectorAll('[data-act="theme"]').forEach((b) => b.setAttribute('aria-label', isDark() ? 'Switch to light pages' : 'Switch to dark pages')); }
 
 // Turns {s:i} {w:i} {r:i} in a clue into highlightable spans.
 function tokens(text, ctx) {

@@ -75,8 +75,7 @@ function submitAccuse() {
   G.wrong++; persist();
   const k = firstContradiction(G.puzzle, p);
   const box = document.getElementById('accuse-result');
-  box.innerHTML = `<div class="stampbox" style="margin:12px 0 0"><span class="stamp slam">Not quite</span></div>
-    <p>${k ? `That story breaks against statement <b>${k}</b>.` : 'The statements do not support that.'} Wrong accusations so far: ${G.wrong}.</p>`;
+  box.innerHTML = `<p class="miss"><b>Not quite.</b> ${k ? `That story breaks against statement <b>${k}</b>.` : 'The statements do not support that.'} Wrong accusations so far: ${G.wrong}.</p>`;
 }
 
 function solveCase() {
@@ -95,7 +94,7 @@ function solveCase() {
     LS.set('inq1:stats', st);
   }
   const cs = document.getElementById('closed-stamp');
-  if (cs) cs.innerHTML = '<span class="stamp on-file slam">Case closed</span>';
+  if (cs) cs.textContent = 'Case closed.';
   openVerdict();
 }
 
@@ -111,12 +110,12 @@ function openVerdict() {
   const P = G.puzzle, ctx = P.ctx, s = P.solution, t = P.truth;
   const rows = ctx.suspects.map((su, i) => `<tr class="${i === s.killer ? 'killer' : ''}"><td>${seal(su)} ${esc(su.name)}</td><td>${esc(ctx.rooms[t.pr[i]].name)}</td><td>${esc(ctx.weapons[t.pw[i]].name)}</td></tr>`).join('');
   openModal(`<div class="verdict"><h2>${esc(P.title)}</h2>
-    <div class="stampbox"><span class="stamp slam">Case closed</span></div>
+    <p class="closed">Case closed.</p>
     <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
     <p>Closed in ${fmtTime(G.elapsed)}. ${G.hints} hint${G.hints === 1 ? '' : 's'}, ${G.wrong} wrong accusation${G.wrong === 1 ? '' : 's'}.</p>
     <details><summary>The night as it really happened</summary>
       <table><thead><tr><td></td><td>Was in</td><td>Held</td></tr></thead><tbody>${rows}</tbody></table>
-      <p style="font-size:13px;color:var(--ink-soft)">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
+      <p class="soft">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
     <div class="share" id="share">${esc(shareText())}</div>
     ${nextStepHTML()}
     <div class="actions"><button class="btn" data-act="copy-share">Copy result</button><button class="btn ghost" data-act="home">Back to the cases</button><button class="btn ghost" data-act="random">Another case</button></div></div>`);

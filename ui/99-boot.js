@@ -8,6 +8,7 @@ document.addEventListener('click', (e) => {
 // first visit: go straight into the guided case (it opens with a welcome and a way to skip)
 if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial(); }
     else if (act === 'how') openModal(howToHTML());
+    else if (act === 'theme') toggleTheme();
     else if (act === 'tutorial') startTutorial();
     else if (act === 'coach-next') coachNext();
     else if (act === 'coach-skip') { LS.set('inq1:tutorial', 1); endCoach(); renderHome();
@@ -82,6 +83,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) persi
 let rz = null;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (VIEW === 'case') { buildPlan(); chooseGridMode(); } }, 120); });
 
+applyTheme();
+document.body.insertAdjacentHTML('afterbegin', KIND_DEFS);
 renderHome();
 // first visit: go straight into the guided case (it opens with a welcome and a way to skip)
 if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();

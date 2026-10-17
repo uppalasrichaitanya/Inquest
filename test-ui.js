@@ -15,10 +15,10 @@ const $ = (s) => d.querySelector(s), $$ = (s) => [...d.querySelectorAll(s)];
 const click = (el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 1 }));
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console.log('ok  ', m); };
 
-ok($('h1') && $('h1').textContent === 'Inquest', 'home renders');
-ok($$('.folder').length === 4, 'four folders');
-ok(/solve with logic/.test($('.home .lede').textContent), 'home says what the game is');
-click($$('.folder')[1]);
+ok($('.bar .mark') && $('.bar .mark').textContent === 'Inquest', 'home renders');
+ok($$('.case-row').length === 4, 'four cases listed');
+ok(/Exactly one answer/.test($('.home h1').textContent), 'home says what the game is');
+click($$('.case-row')[1]);
 ok($('.dossier h2'), 'case opens: ' + ($('.dossier h2') || {}).textContent);
 const n = w.eval('G.puzzle.n');
 ok($$('.stmt').length === w.eval('G.puzzle.clues.length'), 'statements rendered: ' + $$('.stmt').length);
@@ -62,10 +62,10 @@ ok(/Not quite/.test($('#accuse-result').textContent) && /statement/.test($('#acc
 ok(w.eval('G.wrong') === 1, 'wrong counted');
 pick('killer', (sol.killer + 1) % n); pick('killer', sol.killer);
 click($('#do-accuse'));
-ok($('.verdict .stamp') && /Case closed/.test($('.verdict').textContent), 'right accusation closes the case');
+ok($('.verdict .closed') && /Case closed/.test($('.verdict').textContent), 'right accusation closes the case');
 ok(/Closed in/.test($('#share').textContent), 'share text: ' + $('#share').textContent.replace(/\n/g, ' | '));
 click($('[data-act="home"]'));
-ok($('h1'), 'back home'); ok(/Closed/.test($$('.folder')[1].textContent), 'folder shows closed stamp');
+ok($('.home h1'), 'back home'); ok(/Closed/.test($$('.case-row')[1].textContent), 'case row shows it is closed');
 const st = w.eval("JSON.stringify(LS.get('inq1:stats',{}))"); ok(/"streak":1/.test(st), 'streak recorded ' + st);
 
 // a circle the statements rule out is caught by the hint

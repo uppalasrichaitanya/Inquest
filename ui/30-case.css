@@ -1,3 +1,10 @@
+/* TEMPORARY (milestone 3): old case-screen names mapped onto the Casebook tokens. Removed in milestone 4. */
+:root { --desk: var(--paper); --desk-deep: var(--wash); --paper-hi: var(--paper); --paper-lo: var(--paper); --ink-soft: var(--muted); --pencil: var(--muted);
+  --blue: var(--pen); --stamp: var(--ink); --brass: var(--muted); --on-desk: var(--ink); --on-desk-soft: var(--muted); --on-desk-accent: var(--ink); --desk-line: var(--rule);
+  --f-display: var(--serif); --f-type: var(--serif); --f-hand: var(--serif); --cell: 34px; --rhw: 150px; }
+.paper { background: var(--paper); color: var(--ink); }
+.bar .clock { display: none; }
+.tool.go { background: var(--ink); color: var(--paper); text-decoration: none; padding: 8px 16px; border-radius: 2px; }
 .case { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 28px; align-items: start; }
 .case > section { min-width: 0; }
 @media (max-width: 1060px) { .case { grid-template-columns: minmax(0, 1fr); } }
