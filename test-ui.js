@@ -204,8 +204,24 @@ ok(/Not quite/.test($('#accuse-result').textContent) && /statement/.test($('#acc
 ok(w.eval('G.wrong') === 1, 'wrong counted');
 pick('killer', (sol.killer + 1) % n); pick('killer', sol.killer);
 click($('#do-accuse'));
-ok($('.verdict .closed') && /Case closed/.test($('.verdict').textContent), 'right accusation closes the case');
-ok(/Closed in/.test($('#share').textContent), 'share text: ' + $('#share').textContent.replace(/\n/g, ' | '));
+ok(!$('#scrim') && /Case closed/.test($('#closed-stamp').textContent), 'right accusation closes the case, and the finish waits for the ink');
+{
+  const rings = $$('#grid td .ring'), cells = $$('#grid .cell.answer');
+  ok(rings.length === 3 && cells.length === 3 && cells.every((c) => +c.dataset.i === sol.killer), 'the three answer squares are ringed: did it, the weapon, the room');
+  ok(cells.some((c) => c.dataset.b === 'k') && cells.some((c) => c.dataset.b === 'sw' && +c.dataset.j === sol.weapon) && cells.some((c) => c.dataset.b === 'sr' && +c.dataset.j === sol.room), 'on the right squares');
+}
+w.eval('FINISH_DELAY = 0');
+ok($('.bar .accuse').textContent === 'See the finish', 'the closed case offers the finish instead of another accusation');
+click($('.bar .accuse'));
+{
+  const fin = $('#scrim .finish');
+  ok(fin && /^It was /.test($('.finish h2.tale').textContent) && $('.finish h2.tale').textContent.includes(w.eval('G.puzzle.ctx.suspects[G.puzzle.solution.killer].name')), 'the finish says what happened in one sentence: ' + $('.finish h2.tale').textContent);
+  ok(/Named on the second try/.test($('.finish .went').textContent) && /with \d+ hints/.test($('.finish .went').textContent), 'and how it went: ' + $('.finish .went').textContent);
+  ok($('.finish details.how') && !$('.finish details.how').open && /How it happened/.test($('.finish details.how summary').textContent), '"How it happened" is there, folded');
+  ok($$('#scrim .btn').length === 1 && $('#scrim .btn').dataset.act === 'share' && $('#scrim .btn').textContent === 'Share', 'one primary button: Share');
+  ok($('#scrim .link[data-act="archive"]') && $('#scrim .link[data-act="archive"]').textContent === 'Play an older case', '"Play an older case" is a quiet link');
+  ok(/^Inquest No\. 20 · Tuesday ●●○○\n✕✕✕\n✒️✒️✒️ named on the second try\n.+ · (?:💡)+ \d+ hints$/.test($('#share').textContent), 'share text: ' + $('#share').textContent.replace(/\n/g, ' | '));
+}
 click($('[data-act="home"]'));
 ok($('.home h1'), 'back home');
 ok($('.day.is-today.is-closed .tick') && /Closed in/.test($('.today-case').textContent) && /See it again/.test($('.today-case .btn').textContent), 'today is ticked in the week and shown closed');
@@ -224,11 +240,39 @@ click($('.archive .case-row'));
 ok(w.eval('G.mode') === 'archive' && w.eval('G.day') === 19 && /past case/.test($('.case-head .date').textContent), 'an old day opens as a past case');
 w.eval('G.pick = { killer: G.puzzle.solution.killer, weapon: G.puzzle.solution.weapon, room: G.puzzle.solution.room }; submitAccuse();');
 ok(/"streak":1/.test(w.eval("JSON.stringify(LS.get('inq1:stats',{}))")) && w.eval("LS.get('inq1:stats',{}).solved.constable") === 1, 'closing a past case counts as closed but does not touch the streak');
-ok(/INQUEST No\. 19, Monday/.test($('#share').textContent), 'its result names the day: ' + $('#share').textContent.split('\n')[0]);
+ok(/^Inquest No\. 19 · Monday ●○○○$/.test($('#share').textContent.split('\n')[0]), 'its result names the day: ' + $('#share').textContent.split('\n')[0]);
 click($('#scrim [data-act="archive"]'));
 ok($('.archive') && /Closed in/.test($('.archive .case-row').textContent), 'and the archive shows it closed');
 w.localStorage.setItem('inq1:archfilter', '"all"');
 click($('.bar .mark'));
+
+// the share text for every outcome: clean, with hints, after wrong accusations. Never a name, a weapon or a room.
+{
+  const shareOf = (setup) => {
+    w.eval(`localStorage.removeItem(caseKey(dailyFor(18).spec)); newGame(dailyFor(18).spec, 'archive', 18); renderCase(); G.elapsed = 370;`);
+    setup();
+    w.eval('G.pick = { ...G.puzzle.solution }; submitAccuse();');
+    return $('#share').textContent;
+  };
+  const wrongPick = () => w.eval('G.pick = { killer: (G.puzzle.solution.killer + 1) % G.puzzle.n, weapon: G.puzzle.solution.weapon, room: G.puzzle.solution.room }; submitAccuse();');
+  const outcomes = {
+    clean: shareOf(() => {}),
+    hinted: shareOf(() => { click($('[data-act="hint"]')); click($('[data-act="hint-more"]')); click($('#scrim [data-act="close"]')); }),
+    wrong: shareOf(() => { click($('[data-act="accuse"]')); wrongPick(); wrongPick(); }),
+    many: shareOf(() => { click($('[data-act="accuse"]')); for (let k = 0; k < 6; k++) wrongPick(); }),
+  };
+  ok(outcomes.clean === 'Inquest No. 18 · Sunday ●●●●\n✒️✒️✒️ named on the first try\n6 min · no hints', 'clean solve: ' + outcomes.clean.replace(/\n/g, ' | '));
+  ok(outcomes.hinted === 'Inquest No. 18 · Sunday ●●●●\n✒️✒️✒️ named on the first try\n6 min · 💡💡 2 hints', 'with hints: ' + outcomes.hinted.replace(/\n/g, ' | '));
+  ok(outcomes.wrong === 'Inquest No. 18 · Sunday ●●●●\n✕✕✕\n✕✕✕\n✒️✒️✒️ named on the third try\n6 min · no hints', 'after two wrong accusations: ' + outcomes.wrong.replace(/\n/g, ' | '));
+  ok(outcomes.many === 'Inquest No. 18 · Sunday ●●●●\n✕✕✕ ×6\n✒️✒️✒️ named on the seventh try\n6 min · no hints', 'after six: ' + outcomes.many.replace(/\n/g, ' | '));
+  ok(/^Named on the third try, in 6 minutes, with no hints\.$/.test(w.eval('(() => { G.wrong = 2; G.hints = 0; openVerdict(); return document.querySelector(".finish .went").textContent; })()')), 'the finish says the same in words');
+  const ctx = JSON.parse(w.eval('JSON.stringify({ s: G.puzzle.ctx.suspects, w: G.puzzle.ctx.weapons, r: G.puzzle.ctx.rooms })'));
+  const words = new Set([...ctx.s.map((x) => x.name + ' ' + x.short), ...ctx.w.map((x) => x.name + ' ' + x.short), ...ctx.r.map((x) => x.name + ' ' + x.short)].join(' ').replace(/&shy;/g, '').toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 3));
+  const leaks = Object.entries(outcomes).map(([k, s]) => [k, s.toLowerCase().split(/[^a-z]+/).filter((x) => words.has(x))]).filter(([, l]) => l.length);
+  ok(!leaks.length, 'no outcome names a suspect, a weapon or a room' + (leaks.length ? ': ' + JSON.stringify(leaks) : ''));
+  w.eval(`newGame(null, 'practice'); `.replace('null', 'BANK.constable[BANK.constable.length - 1]') + 'renderCase(); G.pick = { ...G.puzzle.solution }; submitAccuse();');
+  ok(/^Inquest, a practice case ●○○○\n/.test($('#share').textContent), 'a practice case shares without a number');
+}
 
 // a circle the statements rule out is caught by the hint
 w.eval(`newGame(BANK.constable[0], 'random'); renderCase();`);
@@ -258,6 +302,41 @@ for (const t of ['constable', 'detective', 'inspector', 'mastermind']) {
   }
 }
 ok(bad === 0, 'hint chains finish on sampled cases');
-ok(errors.length === 0, 'no page errors ' + errors.join(';'));
-console.log(fails ? fails + ' FAILED' : 'all UI checks passed');
-process.exit(fails ? 1 : 0);
+
+// sharing: the share sheet on a phone, the clipboard elsewhere, and selected text if the clipboard says no
+(async () => {
+  const { w, $, $$, click } = page(true);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let coarse = false, shared = [], copied = [], shareErr = null, clipErr = null;
+  w.matchMedia = (q) => ({ matches: /coarse/.test(q) ? coarse : false, addListener() {}, removeListener() {} });
+  const nav = (k, v) => Object.defineProperty(w.navigator, k, { value: v, configurable: true });
+  nav('share', async (d) => { if (shareErr) { const e = new Error('no'); e.name = shareErr; throw e; } shared.push(d.text); });
+  nav('clipboard', { writeText: async (s) => { if (clipErr) throw new Error('denied'); copied.push(s); } });
+  const toastSays = () => ($('#toast') && !$('#toast').hidden ? $('#toast').textContent : '');
+  // the finish waits for the rings, then opens by itself
+  click($('.today-case [data-act="open-day"]'));
+  w.eval('G.pick = { ...G.puzzle.solution }; submitAccuse();');
+  ok(!$('#scrim') && $$('#grid .ring').length === 3, 'closing the case draws the rings first');
+  await sleep(1300);
+  ok($('#scrim .finish'), 'and the finish opens a moment later');
+  const text = w.eval('shareText()');
+  const run = async (cfg) => { shared = []; copied = []; ({ coarse, shareErr, clipErr } = cfg); w.getSelection().removeAllRanges(); if ($('#toast')) $('#toast').hidden = true; return w.eval('shareResult()'); };
+  ok(await run({ coarse: true }) === 'shared' && shared[0] === text && !copied.length, 'on a phone: the share sheet, with the result text');
+  ok(await run({ coarse: true, shareErr: 'AbortError' }) === 'cancelled' && !copied.length && !toastSays(), 'closing the share sheet does nothing more');
+  ok(await run({ coarse: true, shareErr: 'NotAllowedError' }) === 'copied' && copied[0] === text, 'if the share sheet fails, it copies instead');
+  ok(await run({ coarse: false }) === 'copied' && !shared.length && copied[0] === text && /Copied/.test(toastSays()), 'on a computer: copied, and it says so: ' + toastSays());
+  ok(await run({ coarse: false, clipErr: true }) === 'selected' && w.getSelection().rangeCount === 1 && w.getSelection().getRangeAt(0).commonAncestorContainer.closest?.('#share') !== null && /selected: press Ctrl\+C/.test(toastSays()), 'clipboard refused: the text is selected, with how to copy it: ' + toastSays());
+  ok(await run({ coarse: true, shareErr: 'NotAllowedError', clipErr: true }) === 'selected' && /tap Copy/.test(toastSays()), 'on a phone with nothing working: selected, tap Copy');
+  nav('clipboard', undefined);
+  ok(await run({ coarse: false }) === 'selected', 'no clipboard at all: selected');
+  nav('clipboard', { writeText: async (s) => { copied.push(s); } });
+  ({ coarse, shareErr, clipErr } = { coarse: false });
+  copied = [];
+  click($('#scrim [data-act="share"]'));
+  await sleep(20);
+  ok(copied[0] === text && /Copied/.test(toastSays()), 'the Share button does it');
+
+  ok(errors.length === 0, 'no page errors ' + errors.join(';'));
+  console.log(fails ? fails + ' FAILED' : 'all UI checks passed');
+  process.exit(fails ? 1 : 0);
+})();

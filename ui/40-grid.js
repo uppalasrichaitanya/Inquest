@@ -93,9 +93,22 @@ function paintAll() {
     el.setAttribute('aria-label', `${el.dataset.label}: ${MARK_WORD[v]}${p ? ', in pencil' : ''}`);
   });
   paintPins(d);
+  paintAnswer();
   const u = document.querySelector('[data-act="undo"]');
   if (u) u.disabled = !G.undo.some((s) => s.length);
   if (G.mode === 'tutorial') warmAccuseState();
+}
+// once the case is closed, the killer's three squares are ringed in ink: did it, the weapon, the room
+function paintAnswer() {
+  const s = G.puzzle.solution, want = G.solved && G.mode !== 'tutorial' ? [['k', s.killer, 0], ['sw', s.killer, s.weapon], ['sr', s.killer, s.room]] : [];
+  document.querySelectorAll('#grid .cell.answer').forEach((el) => { el.classList.remove('answer'); const r = el.parentNode.querySelector('.ring'); if (r) r.remove(); });
+  for (const [b, i, j] of want) {
+    const el = document.querySelector(`#grid .cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`);
+    if (!el) continue;
+    el.classList.add('answer');
+    el.insertAdjacentHTML('afterend', penRing('ring' + b + i + j));
+    el.setAttribute('aria-label', el.getAttribute('aria-label') + ', the answer');
+  }
 }
 function userMark(b, i, j) { return b === 'k' ? G.marks.k[i] : G.marks[b][i][j]; }
 // every change can be taken back. One step of Undo is one tap, one drag along a row, or one Clear all.

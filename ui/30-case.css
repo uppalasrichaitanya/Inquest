@@ -232,3 +232,12 @@
 @media (prefers-reduced-motion: no-preference) {
   .stmt, .grid .cell { transition: background-color .15s; }
 }
+
+/* the answer, once the case is closed: a bold ring of ink round each of the killer's three squares */
+.grid .ring { position: absolute; inset: -5px; width: calc(100% + 10px); height: calc(100% + 10px); pointer-events: none; overflow: visible; z-index: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .grid .ring path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ring-draw .5s ease-out forwards; }
+  .grid td:has(.cell[data-b='sw']) .ring path { animation-delay: .25s; }
+  .grid td:has(.cell[data-b='sr']) .ring path { animation-delay: .5s; }
+}
+@keyframes ring-draw { to { stroke-dashoffset: 0; } }

@@ -27,12 +27,13 @@ document.addEventListener('click', (e) => {
     else if (act === 'accuse') {
       closeModal();
       if (a.getAttribute('aria-disabled') === 'true') setWarmNote('Not yet. Once the notebook points to one person, with their weapon and room circled, this button wakes up.');
+      else if (G.solved && G.mode !== 'tutorial') openVerdict(); // a closed case: the button reopens the finish
       else openAccuse();
     }
     else if (act === 'submit-accuse') submitAccuse();
     else if (act === 'hint') openHint();
     else if (act === 'hint-more') hintMore();
-    else if (act === 'copy-share') copyShare();
+    else if (act === 'share') shareResult();
     // the case screen
     else if (act === 'pick-stmt') { closeModal(); selectStatement(i); }
     else if (act === 'use') toggleUsed(i);

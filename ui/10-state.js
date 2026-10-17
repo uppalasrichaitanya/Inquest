@@ -107,6 +107,15 @@ function penMark(v, key, size) {
   }
   return `<svg class="pen" viewBox="0 0 ${size} ${size}" aria-hidden="true"><path d="${d}" fill="none" stroke="${faint ? 'var(--pen-faint)' : 'var(--pen)'}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
+// a ring round an answer square, drawn when the case is closed
+function penRing(key) {
+  const r = penRng(key), j = (a) => (r() - 0.5) * a, a0 = r() * 6.28, pts = [];
+  for (let i = 0; i <= 28; i++) {
+    const a = a0 + (i / 25) * 6.28, rr = 19 * (1 + j(0.1) + (i > 25 ? 0.07 : 0));
+    pts.push(`${(23 + Math.cos(a) * rr * 1.08).toFixed(1)} ${(23 + Math.sin(a) * rr).toFixed(1)}`);
+  }
+  return `<svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><path d="M${pts.join(' L')}" pathLength="1" fill="none" stroke="var(--pen)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
 // a tick in the margin: this statement has been used
 function penTick(key) {
   const r = penRng(key), j = (a) => (r() - 0.5) * a;

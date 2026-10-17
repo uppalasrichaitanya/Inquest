@@ -50,7 +50,7 @@ function renderCase() {
     <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to the cases">Inquest</button>
       ${tut ? '' : '<button class="quiet" data-act="hint">Hint</button>'}
       <button class="quiet" data-act="how">How to play</button>${themeButton()}
-      <button class="btn accuse" data-act="accuse">Name the killer</button></div>
+      <button class="btn accuse" data-act="accuse">${G.solved && !tut ? 'See the finish' : 'Name the killer'}</button></div>
     <header class="case-head">
       <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${TIER_LEVEL[P.tier]} of 4">${dayDots(P.tier)}</span></p>
       <h1>${esc(P.title)}</h1>

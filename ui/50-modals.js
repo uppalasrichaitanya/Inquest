@@ -95,50 +95,94 @@ function solveCase() {
   }
   const cs = document.getElementById('closed-stamp');
   if (cs) cs.textContent = 'Case closed.';
-  openVerdict();
+  document.querySelectorAll('.btn.accuse').forEach((b) => { b.textContent = 'See the finish'; });
+  // the three answer squares get their rings first; the finish opens once they are drawn
+  paintAll();
+  const g = G;
+  if (FINISH_DELAY && !matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(() => { if (G === g) openVerdict(); }, FINISH_DELAY);
+  else openVerdict();
 }
+let FINISH_DELAY = 1100;
 
+// how it went, in words: "on the first try, in 6 minutes, with no hints"
+const ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
+const tryWord = (k) => ORDINAL[k - 1] || `${k}th`;
+const minutes = (sec) => (sec < 60 ? 'under a minute' : `${Math.round(sec / 60)} min`);
+const hintWord = (h) => (h ? `${h} hint${h === 1 ? '' : 's'}` : 'no hints');
+
+// Spoiler-free: the day, how hard, and how it went. Never a name, a weapon or a room.
+//   Inquest No. 22 · Thursday ●●●○
+//   ✕✕✕            one line per wrong accusation
+//   ✒️✒️✒️ named on the second try
+//   6 min · 💡💡 2 hints
 function shareText() {
-  const P = G.puzzle;
-  const head = G.day ? `INQUEST No. ${G.day}, ${WEEKDAY[weekdayOf(G.day)]}` : 'INQUEST, practice case';
-  const wrong = G.wrong === 1 ? '1 wrong accusation' : `${G.wrong} wrong accusations`;
-  const hints = G.hints === 1 ? '1 hint' : `${G.hints} hints`;
-  const lvl = TIER_LEVEL[P.tier];
-  return `${head}  ${'●'.repeat(lvl)}${'○'.repeat(4 - lvl)}\n${P.title}\nClosed in ${fmtTime(G.elapsed)}, ${hints}, ${wrong}.`;
+  const P = G.puzzle, lvl = TIER_LEVEL[P.tier], dots = '●'.repeat(lvl) + '○'.repeat(4 - lvl);
+  const head = G.day ? `Inquest No. ${G.day} · ${WEEKDAY[weekdayOf(G.day)]} ${dots}` : `Inquest, a practice case ${dots}`;
+  const misses = G.wrong <= 4 ? Array(G.wrong).fill('✕✕✕') : [`✕✕✕ ×${G.wrong}`];
+  const named = `✒️✒️✒️ named on the ${tryWord(G.wrong + 1)} try`;
+  const bulbs = G.hints ? '💡'.repeat(Math.min(G.hints, 5)) + (G.hints > 5 ? '+' : '') + ' ' : '';
+  return [head, ...misses, named, `${minutes(G.elapsed)} · ${bulbs}${hintWord(G.hints)}`].join('\n');
 }
 
 function openVerdict() {
   const P = G.puzzle, ctx = P.ctx, s = P.solution, t = P.truth;
   const rows = ctx.suspects.map((su, i) => `<tr class="${i === s.killer ? 'killer' : ''}"><td>${seal(su)} ${esc(su.name)}</td><td>${esc(ctx.rooms[t.pr[i]].name)}</td><td>${esc(ctx.weapons[t.pw[i]].name)}</td></tr>`).join('');
-  openModal(`<div class="verdict"><h2>${esc(P.title)}</h2>
-    <p class="closed">Case closed.</p>
-    <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
-    <p>Closed in ${fmtTime(G.elapsed)}. ${G.hints} hint${G.hints === 1 ? '' : 's'}, ${G.wrong} wrong accusation${G.wrong === 1 ? '' : 's'}.</p>
-    <details><summary>The night as it really happened</summary>
+  const w = ctx.weapons[s.weapon].name;
+  const went = `Named on the ${tryWord(G.wrong + 1)} try, in ${G.elapsed < 60 ? 'under a minute' : `${Math.round(G.elapsed / 60)} minute${Math.round(G.elapsed / 60) === 1 ? '' : 's'}`}, with ${hintWord(G.hints)}.`;
+  const day = G.day ? `${esc(dayName(G.day))}, No. ${G.day}` : 'A practice case';
+  openModal(`<div class="verdict">
+    <p class="vday">${day}<span class="sep"></span><span class="closed">Case closed</span></p>
+    <h2 class="tale">It was ${esc(ctx.suspects[s.killer].name)}, in the ${esc(ctx.rooms[s.room].name)}, with the ${esc(w)}.</h2>
+    <p class="went">${went}</p>
+    <details class="how"><summary>How it happened</summary>
+      <p>${esc(P.title)}. Where everyone was, and what each of them held:</p>
       <table><thead><tr><td></td><td>Was in</td><td>Held</td></tr></thead><tbody>${rows}</tbody></table>
       <p class="soft">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
-    <div class="share" id="share">${esc(shareText())}</div>
-    ${nextStepHTML()}
-    <div class="actions"><button class="btn" data-act="copy-share">Copy result</button><button class="btn ghost" data-act="home">Back to today</button><button class="btn ghost" data-act="archive">Past cases</button></div></div>`);
+    <div class="sharebox">
+      <pre class="share" id="share" tabindex="0" aria-label="Your result, to share">${esc(shareText())}</pre>
+      <p class="soft">No names, rooms or weapons: it shows how it went, not the answer.</p>
+    </div>
+    <div class="actions"><button class="btn big" data-act="share">Share</button></div>
+    ${nextStepHTML()}</div>`, 'finish');
 }
 
-// After a win, point at the next thing worth doing: today's case if this wasn't it, else tomorrow.
+// After a win, the quiet ways on: an older case, and today's if this wasn't it, else when tomorrow's opens.
 function nextStepHTML() {
   const st = loadStats(), closed = closedCount(st), streak = liveStreak(st), n = todayN();
   const record = `${closed} case${closed === 1 ? '' : 's'} closed${streak > 1 ? `, a ${streak}-day streak` : ''}.`;
-  if (G.mode !== 'daily' && !caseState(dailyFor(n).spec).solved) return `<div class="next"><p>${record} Today’s case is still open.</p><button class="btn" data-act="open-day" data-n="${n}">Play today’s case</button></div>`;
+  const today = G.mode !== 'daily' && !caseState(dailyFor(n).spec).solved;
   const t = WEEK_TIER[weekdayOf(n + 1)];
-  return `<div class="next"><p>${record} Tomorrow is ${WEEKDAY[weekdayOf(n + 1)]}. ${esc(DAY_FEEL[t])} It opens at midnight.</p></div>`;
+  const line = today ? `${record} Today’s case is still open.` : `${record} Tomorrow is ${WEEKDAY[weekdayOf(n + 1)]}. ${esc(DAY_FEEL[t])} It opens at midnight.`;
+  return `<div class="next"><p class="soft">${line}</p><p class="links">${today ? `<button class="link" data-act="open-day" data-n="${n}">Play today’s case</button>` : ''}<button class="link" data-act="archive">Play an older case</button><button class="link" data-act="home">Back to today</button></p></div>`;
 }
 
-async function copyShare() {
-  const txt = shareText();
-  try { await navigator.clipboard.writeText(txt); toast('Result copied'); }
-  catch (e) {
-    const r = document.createRange(); r.selectNodeContents(document.getElementById('share'));
-    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    toast('Press copy to take the selected text');
+// Share: the share sheet on a phone; otherwise (or if it fails) the clipboard; if the clipboard is refused,
+// select the text and say how to copy it.
+const canShareSheet = () => typeof navigator.share === 'function' && matchMedia('(pointer: coarse)').matches;
+async function shareResult() {
+  const text = shareText();
+  if (canShareSheet()) {
+    try { await navigator.share({ text }); return 'shared'; }
+    catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; }
   }
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('no clipboard');
+    await navigator.clipboard.writeText(text);
+    toast('Copied. Paste it anywhere.');
+    return 'copied';
+  } catch (e) {
+    selectShare();
+    return 'selected';
+  }
+}
+function selectShare() {
+  const el = document.getElementById('share');
+  if (!el) return;
+  el.focus();
+  const r = document.createRange(); r.selectNodeContents(el);
+  const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  toast(matchMedia('(pointer: coarse)').matches ? 'Your result is selected: tap Copy.' : `Your result is selected: press ${mac ? '⌘' : 'Ctrl+'}C to copy it.`);
 }
 
 // ---- hints from Inspector Mallory
