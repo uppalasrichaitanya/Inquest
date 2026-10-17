@@ -40,15 +40,15 @@ function clueVariants(c, ctx) {
       ['note', `Whatever ${S(a.s)} was carrying, it wasn't ${T(a.t).label}.`]];
     case 'sameType': return [
       ['say', `${S(a.a)} and ${S(a.b)} were carrying the same kind of weapon. I thought that was odd.`],
-      ['note', `${S(a.a)}'s weapon was the same kind as ${S(a.b)}'s: both sharp, for instance, or both poison.`]];
+      ['note', `${S(a.a)}'s weapon was the same kind as ${S(a.b)}'s.`]];
     case 'diffType': return [
-      ['say', `${S(a.a)} and ${S(a.b)} were carrying different kinds of weapon. No mistaking one for the other.`],
+      ['say', `${S(a.a)} and ${S(a.b)} were carrying different kinds of weapon.`],
       ['note', `${S(a.a)}'s weapon and ${S(a.b)}'s were of different kinds.`]];
     case 'adjacent': return [
       ['say', `${S(a.a)} and ${S(a.b)} were in ${unit}s next to each other, ${line ? 'coupled together' : 'a door or a stair apart'}. I could hear them both.`],
       ['note', `${S(a.a)}'s ${unit} was next to ${S(a.b)}'s, joined by ${join}.`]];
     case 'notAdjacent': return [
-      ['say', `${S(a.a)} and ${S(a.b)} weren't in ${unit}s next to each other. ${line ? 'There was at least one carriage between them.' : 'You would need more than one door or stair to get from one to the other.'}`],
+      ['say', `${S(a.a)} and ${S(a.b)} weren't in ${unit}s next to each other. ${line ? 'There was at least one carriage between them, sealed or not.' : 'You would need more than one door or stair to get from one to the other.'}`],
       ['note', line ? `${S(a.a)}'s carriage and ${S(a.b)}'s were not coupled together.` : `No single door or stair joined ${S(a.a)}'s room to ${S(a.b)}'s.`]];
     case 'sameFloor': return [
       ['say', `${S(a.a)} and ${S(a.b)} were on the same floor. I heard the boards creak under both of them.`],
@@ -105,6 +105,18 @@ function clueVariants(c, ctx) {
       ['note', `The body was not found ${floorWord(a.f)}.`]];
   }
   throw new Error('no text for clue type ' + c.type);
+}
+
+// In the house, "next to" is spelled out as "a door or a stair". A case can hold several such clues, so every
+// second one, in statement order, says "a doorway or a flight of stairs" instead. Wording only: types and variants stay.
+const DOOR_WORDS = /\b(a|one|single) door or (a |one )?stair\b/g;
+function varyWording(clues) {
+  let k = 0;
+  for (const c of clues) {
+    if (!c.text.match(DOOR_WORDS)) continue;
+    if (k++ % 2) c.text = c.text.replace(DOOR_WORDS, '$1 doorway or $2flight of stairs');
+  }
+  return clues;
 }
 
 // Which suspects does a clue talk about? (so a witness is never the subject of their own statement)

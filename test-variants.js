@@ -30,7 +30,13 @@ for (const w of Object.keys(E.WORLDS)) {
   const ctx = E.buildCtx(E.WORLDS[w], pick, pick, pick);
   for (const c of E.enumerateClues(ctx)) {
     if (seen[c.type + w]) continue;
-    seen[c.type + w] = E.clueVariants(c, ctx).map(([voice, text], i) => `  ${w.padEnd(5)} ${i} ${voice.padEnd(4)} ${E.plainText(text, ctx)}`);
+    seen[c.type + w] = E.clueVariants(c, ctx).flatMap(([voice, text], i) => {
+      const lines = [`  ${w.padEnd(5)} ${i} ${voice.padEnd(4)} ${E.plainText(text, ctx)}`];
+      // the same variant as it reads when it is the second "door or stair" clue in a case
+      const second = E.varyWording([{ text: 'a door or a stair' }, { text }])[1].text;
+      if (second !== text) lines.push(`  ${w.padEnd(5)} ${i} ${voice.padEnd(4)} ${E.plainText(second, ctx)}   (every second such clue in a case)`);
+      return lines;
+    });
   }
 }
 const wording = Object.keys(now).map((k) => [k, ...Object.keys(E.WORLDS).flatMap((w) => seen[k + w] || [])].join('\n')).join('\n\n') + '\n';

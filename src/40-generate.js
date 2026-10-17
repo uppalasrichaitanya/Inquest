@@ -123,7 +123,7 @@ function generatePuzzle(seed, tierId, opts) {
   const { ctx, truth, chosen, human } = got;
 
   const ordered = rng.shuffle(chosen);
-  const clues = ordered.map((c) => {
+  const clues = varyWording(ordered.map((c) => {
     const variants = clueVariants(c, ctx);
     const say = variants.filter((v) => v[0] === 'say'), note = variants.filter((v) => v[0] === 'note');
     const useSay = say.length && (!note.length || rng.chance(0.62));
@@ -134,7 +134,7 @@ function generatePuzzle(seed, tierId, opts) {
       speaker = rng.pick([...Array(ctx.n).keys()].filter((i) => !banned.includes(i)));
     }
     return { type: c.type, kind: c.kind, family: c.family, args: c.args, voice: v[0], speaker, text: v[1], vi: variants.indexOf(v), test: c.test };
-  });
+  }));
 
   const solution = { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m] };
   const rating = Math.max(1, Math.min(5, tier.stars + (human.probes >= 45 ? 1 : 0) - (human.depth === 0 ? 1 : 0)));

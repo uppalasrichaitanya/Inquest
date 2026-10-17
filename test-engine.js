@@ -73,5 +73,13 @@ for (const [src, spec] of shipped) {
   if (hit || E.titleClash(spec.w, spec.ti)) { console.log('TITLE HINTS', src, spec.s, JSON.stringify(spec.ti), hit || E.titleClash(spec.w, spec.ti)); bad++; }
 }
 console.log(`== titles: ${seen.size} distinct across ${shipped.length} cases, none naming the answer`);
+// "next to" in the house: the two phrasings take turns, so no two such clues in a row read the same
+let doorCases = 0;
+for (const [src, spec] of shipped) {
+  const said = E.importPuzzle(spec).clues.map((c) => (/door or (a |one )?stair/.test(c.text) ? 'door' : /doorway or (a |one )?flight of stairs/.test(c.text) ? 'flight' : null)).filter(Boolean);
+  if (said.length > 1) doorCases++;
+  if (said.some((x, i) => i > 0 && x === said[i - 1]) || (said.length && said[0] !== 'door')) { console.log('DOOR WORDING REPEATS', src, spec.s, said.join(' ')); bad++; }
+}
+console.log(`== "door or stair": alternates in all ${doorCases} cases with more than one such clue`);
 console.log(bad ? `\n${bad} PROBLEMS` : '\nall checks passed');
 process.exit(bad ? 1 : 0);

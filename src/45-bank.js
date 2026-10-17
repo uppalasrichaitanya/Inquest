@@ -16,12 +16,12 @@ function importPuzzle(spec) {
   const pool = enumerateClues(ctx);
   const key = (type, args) => type + JSON.stringify(args);
   const byKey = new Map(pool.map((c) => [key(c.type, c.args), c]));
-  const clues = spec.c.map(([type, args, vi, speaker]) => {
+  const clues = varyWording(spec.c.map(([type, args, vi, speaker]) => {
     const c = byKey.get(key(type, args));
     if (!c) throw new Error('bank clue not found: ' + type);
     const v = clueVariants(c, ctx)[vi];
     return { type, kind: c.kind, family: c.family, args, voice: v[0], speaker, text: v[1], vi, test: c.test };
-  });
+  }));
   const truth = { pw: spec.pw, pr: spec.pr, m: spec.m };
   const tier = TIERS[spec.t];
   return {

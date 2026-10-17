@@ -1,6 +1,8 @@
 adjacent
   manor 0 say  Lady Vane and Dr. Pell were in rooms next to each other, a door or a stair apart. I could hear them both.
+  manor 0 say  Lady Vane and Dr. Pell were in rooms next to each other, a doorway or a flight of stairs apart. I could hear them both.   (every second such clue in a case)
   manor 1 note Lady Vane's room was next to Dr. Pell's, joined by a door or a stair.
+  manor 1 note Lady Vane's room was next to Dr. Pell's, joined by a doorway or a flight of stairs.   (every second such clue in a case)
   train 0 say  Mme Valcourt and Count Orlov were in carriages next to each other, coupled together. I could hear them both.
   train 1 note Mme Valcourt's carriage was next to Count Orlov's, joined by a coupling.
 
@@ -13,9 +15,9 @@ diffFloor
   manor 1 note Lady Vane and Dr. Pell were on different floors.
 
 diffType
-  manor 0 say  Lady Vane and Dr. Pell were carrying different kinds of weapon. No mistaking one for the other.
+  manor 0 say  Lady Vane and Dr. Pell were carrying different kinds of weapon.
   manor 1 note Lady Vane's weapon and Dr. Pell's were of different kinds.
-  train 0 say  Mme Valcourt and Count Orlov were carrying different kinds of weapon. No mistaking one for the other.
+  train 0 say  Mme Valcourt and Count Orlov were carrying different kinds of weapon.
   train 1 note Mme Valcourt's weapon and Count Orlov's were of different kinds.
 
 eitherHas
@@ -50,6 +52,7 @@ in
 
 murderAdjRoom
   manor 0 note The body was found a door or a stair away from the Master Bedroom, not in the Master Bedroom itself.
+  manor 0 note The body was found a doorway or a flight of stairs away from the Master Bedroom, not in the Master Bedroom itself.   (every second such clue in a case)
   train 0 note The body was found in a carriage coupled to the Mail Car, not in the Mail Car itself.
 
 murderAheadOf
@@ -60,6 +63,7 @@ murderBehind
 
 murderFarFrom
   manor 0 note It wasn't Lady Vane, nor anyone a door or a stair from Lady Vane's room.
+  manor 0 note It wasn't Lady Vane, nor anyone a doorway or a flight of stairs from Lady Vane's room.   (every second such clue in a case)
   train 0 note It wasn't Mme Valcourt, nor anyone in a carriage coupled to Mme Valcourt's.
 
 murderFloor
@@ -67,10 +71,12 @@ murderFloor
 
 murderNextTo
   manor 0 note The killer was in a room next to Lady Vane's, a door or a stair away.
+  manor 0 note The killer was in a room next to Lady Vane's, a doorway or a flight of stairs away.   (every second such clue in a case)
   train 0 note The killer was in a carriage next to Mme Valcourt's, coupled to it.
 
 murderNotAdjRoom
   manor 0 note The body was not in the Master Bedroom, nor anywhere a door or a stair away.
+  manor 0 note The body was not in the Master Bedroom, nor anywhere a doorway or a flight of stairs away.   (every second such clue in a case)
   train 0 note The body was not in the Mail Car, nor in a carriage coupled to it.
 
 murderNotFloor
@@ -101,8 +107,10 @@ murderType
 
 notAdjacent
   manor 0 say  Lady Vane and Dr. Pell weren't in rooms next to each other. You would need more than one door or stair to get from one to the other.
+  manor 0 say  Lady Vane and Dr. Pell weren't in rooms next to each other. You would need more than one doorway or flight of stairs to get from one to the other.   (every second such clue in a case)
   manor 1 note No single door or stair joined Lady Vane's room to Dr. Pell's.
-  train 0 say  Mme Valcourt and Count Orlov weren't in carriages next to each other. There was at least one carriage between them.
+  manor 1 note No single doorway or flight of stairs joined Lady Vane's room to Dr. Pell's.   (every second such clue in a case)
+  train 0 say  Mme Valcourt and Count Orlov weren't in carriages next to each other. There was at least one carriage between them, sealed or not.
   train 1 note Mme Valcourt's carriage and Count Orlov's were not coupled together.
 
 notHas
@@ -135,9 +143,9 @@ sameFloor
 
 sameType
   manor 0 say  Lady Vane and Dr. Pell were carrying the same kind of weapon. I thought that was odd.
-  manor 1 note Lady Vane's weapon was the same kind as Dr. Pell's: both sharp, for instance, or both poison.
+  manor 1 note Lady Vane's weapon was the same kind as Dr. Pell's.
   train 0 say  Mme Valcourt and Count Orlov were carrying the same kind of weapon. I thought that was odd.
-  train 1 note Mme Valcourt's weapon was the same kind as Count Orlov's: both sharp, for instance, or both poison.
+  train 1 note Mme Valcourt's weapon was the same kind as Count Orlov's.
 
 typeInRoom
   manor 0 say  Whoever was in the Master Bedroom had something sharp. I saw it myself.
@@ -153,7 +161,9 @@ weaponIn
 
 weaponNear
   manor 0 say  I saw the Moroccan Dagger one door or one stair from the Master Bedroom. Not in it.
+  manor 0 say  I saw the Moroccan Dagger one doorway or one flight of stairs from the Master Bedroom. Not in it.   (every second such clue in a case)
   manor 1 note The Moroccan Dagger was in a room next to the Master Bedroom (a door or a stair away), not in the Master Bedroom itself.
+  manor 1 note The Moroccan Dagger was in a room next to the Master Bedroom (a doorway or a flight of stairs away), not in the Master Bedroom itself.   (every second such clue in a case)
   train 0 say  I saw the Jewelled Hat Pin in a carriage coupled to the Mail Car. Not in it.
   train 1 note The Jewelled Hat Pin was in a carriage next to the Mail Car (coupled to it), not in the Mail Car itself.
 
