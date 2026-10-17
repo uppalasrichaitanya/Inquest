@@ -112,16 +112,16 @@ const hintWord = (h) => (h ? `${h} hint${h === 1 ? '' : 's'}` : 'no hints');
 
 // Spoiler-free: the day, how hard, and how it went. Never a name, a weapon or a room.
 //   Inquest No. 22 · Thursday ●●●○
-//   ✕✕✕            one line per wrong accusation
-//   ✒️✒️✒️ named on the second try
+//   ✕✕✒️ named on the third try      one mark per try: ✕ wrong, the pen for the right one
 //   6 min · 💡💡 2 hints
+const SHARE_KEY = 'In the shared result, each try is one mark: ✕ for a wrong accusation, ✒️ for the one that closed the case. Each 💡 is a hint.';
 function shareText() {
   const P = G.puzzle, lvl = TIER_LEVEL[P.tier], dots = '●'.repeat(lvl) + '○'.repeat(4 - lvl);
   const head = G.day ? `Inquest No. ${G.day} · ${WEEKDAY[weekdayOf(G.day)]} ${dots}` : `Inquest, a practice case ${dots}`;
-  const misses = G.wrong <= 4 ? Array(G.wrong).fill('✕✕✕') : [`✕✕✕ ×${G.wrong}`];
-  const named = `✒️✒️✒️ named on the ${tryWord(G.wrong + 1)} try`;
+  const misses = G.wrong <= 9 ? '✕'.repeat(G.wrong) : `✕×${G.wrong} `;
+  const named = `${misses}✒️ named on the ${tryWord(G.wrong + 1)} try`;
   const bulbs = G.hints ? '💡'.repeat(Math.min(G.hints, 5)) + (G.hints > 5 ? '+' : '') + ' ' : '';
-  return [head, ...misses, named, `${minutes(G.elapsed)} · ${bulbs}${hintWord(G.hints)}`].join('\n');
+  return [head, named, `${minutes(G.elapsed)} · ${bulbs}${hintWord(G.hints)}`].join('\n');
 }
 
 function openVerdict() {
@@ -137,7 +137,8 @@ function openVerdict() {
     <details class="how"><summary>How it happened</summary>
       <p>${esc(P.title)}. Where everyone was, and what each of them held:</p>
       <table><thead><tr><td></td><td>Was in</td><td>Held</td></tr></thead><tbody>${rows}</tbody></table>
-      <p class="soft">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
+      <p class="soft">Only the killer's row can be proved from the statements. The rest is one story that fits.</p>
+      <p class="soft sharekey">${SHARE_KEY}</p></details>
     <div class="sharebox">
       <pre class="share" id="share" tabindex="0" aria-label="Your result, to share">${esc(shareText())}</pre>
       <p class="soft">No names, rooms or weapons: it shows how it went, not the answer.</p>

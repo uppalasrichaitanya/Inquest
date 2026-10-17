@@ -23,6 +23,17 @@ function page(seeded) {
   return { w, d, $: (s) => d.querySelector(s), $$: (s) => [...d.querySelectorAll(s)], click: (el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 1 })) };
 }
 
+// ---- the shipped page has no clock of its own: it reads the real date, and No. 1 is 15 October 2026.
+// (Every fixed clock in the tests is put in from outside the page, as below in page().)
+{
+  const shipped = fs.readFileSync('dist/index.html', 'utf8');
+  ok(!/Date\s*=\s*class|setFixedTime|FIXED_NOW|inq1:now|[?&]date=/.test(shipped) && /new Date\(\)/.test(shipped), 'dist/index.html reads the real date, with no test clock or date override');
+  ok(/const LAUNCH = Date\.UTC\(2026, 9, 15\); \/\/ Case No\. 1/.test(shipped), 'and No. 1 is 15 October 2026');
+  const real = new JSDOM(html.replace('<body>', '<body>'), { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://example.test/', beforeParse(w) { w.scrollTo = () => {}; w.matchMedia = () => ({ matches: false, addListener() {}, removeListener() {} }); w.HTMLElement.prototype.scrollIntoView = () => {}; w.localStorage.setItem('inq1:tutorial', '1'); } }).window;
+  const want = Math.floor((Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - Date.UTC(2026, 9, 15)) / 864e5) + 1;
+  ok(real.eval('dayNumber()') === want && real.eval('dateOfDay(1).toDateString()') === new Date(2026, 9, 15).toDateString(), 'left alone, the page is on today, No. ' + want);
+}
+
 // ---- a first visit, from empty storage: the warm-up opens by itself and is played to the end
 {
   const { w, $, $$, click } = page(false);
@@ -217,10 +228,11 @@ click($('.bar .accuse'));
   const fin = $('#scrim .finish');
   ok(fin && /^It was /.test($('.finish h2.tale').textContent) && $('.finish h2.tale').textContent.includes(w.eval('G.puzzle.ctx.suspects[G.puzzle.solution.killer].name')), 'the finish says what happened in one sentence: ' + $('.finish h2.tale').textContent);
   ok(/Named on the second try/.test($('.finish .went').textContent) && /with \d+ hints/.test($('.finish .went').textContent), 'and how it went: ' + $('.finish .went').textContent);
+  ok(/✕ for a wrong accusation, ✒️ for the one that closed the case/.test($('.finish .how .sharekey').textContent), '"How it happened" says what the marks mean');
   ok($('.finish details.how') && !$('.finish details.how').open && /How it happened/.test($('.finish details.how summary').textContent), '"How it happened" is there, folded');
   ok($$('#scrim .btn').length === 1 && $('#scrim .btn').dataset.act === 'share' && $('#scrim .btn').textContent === 'Share', 'one primary button: Share');
   ok($('#scrim .link[data-act="archive"]') && $('#scrim .link[data-act="archive"]').textContent === 'Play an older case', '"Play an older case" is a quiet link');
-  ok(/^Inquest No\. 20 · Tuesday ●●○○\n✕✕✕\n✒️✒️✒️ named on the second try\n.+ · (?:💡)+ \d+ hints$/.test($('#share').textContent), 'share text: ' + $('#share').textContent.replace(/\n/g, ' | '));
+  ok(/^Inquest No\. 20 · Tuesday ●●○○\n✕✒️ named on the second try\n.+ · (?:💡)+ \d+ hints$/.test($('#share').textContent), 'share text: ' + $('#share').textContent.replace(/\n/g, ' | '));
 }
 click($('[data-act="home"]'));
 ok($('.home h1'), 'back home');
@@ -261,10 +273,10 @@ click($('.bar .mark'));
     wrong: shareOf(() => { click($('[data-act="accuse"]')); wrongPick(); wrongPick(); }),
     many: shareOf(() => { click($('[data-act="accuse"]')); for (let k = 0; k < 6; k++) wrongPick(); }),
   };
-  ok(outcomes.clean === 'Inquest No. 18 · Sunday ●●●●\n✒️✒️✒️ named on the first try\n6 min · no hints', 'clean solve: ' + outcomes.clean.replace(/\n/g, ' | '));
-  ok(outcomes.hinted === 'Inquest No. 18 · Sunday ●●●●\n✒️✒️✒️ named on the first try\n6 min · 💡💡 2 hints', 'with hints: ' + outcomes.hinted.replace(/\n/g, ' | '));
-  ok(outcomes.wrong === 'Inquest No. 18 · Sunday ●●●●\n✕✕✕\n✕✕✕\n✒️✒️✒️ named on the third try\n6 min · no hints', 'after two wrong accusations: ' + outcomes.wrong.replace(/\n/g, ' | '));
-  ok(outcomes.many === 'Inquest No. 18 · Sunday ●●●●\n✕✕✕ ×6\n✒️✒️✒️ named on the seventh try\n6 min · no hints', 'after six: ' + outcomes.many.replace(/\n/g, ' | '));
+  ok(outcomes.clean === 'Inquest No. 18 · Sunday ●●●●\n✒️ named on the first try\n6 min · no hints', 'clean solve: ' + outcomes.clean.replace(/\n/g, ' | '));
+  ok(outcomes.hinted === 'Inquest No. 18 · Sunday ●●●●\n✒️ named on the first try\n6 min · 💡💡 2 hints', 'with hints: ' + outcomes.hinted.replace(/\n/g, ' | '));
+  ok(outcomes.wrong === 'Inquest No. 18 · Sunday ●●●●\n✕✕✒️ named on the third try\n6 min · no hints', 'after two wrong accusations: ' + outcomes.wrong.replace(/\n/g, ' | '));
+  ok(outcomes.many === 'Inquest No. 18 · Sunday ●●●●\n✕✕✕✕✕✕✒️ named on the seventh try\n6 min · no hints', 'after six: ' + outcomes.many.replace(/\n/g, ' | '));
   ok(/^Named on the third try, in 6 minutes, with no hints\.$/.test(w.eval('(() => { G.wrong = 2; G.hints = 0; openVerdict(); return document.querySelector(".finish .went").textContent; })()')), 'the finish says the same in words');
   const ctx = JSON.parse(w.eval('JSON.stringify({ s: G.puzzle.ctx.suspects, w: G.puzzle.ctx.weapons, r: G.puzzle.ctx.rooms })'));
   const words = new Set([...ctx.s.map((x) => x.name + ' ' + x.short), ...ctx.w.map((x) => x.name + ' ' + x.short), ...ctx.r.map((x) => x.name + ' ' + x.short)].join(' ').replace(/&shy;/g, '').toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 3));
