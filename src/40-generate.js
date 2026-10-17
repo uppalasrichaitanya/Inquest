@@ -29,11 +29,6 @@ const TIERS = {
   },
 };
 
-const TITLES = {
-  manor: ['The Blackwood Affair', 'A Quiet Dinner at Blackwood', 'Murder by Candlelight', 'The Storm at Blackwood'],
-  train: ['Death on the Meridian', 'The Last Carriage', 'Murder in the Mountains', 'The Night Express'],
-};
-
 function pickN(rng, count, n) {
   return rng.shuffle([...Array(count).keys()]).slice(0, n).sort((a, b) => a - b);
 }
@@ -146,6 +141,6 @@ function generatePuzzle(seed, tierId, opts) {
   return {
     seed: String(seed), tier: tierId, tierName: tier.name, worldId, n: ctx.n, ctx, clues,
     solution, truth, rating, human: { depth: human.depth, probes: human.probes }, tries, strict,
-    title: rng.pick(TITLES[worldId]),
+    title: rng.pick(titlePool(worldId)), // one draw, as before; node retitle.js makes banked titles unique
   };
 }

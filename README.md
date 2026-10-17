@@ -15,6 +15,7 @@ A daily murder-mystery logic game. Read true statements, work the notebook, name
 - `npm install` (only needed for the UI test, installs jsdom)
 - `node build.js` rebuilds `dist/index.html` from `src/`, `ui/` and `bank/`
 - `node mine.js <tier> <count> <startIndex> <out.json>` mines more verified cases (tiers: constable, detective, inspector, mastermind)
+- `node retitle.js` gives every banked case its own title (run it after adding cases to `bank/`; `test-engine.js` fails on a repeated title). Titles come from `src/47-titles.js` and never use a word from a suspect, weapon or room, or one that hints at a method, a room or a suspect's trade
 - `node test-engine.js 30` checks every generated case has exactly one answer, no redundant clues, and is deterministic; it also re-imports every shipped bank case and the tutorial
 - `node test-ui.js` runs the game in a simulated browser (run `node build.js` first; it reads `dist/test.html`, which build.js creates). Its clock is fixed at Tuesday 3 November 2026; `INQ_TZ=Area/City node test-ui.js` runs it in another time zone
 - `node test-variants.js` checks clue rewording kept each clue type's number of variants and their voice (`clue-variants.json`), and that every shipped clue still points at a valid variant

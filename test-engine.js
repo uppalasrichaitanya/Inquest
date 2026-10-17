@@ -61,5 +61,17 @@ for (const [src, spec] of shipped) {
   checked++;
 }
 console.log(`\n== shipped: ${checked} cases checked (tutorial + bank)`);
+// titles: every shipped case has its own, and none gives away the killer, the weapon or the room
+const seen = new Map(), words = (s) => String(s).replace(/&shy;/g, '').toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 3);
+for (const [src, spec] of shipped) {
+  if (!spec.ti) { console.log('NO TITLE', src, spec.s); bad++; continue; }
+  if (seen.has(spec.ti)) { console.log('TITLE REPEATED', JSON.stringify(spec.ti), seen.get(spec.ti), 'and', spec.s); bad++; }
+  seen.set(spec.ti, spec.s);
+  const p = E.importPuzzle(spec), k = p.ctx.suspects[p.solution.killer], w = p.ctx.weapons[p.solution.weapon], r = p.ctx.rooms[p.solution.room];
+  const answer = new Set(words(`${k.name} ${k.short} ${k.role} ${w.name} ${w.short} ${w.note} ${w.type} ${r.name} ${r.short}`));
+  const hit = words(spec.ti).find((x) => answer.has(x) || answer.has(x + 's') || answer.has(x.replace(/s$/, '')));
+  if (hit || E.titleClash(spec.w, spec.ti)) { console.log('TITLE HINTS', src, spec.s, JSON.stringify(spec.ti), hit || E.titleClash(spec.w, spec.ti)); bad++; }
+}
+console.log(`== titles: ${seen.size} distinct across ${shipped.length} cases, none naming the answer`);
 console.log(bad ? `\n${bad} PROBLEMS` : '\nall checks passed');
 process.exit(bad ? 1 : 0);
