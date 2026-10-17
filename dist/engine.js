@@ -311,18 +311,22 @@ function clueVariants(c, ctx) {
   const S = (i) => `{s:${i}}`, W = (i) => `{w:${i}}`, R = (i) => `{r:${i}}`;
   const T = (t) => WEAPON_TYPES[t];
   const floorWord = (f) => ctx.world.floors[f];
+  // what "next to" counts as, said in the clue itself: in the house a door or a stair joins the two rooms
+  // (upstairs and down included); on the train the two carriages are coupled, with none in between
+  const join = line ? 'a coupling' : 'a door or a stair';
+  const away = line ? 'coupled to it' : 'a door or a stair away';
   switch (c.type) {
     case 'has': return [
       ['say', `I saw ${S(a.s)} with the ${W(a.w)} in hand. I'm certain of it.`],
-      ['note', `The ${W(a.w)} was last seen in ${S(a.s)}'s hands.`]];
+      ['note', `${S(a.s)} had the ${W(a.w)}. The prints leave no doubt.`]];
     case 'notHas': return [
       ['say', `${S(a.s)} never touched the ${W(a.w)}. I'd swear to it.`],
-      ['note', `${S(a.s)}'s prints are nowhere on the ${W(a.w)}.`]];
+      ['note', `Whoever had the ${W(a.w)}, it was not ${S(a.s)}.`]];
     case 'in': return [
-      ['say', `${S(a.s)} was in the ${R(a.r)} when the clock struck. I heard them through the door.`],
+      ['say', `${S(a.s)} was in the ${R(a.r)} when the clock struck. I'd know that voice through any door.`],
       ['note', `A witness puts ${S(a.s)} in the ${R(a.r)} at the time of the murder.`]];
     case 'notIn': return [
-      ['say', `${S(a.s)} was nowhere near the ${R(a.r)} that night.`],
+      ['say', `${S(a.s)} never set foot in the ${R(a.r)}. I'd have seen.`],
       ['note', `${S(a.s)} was not in the ${R(a.r)}.`]];
     case 'eitherHas': return [
       ['say', `Either ${S(a.a)} or ${S(a.b)} had the ${W(a.w)}. I couldn't tell you which.`],
@@ -332,30 +336,30 @@ function clueVariants(c, ctx) {
       ['note', `Whoever was in the ${R(a.r)}, it was ${S(a.a)} or ${S(a.b)}.`]];
     case 'holdsType': return [
       ['say', `${S(a.s)} was carrying ${T(a.t).held}. I noticed it straight away.`],
-      ['note', `${S(a.s)} was carrying ${T(a.t).held}.`]];
+      ['note', `${S(a.s)}'s weapon was ${T(a.t).held}.`]];
     case 'notHoldsType': return [
       ['say', `${S(a.s)} wasn't carrying ${T(a.t).any}. I checked.`],
       ['note', `Whatever ${S(a.s)} was carrying, it wasn't ${T(a.t).label}.`]];
     case 'sameType': return [
       ['say', `${S(a.a)} and ${S(a.b)} were carrying the same kind of weapon. I thought that was odd.`],
-      ['note', `${S(a.a)} and ${S(a.b)} carried the same kind of weapon.`]];
+      ['note', `${S(a.a)}'s weapon was the same kind as ${S(a.b)}'s: both sharp, for instance, or both poison.`]];
     case 'diffType': return [
-      ['say', `${S(a.a)} and ${S(a.b)} weren't carrying the same kind of weapon. Not even close.`],
-      ['note', `${S(a.a)} and ${S(a.b)} carried different kinds of weapon.`]];
+      ['say', `${S(a.a)} and ${S(a.b)} were carrying different kinds of weapon. No mistaking one for the other.`],
+      ['note', `${S(a.a)}'s weapon and ${S(a.b)}'s were of different kinds.`]];
     case 'adjacent': return [
-      ['say', `${S(a.a)} and ${S(a.b)} were in ${unit}s right next to each other. I could hear them both.`],
-      ['note', `${S(a.a)}'s ${unit} was right next to ${S(a.b)}'s.`]];
+      ['say', `${S(a.a)} and ${S(a.b)} were in ${unit}s next to each other, ${line ? 'coupled together' : 'a door or a stair apart'}. I could hear them both.`],
+      ['note', `${S(a.a)}'s ${unit} was next to ${S(a.b)}'s, joined by ${join}.`]];
     case 'notAdjacent': return [
-      ['say', `${S(a.a)} and ${S(a.b)} weren't in ${unit}s next to each other. Not even close.`],
-      ['note', `${S(a.a)}'s ${unit} was not next to ${S(a.b)}'s.`]];
+      ['say', `${S(a.a)} and ${S(a.b)} weren't in ${unit}s next to each other. ${line ? 'There was at least one carriage between them.' : 'You would need more than one door or stair to get from one to the other.'}`],
+      ['note', line ? `${S(a.a)}'s carriage and ${S(a.b)}'s were not coupled together.` : `No single door or stair joined ${S(a.a)}'s room to ${S(a.b)}'s.`]];
     case 'sameFloor': return [
       ['say', `${S(a.a)} and ${S(a.b)} were on the same floor. I heard the boards creak under both of them.`],
-      ['note', `${S(a.a)} and ${S(a.b)} were on the same floor.`]];
+      ['note', `${S(a.a)}'s room and ${S(a.b)}'s were on one floor.`]];
     case 'diffFloor': return [
-      ['say', `${S(a.a)} and ${S(a.b)} weren't on the same floor. I'm sure of that.`],
+      ['say', `${S(a.a)} was on one floor and ${S(a.b)} on another. I'm sure of that.`],
       ['note', `${S(a.a)} and ${S(a.b)} were on different floors.`]];
     case 'ahead': return [
-      ['say', `${S(a.a)} was in a carriage closer to the engine than ${S(a.b)}.`],
+      ['say', `I walked the train from the engine back, and passed ${S(a.a)} before ${S(a.b)}.`],
       ['note', `${S(a.a)}'s carriage was nearer the engine than ${S(a.b)}'s.`]];
     case 'weaponIn': return [
       ['say', `The ${W(a.w)} was in the ${R(a.r)}. I saw it in someone's hand.`],
@@ -364,8 +368,8 @@ function clueVariants(c, ctx) {
       ['say', `The ${W(a.w)} was never in the ${R(a.r)}.`],
       ['note', `Whoever was in the ${R(a.r)}, they weren't holding the ${W(a.w)}.`]];
     case 'weaponNear': return [
-      ['say', `I saw the ${W(a.w)} in a ${unit} next to the ${R(a.r)}.`],
-      ['note', `The ${W(a.w)} was in a ${unit} next to the ${R(a.r)}, not in the ${R(a.r)} itself.`]];
+      ['say', `I saw the ${W(a.w)} ${line ? `in a carriage coupled to the ${R(a.r)}` : `one door or one stair from the ${R(a.r)}`}. Not in it.`],
+      ['note', `The ${W(a.w)} was in a ${unit} next to the ${R(a.r)} (${away}), not in the ${R(a.r)} itself.`]];
     case 'typeInRoom': return [
       ['say', `Whoever was in the ${R(a.r)} had ${T(a.t).held}. I saw it myself.`],
       ['note', `The person in the ${R(a.r)} was carrying ${T(a.t).held}.`]];
@@ -374,15 +378,15 @@ function clueVariants(c, ctx) {
       ['note', `The person in the ${R(a.r)} wasn't carrying ${T(a.t).label}.`]];
     // ---- the body
     case 'murderType': return [
-      ['note', `The coroner is certain: the cause of death was ${T(a.t).cause}.`]];
+      ['note', `The coroner found ${T(a.t).cause}. The killer used ${T(a.t).held}.`]];
     case 'murderNotType': return [
-      ['note', `The coroner is clear: he was not killed with ${T(a.t).label}.`]];
+      ['note', `The coroner rules out ${T(a.t).label}.`]];
     case 'murderNotSuspect': return [
-      ['note', `${S(a.s)} has a solid alibi and can be ruled out as the killer.`]];
+      ['note', `${S(a.s)} has an alibi that holds. Not the killer.`]];
     case 'murderNextTo': return [
-      ['note', `The killer was in a ${unit} right next to ${S(a.s)}'s.`]];
+      ['note', `The killer was in a ${unit} next to ${S(a.s)}'s, ${away}.`]];
     case 'murderFarFrom': return [
-      ['note', `It wasn't ${S(a.s)}, and it wasn't anyone in a ${unit} next to ${S(a.s)}'s.`]];
+      ['note', `It wasn't ${S(a.s)}, nor anyone ${line ? `in a carriage coupled to ${S(a.s)}'s` : `a door or a stair from ${S(a.s)}'s room`}.`]];
     case 'murderSameFloor': return [
       ['note', `The killer was on the same floor as ${S(a.s)}, but it wasn't ${S(a.s)}.`]];
     case 'murderAheadOf': return [
@@ -390,13 +394,13 @@ function clueVariants(c, ctx) {
     case 'murderBehind': return [
       ['note', `The killer's carriage was further from the engine than ${S(a.s)}'s.`]];
     case 'murderNotWeapon': return [
-      ['note', `Forensics cleared the ${W(a.w)}. It is not the murder weapon.`]];
+      ['note', `The ${W(a.w)} is clean. It is not the murder weapon.`]];
     case 'murderNotRoom': return [
       ['note', `The body was not found in the ${R(a.r)}.`]];
     case 'murderAdjRoom': return [
-      ['note', `The body was found in a ${unit} next to the ${R(a.r)}.`]];
+      ['note', `The body was found ${line ? 'in a carriage coupled to' : 'a door or a stair away from'} the ${R(a.r)}, not in the ${R(a.r)} itself.`]];
     case 'murderNotAdjRoom': return [
-      ['note', `The body was not in the ${R(a.r)}, and not in any ${unit} next to it.`]];
+      ['note', `The body was not in the ${R(a.r)}, nor ${line ? 'in a carriage coupled to it' : 'anywhere a door or a stair away'}.`]];
     case 'murderFloor': return [
       ['note', `The body was found ${floorWord(a.f)}.`]];
     case 'murderNotFloor': return [
