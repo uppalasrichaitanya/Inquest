@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# browser-automation scratch (snapshots, console logs)
+.playwright-mcp/
+
+# build by-products (dist/index.html and dist/engine.js are kept: they are the shipped game and what the tests load)
+dist/test.html
+
+# fresh screenshots from shots.js; copy the ones worth keeping into playtest/<date>/
+playtest/latest/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.log

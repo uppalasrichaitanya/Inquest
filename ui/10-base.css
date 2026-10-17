@@ -1,0 +1,121 @@
+/* Layout concept: a detective's desk seen from above. Dark baize, one lamp-pool of light, and paper
+   objects lying on it: the case file (left), the notebook and floor plan (right). Red is only ever a
+   rubber stamp. Blue is only ever your own ink. */
+:root {
+  --desk: #14211b;
+  --desk-deep: #0c1612;
+  --paper: #d8cdb0;
+  --paper-hi: #e5dcc4;
+  --paper-lo: #c7bb98;
+  --ink: #1b1a1d;
+  --ink-soft: #4b463d;
+  --pencil: #66645f;
+  --blue: #25427a;
+  --stamp: #9b2b22;
+  --brass: #b79a5b;
+  --rule: rgba(27, 26, 29, .2);
+  --glow: rgba(214, 178, 96, .16);
+  --vignette: rgba(0, 0, 0, .45);
+  /* things written straight onto the desk (not on paper) */
+  --on-desk: #d8cdb0;
+  --on-desk-soft: #b9b49e;
+  --on-desk-accent: #b79a5b;
+  --desk-line: rgba(216, 205, 176, .35);
+  --f-display: 'Limelight', 'Bodoni 72', Didot, 'Times New Roman', serif;
+  --f-type: 'Courier Prime', 'Courier New', Courier, monospace;
+  --f-hand: 'Reenie Beanie', 'Bradley Hand', 'Segoe Script', cursive;
+  --cell: 34px;
+  --rhw: 150px;
+  color-scheme: dark;
+}
+/* Light mode: the same desk under daylight. A pale blotter, brighter paper, darker brass. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --desk: #c9cdbf; --desk-deep: #b7bcac;
+    --paper: #ece3cb; --paper-hi: #f5efdf; --paper-lo: #ddd1b3;
+    --glow: rgba(255, 246, 214, .55); --vignette: rgba(60, 60, 40, .16);
+    --on-desk: #1d2620; --on-desk-soft: #3f4a42; --on-desk-accent: #6e5520; --desk-line: rgba(29, 38, 32, .35);
+    color-scheme: light;
+  }
+}
+:root[data-theme='light'] {
+  --desk: #c9cdbf; --desk-deep: #b7bcac;
+  --paper: #ece3cb; --paper-hi: #f5efdf; --paper-lo: #ddd1b3;
+  --glow: rgba(255, 246, 214, .55); --vignette: rgba(60, 60, 40, .16);
+  --on-desk: #1d2620; --on-desk-soft: #3f4a42; --on-desk-accent: #6e5520; --desk-line: rgba(29, 38, 32, .35);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--desk);
+  color: var(--on-desk);
+  font: 15px/1.5 var(--f-type);
+  padding-block: 0 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  min-height: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+body::before { /* lamp pool and vignette */
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 28% 0%, var(--glow), transparent 70%),
+    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 55%, var(--vignette) 100%);
+}
+#app { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; overflow-x: clip; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--on-desk-accent); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* paper: grain via SVG turbulence, edge wear via inset shadows */
+.paper {
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  background: var(--grain), linear-gradient(172deg, var(--paper-hi), var(--paper) 40%, var(--paper-lo));
+  color: var(--ink);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .35) inset, 0 0 0 1px rgba(0, 0, 0, .25), 0 18px 36px rgba(0, 0, 0, .42), 0 2px 4px rgba(0, 0, 0, .4);
+}
+
+/* top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; gap: 14px; padding: 12px 0; margin-bottom: 8px; background: linear-gradient(var(--desk) 70%, transparent); }
+.bar .mark { font: 22px/1 var(--f-display); letter-spacing: .04em; color: var(--on-desk); background: none; border: 0; padding: 4px 0; text-align: left; }
+.bar .mark:hover { color: var(--on-desk-accent); }
+.bar .mid { flex: 1; min-width: 0; color: var(--on-desk-accent); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar .clock { font-variant-numeric: tabular-nums; color: var(--on-desk); font-size: 15px; letter-spacing: .06em; }
+.tool { background: transparent; border: 1px solid var(--desk-line); color: var(--on-desk); border-radius: 2px; padding: 6px 11px; font-size: 13px; }
+.tool:hover { border-color: var(--on-desk-accent); color: var(--on-desk-accent); }
+.tool[aria-pressed='true'] { background: var(--desk-deep); }
+.tool.go { background: var(--stamp); border-color: var(--stamp); color: #f3e6d2; font-weight: 700; letter-spacing: .03em; }
+.tool.go:hover { background: #b3342a; color: #fff; }
+
+/* rubber stamp */
+.stamp {
+  display: inline-block; font: 700 22px/1 var(--f-type); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--stamp); border: 3px solid var(--stamp); border-radius: 4px; padding: 8px 14px 6px;
+  transform: rotate(-6deg); opacity: .88; mix-blend-mode: multiply;
+  box-shadow: inset 0 0 0 2px rgba(155, 43, 34, .0);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23m)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23m)'/%3E%3C/svg%3E");
+}
+.stamp.blue { color: var(--blue); border-color: var(--blue); }
+@keyframes slam { 0% { transform: scale(2.4) rotate(-14deg); opacity: 0; } 55% { transform: scale(.94) rotate(-5deg); opacity: .95; } 100% { transform: scale(1) rotate(-6deg); opacity: .88; } }
+.stamp.slam { animation: slam .38s cubic-bezier(.2, .9, .3, 1.1) both; }
+
+/* wax seal monogram for suspects */
+.seal { --h: 20; display: inline-grid; place-items: center; width: 1.7em; height: 1.7em; flex: none; border-radius: 50%; font: 700 .72em/1 var(--f-type); letter-spacing: 0; color: hsl(var(--h) 60% 92%);
+  background: radial-gradient(circle at 35% 30%, hsl(var(--h) 45% 46%), hsl(var(--h) 52% 30%) 70%); box-shadow: 0 0 0 .12em hsl(var(--h) 40% 24% / .55) inset, 0 1px 2px rgba(0, 0, 0, .5); }
+
+/* weapon type glyphs */
+.wg { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (prefers-reduced-motion: reduce) { .stamp.slam { animation: none; } * { scroll-behavior: auto !important; transition: none !important; } }
+
+.tool.jump { display: none; }
+@media (max-width: 1060px) { .tool.jump { display: inline-block; } }
+@media (max-width: 520px) {
+  .bar { gap: 6px; }
+  .bar .mark { font-size: 19px; }
+  .bar .clock { font-size: 13px; letter-spacing: .02em; }
+  .tool { padding: 6px 8px; font-size: 12.5px; }
+}
