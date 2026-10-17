@@ -29,6 +29,10 @@ function page(seeded) {
   const shipped = fs.readFileSync('dist/index.html', 'utf8');
   ok(!/Date\s*=\s*class|setFixedTime|FIXED_NOW|inq1:now|[?&]date=/.test(shipped) && /new Date\(\)/.test(shipped), 'dist/index.html reads the real date, with no test clock or date override');
   ok(/const LAUNCH = Date\.UTC\(2026, 9, 15\); \/\/ Case No\. 1/.test(shipped), 'and No. 1 is 15 October 2026');
+  // ready to host: a proper document, and a link preview that says what it is
+  const tags = ['<title>Inquest</title>', '<meta name="description" content="A daily murder mystery.', '<meta property="og:title" content="Inquest">', '<meta property="og:description" content="A daily murder mystery.', '<meta name="theme-color" content="#F1F2EE" media="(prefers-color-scheme: light)">', '<meta name="theme-color" content="#15181D" media="(prefers-color-scheme: dark)">', '<link rel="icon" href="data:image/svg+xml,'];
+  ok(/^<!doctype html>\n<html lang="en">\n<head>/.test(shipped) && tags.every((x) => shipped.includes(x)), 'dist/index.html is a full document with title, description, favicon, theme colours and Open Graph tags: ' + tags.filter((x) => !shipped.includes(x)).join(' | '));
+  ok(!/https?:\/\/(?!fonts\.(googleapis|gstatic)\.com)[^"'\s)]+\.(js|css|png|svg|woff2?)\b/.test(shipped), 'and nothing outside it is loaded except Google Fonts');
   const real = new JSDOM(html.replace('<body>', '<body>'), { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://example.test/', beforeParse(w) { w.scrollTo = () => {}; w.matchMedia = () => ({ matches: false, addListener() {}, removeListener() {} }); w.HTMLElement.prototype.scrollIntoView = () => {}; w.localStorage.setItem('inq1:tutorial', '1'); } }).window;
   const want = Math.floor((Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - Date.UTC(2026, 9, 15)) / 864e5) + 1;
   ok(real.eval('dayNumber()') === want && real.eval('dateOfDay(1).toDateString()') === new Date(2026, 9, 15).toDateString(), 'left alone, the page is on today, No. ' + want);
