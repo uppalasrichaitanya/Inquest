@@ -3,6 +3,8 @@
 // recorded in clue-variants.json. The wording itself may change freely.
 //   node test-variants.js           check
 //   node test-variants.js --update  re-record (only when a change of shape is intended AND the bank is re-mined)
+//   node test-variants.js --wording re-record clue-wording.txt after rewording, then review its diff
+// clue-wording.txt holds every variant written out with real names, in each setting, so a rewording shows as a diff.
 // Also checks every shipped clue: its variant exists, and it has a speaker exactly when its voice is 'say'.
 const fs = require('fs');
 const E = require('./dist/engine.js');
@@ -20,6 +22,20 @@ for (const w of Object.keys(E.WORLDS)) {
 }
 const now = Object.fromEntries(Object.keys(shapes).sort().map((k) => [k, shapes[k]]));
 
+// every variant of every type, written out with real names (the first clue of each type in each setting)
+const WORDS = __dirname + '/clue-wording.txt';
+const seen = {};
+for (const w of Object.keys(E.WORLDS)) {
+  const pick = [0, 1, 2, 3, 4, 5];
+  const ctx = E.buildCtx(E.WORLDS[w], pick, pick, pick);
+  for (const c of E.enumerateClues(ctx)) {
+    if (seen[c.type + w]) continue;
+    seen[c.type + w] = E.clueVariants(c, ctx).map(([voice, text], i) => `  ${w.padEnd(5)} ${i} ${voice.padEnd(4)} ${E.plainText(text, ctx)}`);
+  }
+}
+const wording = Object.keys(now).map((k) => [k, ...Object.keys(E.WORLDS).flatMap((w) => seen[k + w] || [])].join('\n')).join('\n\n') + '\n';
+if (process.argv.includes('--wording')) { fs.writeFileSync(WORDS, wording); console.log('recorded clue-wording.txt: review it with git diff'); }
+
 let bad = 0;
 if (process.argv.includes('--update') || !fs.existsSync(SNAP)) {
   fs.writeFileSync(SNAP, JSON.stringify(now, null, 1) + '\n');
@@ -31,6 +47,7 @@ if (process.argv.includes('--update') || !fs.existsSync(SNAP)) {
     if (a !== b) { console.log(`CHANGED ${k}: was ${a}, now ${b}`); bad++; }
   }
   console.log(`clue shapes: ${Object.keys(now).length} types compared with clue-variants.json`);
+  if (!fs.existsSync(WORDS) || fs.readFileSync(WORDS, 'utf8').replace(/\r\n/g, '\n') !== wording) { console.log('WORDING CHANGED: run node test-variants.js --wording and review the diff of clue-wording.txt'); bad++; }
 }
 
 const shipped = [['tutorial', E.TUTORIAL]];

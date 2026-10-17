@@ -1,0 +1,164 @@
+adjacent
+  manor 0 say  Lady Vane and Dr. Pell were in rooms right next to each other. I could hear them both.
+  manor 1 note Lady Vane's room was right next to Dr. Pell's.
+  train 0 say  Mme Valcourt and Count Orlov were in carriages right next to each other. I could hear them both.
+  train 1 note Mme Valcourt's carriage was right next to Count Orlov's.
+
+ahead
+  train 0 say  Mme Valcourt was in a carriage closer to the engine than Count Orlov.
+  train 1 note Mme Valcourt's carriage was nearer the engine than Count Orlov's.
+
+diffFloor
+  manor 0 say  Lady Vane and Dr. Pell weren't on the same floor. I'm sure of that.
+  manor 1 note Lady Vane and Dr. Pell were on different floors.
+
+diffType
+  manor 0 say  Lady Vane and Dr. Pell weren't carrying the same kind of weapon. Not even close.
+  manor 1 note Lady Vane and Dr. Pell carried different kinds of weapon.
+  train 0 say  Mme Valcourt and Count Orlov weren't carrying the same kind of weapon. Not even close.
+  train 1 note Mme Valcourt and Count Orlov carried different kinds of weapon.
+
+eitherHas
+  manor 0 say  Either Lady Vane or Dr. Pell had the Moroccan Dagger. I couldn't tell you which.
+  manor 1 note The Moroccan Dagger was held by Lady Vane or by Dr. Pell.
+  train 0 say  Either Mme Valcourt or Count Orlov had the Jewelled Hat Pin. I couldn't tell you which.
+  train 1 note The Jewelled Hat Pin was held by Mme Valcourt or by Count Orlov.
+
+eitherIn
+  manor 0 say  Someone was in the Master Bedroom: Lady Vane or Dr. Pell. It was too dark to see which.
+  manor 1 note Whoever was in the Master Bedroom, it was Lady Vane or Dr. Pell.
+  train 0 say  Someone was in the Mail Car: Mme Valcourt or Count Orlov. It was too dark to see which.
+  train 1 note Whoever was in the Mail Car, it was Mme Valcourt or Count Orlov.
+
+has
+  manor 0 say  I saw Lady Vane with the Moroccan Dagger in hand. I'm certain of it.
+  manor 1 note The Moroccan Dagger was last seen in Lady Vane's hands.
+  train 0 say  I saw Mme Valcourt with the Jewelled Hat Pin in hand. I'm certain of it.
+  train 1 note The Jewelled Hat Pin was last seen in Mme Valcourt's hands.
+
+holdsType
+  manor 0 say  Lady Vane was carrying something sharp. I noticed it straight away.
+  manor 1 note Lady Vane was carrying something sharp.
+  train 0 say  Mme Valcourt was carrying something sharp. I noticed it straight away.
+  train 1 note Mme Valcourt was carrying something sharp.
+
+in
+  manor 0 say  Lady Vane was in the Master Bedroom when the clock struck. I heard them through the door.
+  manor 1 note A witness puts Lady Vane in the Master Bedroom at the time of the murder.
+  train 0 say  Mme Valcourt was in the Mail Car when the clock struck. I heard them through the door.
+  train 1 note A witness puts Mme Valcourt in the Mail Car at the time of the murder.
+
+murderAdjRoom
+  manor 0 note The body was found in a room next to the Master Bedroom.
+  train 0 note The body was found in a carriage next to the Mail Car.
+
+murderAheadOf
+  train 0 note The killer's carriage was nearer the engine than Mme Valcourt's.
+
+murderBehind
+  train 0 note The killer's carriage was further from the engine than Mme Valcourt's.
+
+murderFarFrom
+  manor 0 note It wasn't Lady Vane, and it wasn't anyone in a room next to Lady Vane's.
+  train 0 note It wasn't Mme Valcourt, and it wasn't anyone in a carriage next to Mme Valcourt's.
+
+murderFloor
+  manor 0 note The body was found upstairs.
+
+murderNextTo
+  manor 0 note The killer was in a room right next to Lady Vane's.
+  train 0 note The killer was in a carriage right next to Mme Valcourt's.
+
+murderNotAdjRoom
+  manor 0 note The body was not in the Master Bedroom, and not in any room next to it.
+  train 0 note The body was not in the Mail Car, and not in any carriage next to it.
+
+murderNotFloor
+  manor 0 note The body was not found upstairs.
+
+murderNotRoom
+  manor 0 note The body was not found in the Master Bedroom.
+  train 0 note The body was not found in the Mail Car.
+
+murderNotSuspect
+  manor 0 note Lady Vane has a solid alibi and can be ruled out as the killer.
+  train 0 note Mme Valcourt has a solid alibi and can be ruled out as the killer.
+
+murderNotType
+  manor 0 note The coroner is clear: he was not killed with a blade.
+  train 0 note The coroner is clear: he was not killed with a blade.
+
+murderNotWeapon
+  manor 0 note Forensics cleared the Moroccan Dagger. It is not the murder weapon.
+  train 0 note Forensics cleared the Jewelled Hat Pin. It is not the murder weapon.
+
+murderSameFloor
+  manor 0 note The killer was on the same floor as Lady Vane, but it wasn't Lady Vane.
+
+murderType
+  manor 0 note The coroner is certain: the cause of death was a clean, deep cut.
+  train 0 note The coroner is certain: the cause of death was a clean, deep cut.
+
+notAdjacent
+  manor 0 say  Lady Vane and Dr. Pell weren't in rooms next to each other. Not even close.
+  manor 1 note Lady Vane's room was not next to Dr. Pell's.
+  train 0 say  Mme Valcourt and Count Orlov weren't in carriages next to each other. Not even close.
+  train 1 note Mme Valcourt's carriage was not next to Count Orlov's.
+
+notHas
+  manor 0 say  Lady Vane never touched the Moroccan Dagger. I'd swear to it.
+  manor 1 note Lady Vane's prints are nowhere on the Moroccan Dagger.
+  train 0 say  Mme Valcourt never touched the Jewelled Hat Pin. I'd swear to it.
+  train 1 note Mme Valcourt's prints are nowhere on the Jewelled Hat Pin.
+
+notHoldsType
+  manor 0 say  Lady Vane wasn't carrying anything sharp. I checked.
+  manor 1 note Whatever Lady Vane was carrying, it wasn't a blade.
+  train 0 say  Mme Valcourt wasn't carrying anything sharp. I checked.
+  train 1 note Whatever Mme Valcourt was carrying, it wasn't a blade.
+
+notIn
+  manor 0 say  Lady Vane was nowhere near the Master Bedroom that night.
+  manor 1 note Lady Vane was not in the Master Bedroom.
+  train 0 say  Mme Valcourt was nowhere near the Mail Car that night.
+  train 1 note Mme Valcourt was not in the Mail Car.
+
+notTypeInRoom
+  manor 0 say  Whoever was in the Master Bedroom didn't have anything sharp. I'd have noticed.
+  manor 1 note The person in the Master Bedroom wasn't carrying a blade.
+  train 0 say  Whoever was in the Mail Car didn't have anything sharp. I'd have noticed.
+  train 1 note The person in the Mail Car wasn't carrying a blade.
+
+sameFloor
+  manor 0 say  Lady Vane and Dr. Pell were on the same floor. I heard the boards creak under both of them.
+  manor 1 note Lady Vane and Dr. Pell were on the same floor.
+
+sameType
+  manor 0 say  Lady Vane and Dr. Pell were carrying the same kind of weapon. I thought that was odd.
+  manor 1 note Lady Vane and Dr. Pell carried the same kind of weapon.
+  train 0 say  Mme Valcourt and Count Orlov were carrying the same kind of weapon. I thought that was odd.
+  train 1 note Mme Valcourt and Count Orlov carried the same kind of weapon.
+
+typeInRoom
+  manor 0 say  Whoever was in the Master Bedroom had something sharp. I saw it myself.
+  manor 1 note The person in the Master Bedroom was carrying something sharp.
+  train 0 say  Whoever was in the Mail Car had something sharp. I saw it myself.
+  train 1 note The person in the Mail Car was carrying something sharp.
+
+weaponIn
+  manor 0 say  The Moroccan Dagger was in the Master Bedroom. I saw it in someone's hand.
+  manor 1 note Whoever was in the Master Bedroom was holding the Moroccan Dagger.
+  train 0 say  The Jewelled Hat Pin was in the Mail Car. I saw it in someone's hand.
+  train 1 note Whoever was in the Mail Car was holding the Jewelled Hat Pin.
+
+weaponNear
+  manor 0 say  I saw the Moroccan Dagger in a room next to the Master Bedroom.
+  manor 1 note The Moroccan Dagger was in a room next to the Master Bedroom, not in the Master Bedroom itself.
+  train 0 say  I saw the Jewelled Hat Pin in a carriage next to the Mail Car.
+  train 1 note The Jewelled Hat Pin was in a carriage next to the Mail Car, not in the Mail Car itself.
+
+weaponNotIn
+  manor 0 say  The Moroccan Dagger was never in the Master Bedroom.
+  manor 1 note Whoever was in the Master Bedroom, they weren't holding the Moroccan Dagger.
+  train 0 say  The Jewelled Hat Pin was never in the Mail Car.
+  train 1 note Whoever was in the Mail Car, they weren't holding the Jewelled Hat Pin.
