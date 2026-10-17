@@ -1,14 +1,20 @@
+// INQ_TZ=Area/City runs the whole test in that time zone (the TZ variable itself is ignored on Windows)
+if (process.env.INQ_TZ) process.env.TZ = process.env.INQ_TZ;
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const html = fs.readFileSync('dist/test.html', 'utf8').replace(/<link[^>]*>/g, '');
 const errors = [];
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console.log('ok  ', m); };
-// a fresh page; seeded = someone who has already done the warm-up
+// a fresh page; seeded = someone who has already done the warm-up. The clock is fixed at
+// Tuesday 3 November 2026 (case No. 20), so the daily case and the archive are the same on every run.
+const NOW = new Date(2026, 10, 3, 9, 30).getTime();
 function page(seeded) {
   const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://example.test/', beforeParse(w) {
     w.addEventListener('error', (e) => errors.push('window error: ' + e.message));
     w.scrollTo = () => {};
     w.scrollBy = () => {};
+    const Real = w.Date;
+    w.Date = class extends Real { constructor(...a) { super(...(a.length ? a : [NOW])); } static now() { return NOW; } };
     w.matchMedia = w.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
     if (seeded) w.localStorage.setItem('inq1:tutorial', '1');
     w.HTMLElement.prototype.scrollIntoView = () => {};
@@ -73,8 +79,11 @@ function page(seeded) {
   for (const [k, v] of [['killer', ts.killer], ['weapon', ts.weapon], ['room', ts.room]]) click($(`[data-pick="${k}"][data-v="${v}"]`));
   click($('#do-accuse'));
   ok(/whole game/.test($('#scrim').textContent) && w.localStorage.getItem('inq1:tutorial') === '1', 'the warm-up ends warmly and is remembered');
-  click($('#scrim [data-act="home"]'));
-  ok($$('.case-row').length === 4 && !$('.warm-head'), 'then home lists the cases, and the warm-up does not come back');
+  click($('#scrim [data-act="gentle"]'));
+  ok(w.eval('G.mode') === 'archive' && w.eval('G.day') === 19 && w.eval('G.puzzle.tier') === 'constable', 'then a gentle first case: last Monday, No. 19');
+  click($('.bar .mark'));
+  ok($('.today-case') && !$('.warm-head'), 'home shows today, and the warm-up does not come back');
+  ok($('.gentle') && /Monday 2 November/.test($('.gentle').textContent), 'someone new is pointed at Monday: ' + $('.gentle').textContent.trim());
   click($('[data-act="tutorial"]'));
   ok($('.warm-head') && $('.case-head .rules3') && w.eval('G.marks.sw[0][1]') === 0, 'the warm-up can be replayed, fresh, rules open');
   $('#grid .cell[data-b="sw"][data-i="0"][data-j="1"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
@@ -86,9 +95,25 @@ function page(seeded) {
 // ---- a returning player
 const { w, d, $, $$, click } = page(true);
 ok($('.bar .mark') && $('.bar .mark').textContent === 'Inquest', 'home renders');
-ok($$('.case-row').length === 4, 'four cases listed');
+// the daily mapping: a week across a month boundary and the October clock change (Sunday 25 October to Monday 2 November)
+{
+  const seq = JSON.parse(w.eval(`JSON.stringify([...Array(9).keys()].map((k) => { const n = dayNumber(new Date(2026, 9, 25 + k)); const D = dailyFor(n); return [n, D.tier[0], D.idx, dateOfDay(n).getDate()]; }))`));
+  ok(seq.map((x) => x[0]).join() === '11,12,13,14,15,16,17,18,19', 'case numbers run on by one a day, across the clock change and into November: ' + seq.map((x) => x[0]).join());
+  ok(seq.map((x) => x[3]).join() === '25,26,27,28,29,30,31,1,2', 'and map back to their dates');
+  ok(seq.map((x) => x[1] + x[2]).join() === 'm1,c1,d2,d3,i6,i7,i8,m2,c2', 'Sunday hardest, Monday gentlest, each kind of day takes the next case of its tier: ' + seq.map((x) => x[1] + x[2]).join());
+  ok(w.eval('dayNumber(new Date(2026, 9, 15))') === 1 && w.eval('weekdayOf(1)') === 4, 'No. 1 is Thursday 15 October');
+  const steady = w.eval(`(() => { const last = {}; for (let n = 1; n <= 1500; n++) { const D = dailyFor(n); if (dayNumber(dateOfDay(n)) !== n) return 'date ' + n; if (D.tier !== WEEK_TIER[dateOfDay(n).getDay()]) return 'weekday ' + n; if (D.tier in last && D.idx !== last[D.tier] + 1) return 'skip ' + n; last[D.tier] = D.idx; } return 'ok'; })()`);
+  ok(steady === 'ok', 'four years of days: dates round-trip, weekdays match, no tier skips or repeats a case: ' + steady);
+  ok(w.eval('new Set([...Array(200).keys()].map((k) => dailyFor(5 + 7 * k).spec.s)).size') === 200, 'two hundred Mondays, two hundred different cases');
+  ok(w.eval('liveStreak({ streak: 4, lastDay: 19 })') === 4 && w.eval('liveStreak({ streak: 4, lastDay: 18 })') === 0, 'a streak lives while yesterday was closed, and lapses after a missed day');
+}
 ok(/Exactly one answer/.test($('.home h1').textContent), 'home says what the game is');
-click($$('.case-row')[1]);
+ok($('.today-case h2') && /No\. 20/.test($('.today-case .label').textContent), "today's case leads the page: " + $('.today-case .label').textContent);
+ok(/Tuesday 3 November/.test($('.home .date').textContent), 'with the date');
+ok($$('.days li').length === 7 && $('.day.is-today') && /Tue/.test($('.day.is-today').textContent) && $$('.day.future').length === 5, 'this week, Monday to Sunday: today marked, five days to come');
+click($('.today-case [data-act="open-day"]'));
+ok(w.eval('G.mode') === 'daily' && w.eval('G.day') === 20 && w.eval('G.puzzle.tier') === 'detective', "today's case opens: a Tuesday, five guests");
+ok(/Tuesday 3 November, No\. 20/.test($('.case-head .date').textContent), 'the case says which day it is');
 ok($('.case-head h1'), 'case opens: ' + ($('.case-head h1') || {}).textContent);
 const n = w.eval('G.puzzle.n'), ctx = w.eval('G.puzzle.ctx');
 const key = (el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
@@ -182,8 +207,28 @@ click($('#do-accuse'));
 ok($('.verdict .closed') && /Case closed/.test($('.verdict').textContent), 'right accusation closes the case');
 ok(/Closed in/.test($('#share').textContent), 'share text: ' + $('#share').textContent.replace(/\n/g, ' | '));
 click($('[data-act="home"]'));
-ok($('.home h1'), 'back home'); ok(/Closed/.test($$('.case-row')[1].textContent), 'case row shows it is closed');
-const st = w.eval("JSON.stringify(LS.get('inq1:stats',{}))"); ok(/"streak":1/.test(st), 'streak recorded ' + st);
+ok($('.home h1'), 'back home');
+ok($('.day.is-today.is-closed .tick') && /Closed in/.test($('.today-case').textContent) && /See it again/.test($('.today-case .btn').textContent), 'today is ticked in the week and shown closed');
+const st = w.eval("JSON.stringify(LS.get('inq1:stats',{}))"); ok(/"streak":1/.test(st) && /"lastDay":20/.test(st), 'streak recorded ' + st);
+ok(/A 1-day streak/.test($('.home .row').textContent), 'and shown small: ' + $('.home .row .soft').textContent);
+// past cases
+click($('[data-act="archive"]'));
+ok($('.archive h1') && $$('.archive .case-row').length === 19, 'past cases: every day from No. 19 back to No. 1 (' + $$('.archive .case-row').length + ')');
+ok($$('.archive .wk').length === 4 && /Week of 2 November/.test($('.archive .wk .label').textContent), 'grouped by week, newest first');
+click($('[data-act="archfilter"][data-f="constable"]'));
+ok($$('.archive .case-row').length === 3 && $$('.archive .day-name').every((e) => /^Monday/.test(e.textContent)), 'Mondays only: three of them');
+click($('[data-act="archfilter"][data-f="mastermind"]'));
+ok($$('.archive .case-row').length === 3, 'Sundays only: three of them');
+click($('[data-act="archfilter"][data-f="constable"]'));
+click($('.archive .case-row'));
+ok(w.eval('G.mode') === 'archive' && w.eval('G.day') === 19 && /past case/.test($('.case-head .date').textContent), 'an old day opens as a past case');
+w.eval('G.pick = { killer: G.puzzle.solution.killer, weapon: G.puzzle.solution.weapon, room: G.puzzle.solution.room }; submitAccuse();');
+ok(/"streak":1/.test(w.eval("JSON.stringify(LS.get('inq1:stats',{}))")) && w.eval("LS.get('inq1:stats',{}).solved.constable") === 1, 'closing a past case counts as closed but does not touch the streak');
+ok(/INQUEST No\. 19, Monday/.test($('#share').textContent), 'its result names the day: ' + $('#share').textContent.split('\n')[0]);
+click($('#scrim [data-act="archive"]'));
+ok($('.archive') && /Closed in/.test($('.archive .case-row').textContent), 'and the archive shows it closed');
+w.localStorage.setItem('inq1:archfilter', '"all"');
+click($('.bar .mark'));
 
 // a circle the statements rule out is caught by the hint
 w.eval(`newGame(BANK.constable[0], 'random'); renderCase();`);

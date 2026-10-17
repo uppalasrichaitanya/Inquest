@@ -12,25 +12,55 @@ function dayNumber(d) {
   d = d || new Date();
   return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - LAUNCH) / 864e5) + 1;
 }
-function dailySpec(tier) {
-  const list = BANK[tier], n = dayNumber();
-  return list[(((n - 1) % list.length) + list.length) % list.length];
+// ---- the daily rhythm. Everyone gets the same case each day, and the week has a shape, like a crossword:
+// Monday four guests, Tuesday and Wednesday five, Thursday to Saturday six, Sunday the Mastermind.
+// Each kind of day takes the next case of its tier in bank order, so nothing repeats until a bank wraps round.
+const WEEK_TIER = ['mastermind', 'constable', 'detective', 'detective', 'inspector', 'inspector', 'inspector']; // by getDay(): Sunday first
+const TIER_LEVEL = { constable: 1, detective: 2, inspector: 3, mastermind: 4 };
+const DAY_FEEL = {
+  constable: 'The gentlest day: plain testimony, nothing to test.',
+  detective: 'Every statement earns its place.',
+  inspector: 'Fewer gifts. Expect to test a theory.',
+  mastermind: 'No direct testimony. Only what the evidence implies.',
+};
+const DAY_GROUP = { constable: 'Mondays', detective: 'Tuesdays and Wednesdays', inspector: 'Thursdays to Saturdays', mastermind: 'Sundays' };
+const todayN = () => Math.max(1, dayNumber());
+// the calendar date of case No. n, at local midnight
+function dateOfDay(n) {
+  const L = new Date(LAUNCH);
+  return new Date(L.getUTCFullYear(), L.getUTCMonth(), L.getUTCDate() + n - 1);
 }
+const weekdayOf = (n) => (((new Date(LAUNCH).getUTCDay() + n - 1) % 7) + 7) % 7;
+// case No. n: its date, its kind of day, and which case of that tier it gets
+function dailyFor(n) {
+  const tier = WEEK_TIER[weekdayOf(n)], list = BANK[tier];
+  const weeks = Math.floor((n - 1) / 7);
+  let idx = weeks * WEEK_TIER.filter((t) => t === tier).length;
+  for (let m = 1 + weeks * 7; m < n; m++) if (WEEK_TIER[weekdayOf(m)] === tier) idx++;
+  return { n, date: dateOfDay(n), tier, idx, spec: list[idx % list.length] };
+}
+const dayName = (n, opts) => dateOfDay(n).toLocaleDateString('en-GB', opts || { weekday: 'long', day: 'numeric', month: 'long' });
+// a gentle first case for someone new: the latest Monday not yet closed, or (before the first Monday) a practice
+// four-guest case taken from the far end of the bank, years away from being anyone's Monday
+function gentleStart() {
+  for (let n = todayN(); n >= 1; n--) if (weekdayOf(n) === 1 && !caseState(dailyFor(n).spec).solved) return { n };
+  const list = BANK.constable;
+  for (let i = list.length - 1; i >= 0; i--) if (!caseState(list[i]).solved) return { spec: list[i] };
+  return { spec: list[list.length - 1] };
+}
+const caseState = (spec) => LS.get(caseKey(spec), null) || {};
+// the streak lives only while yesterday's or today's case was closed on its day
+function liveStreak(st) { return st.lastDay >= todayN() - 1 ? st.streak : 0; }
 const caseKey = (spec) => `inq1:case:${spec.t}:${spec.s}`;
 const loadStats = () => LS.get('inq1:stats', { solved: {}, best: {}, streak: 0, bestStreak: 0, lastDay: 0 });
-
-function randomSpec(tier) {
-  const list = BANK[tier];
-  const fresh = list.filter((s) => !(LS.get(caseKey(s), null) || {}).solved);
-  const pool = fresh.length ? fresh : list;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtTime = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 const zeros = (n) => Array.from({ length: n }, () => new Array(n).fill(0));
 // difficulty as a row of printed dots: filled for each level of five
-const stars = (k) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(k)}${'<i></i>'.repeat(5 - k)}</span>`;
+const stars = (k, of = 5) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(k)}${'<i></i>'.repeat(of - k)}</span>`;
+// how hard a kind of day is, as four dots: Monday one, Sunday four
+const dayDots = (tier) => stars(TIER_LEVEL[tier], 4);
 
 function initials(name) {
   const w = name.split(' ').filter((x) => !TITLES_RANK.includes(x));
@@ -111,7 +141,7 @@ function tokens(text, ctx) {
 let G = null;      // current case
 let VIEW = 'home';
 
-function newGame(spec, mode) {
+function newGame(spec, mode, day) {
   const puzzle = importPuzzle(spec);
   const key = caseKey(spec);
   const saved = mode === 'tutorial' ? {} : LS.get(key, null) || {};
@@ -121,6 +151,7 @@ function newGame(spec, mode) {
   const struck = saved.struck || [];
   G = {
     spec, puzzle, key, mode, marks,
+    day: day || null, // the case number, for a day's case (today's is mode 'daily', an earlier one 'archive')
     struck,
     elapsed: saved.elapsed || 0,
     hints: saved.hints || 0,

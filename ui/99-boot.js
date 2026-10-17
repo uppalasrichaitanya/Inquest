@@ -9,7 +9,11 @@ document.addEventListener('click', (e) => {
   const a = e.target.closest('[data-act]');
   if (a) {
     const act = a.dataset.act, i = +a.dataset.i;
-    if (act === 'open-daily') openCase(dailySpec(a.dataset.tier), 'daily');
+    if (act === 'open-day') openDay(+a.dataset.n);
+    else if (act === 'gentle') openGentle();
+    else if (act === 'archive') { closeModal(); ARCH.weeks = 6; renderArchive(); window.scrollTo(0, 0); }
+    else if (act === 'archfilter') { LS.set('inq1:archfilter', a.dataset.f); ARCH.weeks = 6; renderArchive(); }
+    else if (act === 'archmore') { ARCH.weeks += 6; renderArchive(); }
     else if (act === 'home') { closeModal(); homeOrLesson(); }
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
@@ -19,11 +23,6 @@ document.addEventListener('click', (e) => {
     else if (act === 'undo') undo();
     else if (act === 'clear') clearAll();
     else if (act === 'stats') openStats();
-    else if (act === 'random') {
-      closeModal();
-      const t = G ? G.puzzle.tier : TIER_ORDER[Math.floor(Math.random() * TIER_ORDER.length)];
-      pickRandom(t);
-    }
     else if (act === 'close') closeModal();
     else if (act === 'accuse') {
       closeModal();
@@ -34,7 +33,6 @@ document.addEventListener('click', (e) => {
     else if (act === 'hint') openHint();
     else if (act === 'hint-more') hintMore();
     else if (act === 'copy-share') copyShare();
-    else if (act === 'pick-tier') { closeModal(); openCase(randomSpec(a.dataset.tier), 'random'); }
     // the case screen
     else if (act === 'pick-stmt') { closeModal(); selectStatement(i); }
     else if (act === 'use') toggleUsed(i);
@@ -61,15 +59,6 @@ document.addEventListener('click', (e) => {
   if (room && !e.target.closest('.cell') && G) { openRoomSheet(+room.dataset.room); return; }
   if (e.target.id === 'scrim') closeModal();
 });
-
-function pickRandom(tier) {
-  closeModal();
-  openRandomChoice(tier);
-}
-function openRandomChoice(tier) {
-  openModal(`<h2>Play an older case</h2><p>Pick a level. You will get a case you have not closed yet, when there is one.</p>
-    <div class="actions">${TIER_ORDER.map((t) => `<button class="btn ${t === tier ? '' : 'ghost'}" data-act="pick-tier" data-tier="${t}">${TIERS[t].name}</button>`).join('')}</div>`);
-}
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();

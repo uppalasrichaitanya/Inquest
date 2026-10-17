@@ -180,7 +180,7 @@ function finishWarmup() {
     <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
     <p>Five true statements, and the notebook did the rest. Real cases have more guests and trickier statements, but every one is solved the same way.</p>
     <p class="soft">Stuck later on? <b>Hint</b> points to the next step, and tells you if a mark doesn’t add up.</p>
-    <div class="actions"><button class="btn" data-act="open-daily" data-tier="constable">Play a first real case</button><button class="btn ghost" data-act="home">Back to the cases</button></div></div>`);
+    <div class="actions"><button class="btn" data-act="gentle">Play a gentle first case</button><button class="btn ghost" data-act="home">Today\u2019s case</button></div></div>`);
   const cs = document.getElementById('closed-stamp');
   if (cs) cs.textContent = 'Case closed.';
 }

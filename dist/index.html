@@ -90,33 +90,85 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 
+/* ---- home: today's case, this week, the way into the past */
 .home { padding-top: clamp(24px, 6vw, 56px); display: grid; gap: 44px; max-width: 920px; }
 .home .date { margin: 0 0 8px; font-style: italic; color: var(--muted); }
 .home h1 { margin: 0; max-width: 15em; font-size: clamp(38px, 6vw, 62px); line-height: 1.02; font-weight: 500; letter-spacing: -.015em; font-variation-settings: 'opsz' 72; text-wrap: balance; }
 .home .lede { margin: 18px 0 0; max-width: 34em; font-size: 20px; }
 .home .cta { margin: 24px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
-.cases { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--rule); }
-.cases li { border-bottom: 1px solid var(--rule); }
-.case-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 6px 28px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; padding: 18px 8px 20px 0; color: var(--ink); }
-.case-row:hover { background: linear-gradient(90deg, var(--wash), transparent 90%); }
-.case-row .tier { font-size: 26px; font-weight: 500; font-variation-settings: 'opsz' 48; margin-right: 12px; }
-.case-row .start { font-style: italic; color: var(--pen); font-size: 16px; }
-.case-row .line { display: block; color: var(--muted); font-size: 16px; }
-.case-row .title { display: block; font-style: italic; font-size: 18px; }
-.case-row .how { display: grid; justify-items: end; gap: 2px; font-size: 15px; color: var(--muted); }
-.case-row .state.done { color: var(--ink); }
 .level { display: inline-flex; gap: 4px; }
 .level i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--muted); }
 .level i.on { background: var(--ink); border-color: var(--ink); }
+.label .sep, .date .sep { display: inline-block; width: 14px; }
+
+/* today's case: the one thing on the page */
+.today-case { border-top: 2px solid var(--ink); padding-top: 14px; }
+.today-case .label { display: flex; align-items: center; }
+.today-case h2 { margin: 10px 0 0; font-size: clamp(32px, 4.4vw, 46px); line-height: 1.05; font-weight: 500; font-style: italic; font-variation-settings: 'opsz' 60; }
+.today-case .line { margin: 10px 0 0; color: var(--muted); font-size: 17px; max-width: 40em; }
+.today-case .feel { color: var(--ink); }
+.today-case .go { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 22px; }
+.btn.big { padding: 13px 30px 14px; font-size: 19px; }
+.state { font-style: italic; color: var(--muted); }
+.state.done { color: var(--ink); }
+.gentle { margin: 18px 0 0; font-size: 16px; color: var(--muted); }
+.gentle .link { margin-left: 4px; }
+
+/* this week: Monday to Sunday */
+.days { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.days li { display: flex; }
+.day { position: relative; flex: 1; display: grid; justify-items: center; gap: 4px; padding: 12px 2px 14px; background: none; border: 0; color: var(--ink); font-size: 15px; }
+.days li + li .day { border-left: 1px solid var(--rule); }
+button.day:hover { background: var(--wash); }
+.day .dname { font-style: italic; color: var(--muted); }
+.day .dnum { font-size: 22px; line-height: 1.1; font-variant-numeric: lining-nums; }
+.day .level { gap: 3px; }
+.day .level i { width: 5px; height: 5px; }
+.day.is-today { box-shadow: inset 0 -3px 0 var(--ink); }
+.day.is-today .dname { color: var(--ink); }
+.day.future, .day.before { color: var(--ghost); }
+.day.future .dname, .day.before .dname { color: var(--ghost); }
+.day.future .level i, .day.before .level i { border-color: var(--ghost); }
+.day.future .level i.on, .day.before .level i.on { background: var(--ghost); }
+.day .dmark { position: absolute; top: 6px; right: 6px; width: 18px; height: 16px; }
+.day .dmark .tick { width: 18px; height: 16px; }
+.weekline { margin: 10px 0 0; font-size: 15px; }
+
 .home .row { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; }
 .home .row .grow { flex: 1; min-width: 12px; }
+
+/* past cases */
+.archive { gap: 30px; }
+.archive h1 { max-width: none; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { min-height: 40px; padding: 6px 14px; background: none; border: 1px solid var(--rule); border-radius: 2px; color: var(--muted); font-size: 16px; }
+.filters button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.wk .label { margin-bottom: 0; }
+.cases { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.cases li { border-bottom: 1px solid var(--rule); }
+.case-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 8.5em; gap: 4px 28px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; padding: 14px 8px 16px 0; color: var(--ink); }
+.case-row:hover { background: linear-gradient(90deg, var(--wash), transparent 90%); }
+.case-row .day-name { display: block; font-size: 19px; }
+.case-row .line { display: block; color: var(--muted); font-size: 15px; }
+.case-row .title { display: block; font-style: italic; font-size: 18px; }
+.case-row .how { display: grid; justify-items: end; gap: 2px; font-size: 15px; }
+.archive > .btn { justify-self: start; }
+
 @media (max-width: 760px) {
-  .home { gap: 32px; padding-top: 16px; }
-  .home .lede { font-size: 18px; }
-  .case-row { grid-template-columns: minmax(0, 1fr) auto; padding: 14px 0 16px; }
+  .home { gap: 30px; padding-top: 16px; }
+  .home h1 { font-size: 32px; }
+  .home .lede { font-size: 17px; }
+  .today-case h2 { font-size: 30px; }
+  .today-case .line { font-size: 16px; }
+  .btn.big { width: 100%; }
+  .day { padding: 10px 0 12px; font-size: 13px; }
+  .day .dnum { font-size: 19px; }
+  .day .dmark { top: 3px; right: 2px; width: 14px; height: 13px; }
+  .day .dmark .tick { width: 14px; height: 13px; }
+  .case-row { grid-template-columns: minmax(0, 1fr) auto; padding: 12px 0 14px; }
   .case-row .today { grid-column: 1; grid-row: 2; }
   .case-row .how { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
-  .case-row .tier { font-size: 22px; }
+  .filters button { font-size: 15px; padding: 6px 11px; }
 }
 
 /* ---- the case screen */
@@ -1367,25 +1419,55 @@ function dayNumber(d) {
   d = d || new Date();
   return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - LAUNCH) / 864e5) + 1;
 }
-function dailySpec(tier) {
-  const list = BANK[tier], n = dayNumber();
-  return list[(((n - 1) % list.length) + list.length) % list.length];
+// ---- the daily rhythm. Everyone gets the same case each day, and the week has a shape, like a crossword:
+// Monday four guests, Tuesday and Wednesday five, Thursday to Saturday six, Sunday the Mastermind.
+// Each kind of day takes the next case of its tier in bank order, so nothing repeats until a bank wraps round.
+const WEEK_TIER = ['mastermind', 'constable', 'detective', 'detective', 'inspector', 'inspector', 'inspector']; // by getDay(): Sunday first
+const TIER_LEVEL = { constable: 1, detective: 2, inspector: 3, mastermind: 4 };
+const DAY_FEEL = {
+  constable: 'The gentlest day: plain testimony, nothing to test.',
+  detective: 'Every statement earns its place.',
+  inspector: 'Fewer gifts. Expect to test a theory.',
+  mastermind: 'No direct testimony. Only what the evidence implies.',
+};
+const DAY_GROUP = { constable: 'Mondays', detective: 'Tuesdays and Wednesdays', inspector: 'Thursdays to Saturdays', mastermind: 'Sundays' };
+const todayN = () => Math.max(1, dayNumber());
+// the calendar date of case No. n, at local midnight
+function dateOfDay(n) {
+  const L = new Date(LAUNCH);
+  return new Date(L.getUTCFullYear(), L.getUTCMonth(), L.getUTCDate() + n - 1);
 }
+const weekdayOf = (n) => (((new Date(LAUNCH).getUTCDay() + n - 1) % 7) + 7) % 7;
+// case No. n: its date, its kind of day, and which case of that tier it gets
+function dailyFor(n) {
+  const tier = WEEK_TIER[weekdayOf(n)], list = BANK[tier];
+  const weeks = Math.floor((n - 1) / 7);
+  let idx = weeks * WEEK_TIER.filter((t) => t === tier).length;
+  for (let m = 1 + weeks * 7; m < n; m++) if (WEEK_TIER[weekdayOf(m)] === tier) idx++;
+  return { n, date: dateOfDay(n), tier, idx, spec: list[idx % list.length] };
+}
+const dayName = (n, opts) => dateOfDay(n).toLocaleDateString('en-GB', opts || { weekday: 'long', day: 'numeric', month: 'long' });
+// a gentle first case for someone new: the latest Monday not yet closed, or (before the first Monday) a practice
+// four-guest case taken from the far end of the bank, years away from being anyone's Monday
+function gentleStart() {
+  for (let n = todayN(); n >= 1; n--) if (weekdayOf(n) === 1 && !caseState(dailyFor(n).spec).solved) return { n };
+  const list = BANK.constable;
+  for (let i = list.length - 1; i >= 0; i--) if (!caseState(list[i]).solved) return { spec: list[i] };
+  return { spec: list[list.length - 1] };
+}
+const caseState = (spec) => LS.get(caseKey(spec), null) || {};
+// the streak lives only while yesterday's or today's case was closed on its day
+function liveStreak(st) { return st.lastDay >= todayN() - 1 ? st.streak : 0; }
 const caseKey = (spec) => `inq1:case:${spec.t}:${spec.s}`;
 const loadStats = () => LS.get('inq1:stats', { solved: {}, best: {}, streak: 0, bestStreak: 0, lastDay: 0 });
-
-function randomSpec(tier) {
-  const list = BANK[tier];
-  const fresh = list.filter((s) => !(LS.get(caseKey(s), null) || {}).solved);
-  const pool = fresh.length ? fresh : list;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtTime = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 const zeros = (n) => Array.from({ length: n }, () => new Array(n).fill(0));
 // difficulty as a row of printed dots: filled for each level of five
-const stars = (k) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(k)}${'<i></i>'.repeat(5 - k)}</span>`;
+const stars = (k, of = 5) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(k)}${'<i></i>'.repeat(of - k)}</span>`;
+// how hard a kind of day is, as four dots: Monday one, Sunday four
+const dayDots = (tier) => stars(TIER_LEVEL[tier], 4);
 
 function initials(name) {
   const w = name.split(' ').filter((x) => !TITLES_RANK.includes(x));
@@ -1466,7 +1548,7 @@ function tokens(text, ctx) {
 let G = null;      // current case
 let VIEW = 'home';
 
-function newGame(spec, mode) {
+function newGame(spec, mode, day) {
   const puzzle = importPuzzle(spec);
   const key = caseKey(spec);
   const saved = mode === 'tutorial' ? {} : LS.get(key, null) || {};
@@ -1476,6 +1558,7 @@ function newGame(spec, mode) {
   const struck = saved.struck || [];
   G = {
     spec, puzzle, key, mode, marks,
+    day: day || null, // the case number, for a day's case (today's is mode 'daily', an earlier one 'archive')
     struck,
     elapsed: saved.elapsed || 0,
     hints: saved.hints || 0,
@@ -1543,68 +1626,131 @@ function derive(marks, n, opts) {
 }
 
 const app = () => document.getElementById('app');
-
-const TIER_COPY = {
-  constable: { tab: 'Four suspects', line: 'Plain testimony. The place to start.' },
-  detective: { tab: 'Five suspects', line: 'A fair fight. Every clue earns its place.' },
-  inspector: { tab: 'Six suspects', line: 'Fewer gifts. Expect to test a theory or two.' },
-  mastermind: { tab: 'Six suspects', line: 'No direct testimony. Only what the evidence implies.' },
-};
 const tutorialDone = () => !!LS.get('inq1:tutorial', 0);
+const WEEKDAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-function folderState(spec) {
-  const s = LS.get(caseKey(spec), null);
-  if (s && s.solved) return '<span class="state done">Closed</span>';
-  if (s && (s.elapsed > 20 || s.struck && s.struck.length)) return '<span class="state">Started</span>';
-  return '<span class="state">Not started</span>';
+function stateWord(spec) {
+  const s = caseState(spec);
+  if (s.solved) return `Closed in ${fmtTime(s.elapsed || 0)}`;
+  if (s.elapsed > 20 || (s.struck && s.struck.length)) return 'Started';
+  return '';
 }
+const closedCount = (st) => Object.values(st.solved).reduce((a, b) => a + b, 0);
+const guestWord = { constable: 'Four guests', detective: 'Five guests', inspector: 'Six guests', mastermind: 'Six guests' };
 
+// ---- home: today's case, this week, and a way into the past
 function renderHome() {
   VIEW = 'home'; G = null;
-  const st = loadStats();
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const solved = Object.values(st.solved).reduce((a, b) => a + b, 0);
-  const rows = TIER_ORDER.map((t) => {
-    const spec = dailySpec(t), T = TIERS[t], w = WORLDS[spec.w];
-    const start = t === 'constable' && !solved ? '<span class="start">Start here</span>' : '';
-    return `<li><button class="case-row" data-act="open-daily" data-tier="${t}">
-      <span class="who"><span class="tier">${T.name}</span>${start}<span class="line">${TIER_COPY[t].tab}. ${esc(TIER_COPY[t].line)}</span></span>
-      <span class="today"><span class="title">${esc(spec.ti)}</span><span class="line">${esc(w.name)}, ${w.year}</span></span>
-      <span class="how"><span aria-label="Difficulty ${spec.r} of 5">${stars(spec.r)}</span>${folderState(spec)}</span>
-    </button></li>`;
-  }).join('');
-  const learn = tutorialDone()
-    ? ''
-    : '<div class="cta"><button class="btn" data-act="tutorial">Learn to play</button><span class="soft">A three-guest warm-up. About a minute.</span></div>';
+  const st = loadStats(), n = todayN(), D = dailyFor(n), w = WORLDS[D.spec.w], s = caseState(D.spec);
+  const closed = closedCount(st), streak = liveStreak(st);
+  const go = s.solved ? 'See it again' : s.elapsed > 20 || (s.struck && s.struck.length) ? 'Carry on' : 'Play today’s case';
+  // someone new, on a day that isn't Monday, is offered a gentler first case
+  let gentle = '';
+  if (!closed && weekdayOf(n) !== 1) {
+    const g = gentleStart();
+    gentle = `<p class="gentle">New here? ${g.n ? `${esc(dayName(g.n, { weekday: 'long', day: 'numeric', month: 'long' }))}’s case is a gentle one to start.` : 'Mondays are the gentlest day; until the first one, here is a gentle practice case.'}
+      <button class="link" data-act="gentle">Start there</button></p>`;
+  }
   app().innerHTML = `
     <div class="bar"><button class="mark" data-act="home">Inquest</button>
       <button class="quiet" data-act="how">How to play</button><button class="quiet" data-act="stats">Your record</button>${themeButton()}</div>
     <main class="home">
       <header>
-        <p class="date">${esc(dateStr)}, case ${dayNumber()}</p>
+        <p class="date">${esc(dayName(n))}</p>
         <h1>One murder. A few true statements. Exactly one answer.</h1>
-        <p class="lede">Read what the witnesses say, rule things out in your notebook, and name the killer, the weapon and the room.</p>
-        ${learn}
+        ${tutorialDone() ? '' : '<div class="cta"><button class="btn ghost" data-act="tutorial">Learn to play</button><span class="soft">A three-guest warm-up. About a minute.</span></div>'}
       </header>
-      <section aria-labelledby="today-label">
-        <p class="label" id="today-label">Today's cases, easiest first</p>
-        <ol class="cases">${rows}</ol>
+      <section class="today-case" aria-labelledby="today-label">
+        <p class="label" id="today-label">Today’s case, No. ${n}<span class="sep"></span><span aria-label="${WEEKDAY[weekdayOf(n)]}, difficulty ${TIER_LEVEL[D.tier]} of 4">${dayDots(D.tier)}</span></p>
+        <h2>${esc(D.spec.ti)}</h2>
+        <p class="line">${esc(w.name)}, ${w.year}. ${guestWord[D.tier]}. <span class="feel">${esc(DAY_FEEL[D.tier])}</span></p>
+        <div class="go"><button class="btn big" data-act="open-day" data-n="${n}">${go}</button>${s.solved ? `<span class="state done">${stateWord(D.spec)}</span>` : ''}</div>
+        ${gentle}
       </section>
+      ${weekHTML(n)}
       <div class="row">
+        <button class="link" data-act="archive">Past cases</button>
         ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the warm-up</button>' : ''}
-        <button class="link" data-act="random">Play an older case</button>
         <span class="grow"></span>
-        <span class="soft">Streak ${st.streak}, best ${st.bestStreak}, ${solved} closed</span>
+        <span class="soft">${streak ? `A ${streak}-day streak` : 'No streak yet'}${st.bestStreak > 1 ? ` (best ${st.bestStreak})` : ''}${closed ? `, ${closed} closed` : ''}.</span>
       </div>
     </main>`;
   window.scrollTo(0, 0);
 }
 
-function openCase(spec, mode) {
+// this week, Monday to Sunday: each day's difficulty, and a tick for the ones you closed
+function weekHTML(n) {
+  const mon = n - ((weekdayOf(n) + 6) % 7);
+  const days = [...Array(7).keys()].map((k) => {
+    const m = mon + k, wd = weekdayOf(m), tier = WEEK_TIER[wd];
+    const short = WEEKDAY[wd].slice(0, 3), date = dateOfDay(m).getDate();
+    const inner = `<span class="dname">${short}</span><span class="dnum">${date}</span>${dayDots(tier)}`;
+    if (m < 1) return `<li><span class="day before" aria-hidden="true"><span class="dname">${short}</span><span class="dnum">${date}</span></span></li>`;
+    if (m > n) return `<li><span class="day future" title="Opens at midnight on ${esc(dayName(m))}">${inner}<span class="sr">${esc(dayName(m))}, not yet</span></span></li>`;
+    const s = caseState(dailyFor(m).spec), word = s.solved ? 'closed' : s.elapsed > 20 ? 'started' : 'not played';
+    return `<li><button class="day${m === n ? ' is-today' : ''}${s.solved ? ' is-closed' : ''}" data-act="open-day" data-n="${m}" aria-label="${esc(dayName(m))}, No. ${m}, ${word}">${inner}<span class="dmark">${s.solved ? penTick('d' + m) : ''}</span></button></li>`;
+  }).join('');
+  return `<section class="week" aria-labelledby="week-label"><p class="label" id="week-label">This week</p><ol class="days">${days}</ol>
+    <p class="soft weekline">The week rises like a crossword: Monday is the gentlest, Sunday the hardest.</p></section>`;
+}
+
+// ---- past cases: every day since No. 1, newest first, a week at a time
+const ARCH = { weeks: 6 };
+const ARCH_FILTERS = [['all', 'All days'], ['constable', 'Mondays'], ['detective', 'Tue & Wed'], ['inspector', 'Thu to Sat'], ['mastermind', 'Sundays']];
+function renderArchive() {
+  VIEW = 'archive'; G = null;
+  const n = todayN(), f = LS.get('inq1:archfilter', 'all');
+  const days = [];
+  for (let m = n - 1; m >= 1; m--) if (f === 'all' || WEEK_TIER[weekdayOf(m)] === f) days.push(m);
+  // group by week (Monday first), and show only the latest ARCH.weeks of them
+  const weeks = [];
+  for (const m of days) {
+    const mon = m - ((weekdayOf(m) + 6) % 7);
+    if (!weeks.length || weeks[weeks.length - 1].mon !== mon) weeks.push({ mon, days: [] });
+    weeks[weeks.length - 1].days.push(m);
+  }
+  const shown = weeks.slice(0, ARCH.weeks);
+  const row = (m) => {
+    const D = dailyFor(m), w = WORLDS[D.spec.w], word = stateWord(D.spec);
+    return `<li><button class="case-row" data-act="open-day" data-n="${m}">
+      <span class="who"><span class="day-name">${esc(dayName(m))}</span><span class="line">No. ${m}</span></span>
+      <span class="today"><span class="title">${esc(D.spec.ti)}</span><span class="line">${esc(w.name)}, ${w.year}</span></span>
+      <span class="how"><span aria-label="Difficulty ${TIER_LEVEL[D.tier]} of 4">${dayDots(D.tier)}</span><span class="state${caseState(D.spec).solved ? ' done' : ''}">${word || 'Not played'}</span></span>
+    </button></li>`;
+  };
+  const firstOf = (tier) => { for (let m = n; m < n + 7; m++) if (WEEK_TIER[weekdayOf(m)] === tier) return m; return n; };
+  const empty = f === 'all' ? 'No past cases yet: No. 1 is today.'
+    : `No ${DAY_GROUP[f].replace('Tuesdays and Wednesdays', 'Tuesdays or Wednesdays').replace('Thursdays to Saturdays', 'Thursdays, Fridays or Saturdays')} yet. The first is ${esc(dayName(firstOf(f)))}.`;
+  app().innerHTML = `
+    <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to today">Inquest</button>
+      <button class="quiet" data-act="how">How to play</button><button class="quiet" data-act="stats">Your record</button>${themeButton()}</div>
+    <main class="home archive">
+      <header>
+        <p class="date"><button class="link" data-act="home">Back to today</button></p>
+        <h1>Past cases</h1>
+        <p class="lede">Every day since No. 1 on ${esc(dayName(1, { day: 'numeric', month: 'long' }))}. Practise the gentle Mondays, or go back for the Sundays.</p>
+      </header>
+      <div class="filters" role="group" aria-label="Which days">${ARCH_FILTERS.map(([k, label]) => `<button type="button" data-act="archfilter" data-f="${k}" aria-pressed="${k === f}">${label}</button>`).join('')}</div>
+      ${shown.length ? shown.map((wk) => `<section class="wk" aria-label="Week of ${esc(dayName(Math.max(1, wk.mon), { day: 'numeric', month: 'long' }))}">
+        <p class="label">Week of ${esc(dateOfDay(wk.mon).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }))}</p>
+        <ol class="cases">${wk.days.map(row).join('')}</ol></section>`).join('') : `<p class="soft">${empty}</p>`}
+      ${weeks.length > shown.length ? '<button class="btn ghost" data-act="archmore">Show earlier weeks</button>' : ''}
+    </main>`;
+}
+
+// open a day's case: today's counts towards the streak, an earlier one is from the archive
+function openDay(n) {
+  const D = dailyFor(n);
+  openCase(D.spec, n === todayN() ? 'daily' : 'archive', n);
+}
+function openCase(spec, mode, day) {
   closeModal();
-  newGame(spec, mode);
+  newGame(spec, mode, day);
   renderCase();
+}
+function openGentle() {
+  const g = gentleStart();
+  if (g.n) openDay(g.n); else openCase(g.spec, 'practice');
 }
 
 function howToHTML() {
@@ -1663,8 +1809,7 @@ function renderCase() {
   VIEW = 'case';
   const P = G.puzzle, ctx = P.ctx, w = ctx.world, n = P.n, tut = G.mode === 'tutorial';
   const unit = w.layoutKind === 'line' ? 'carriage' : 'room';
-  const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const when = tut ? 'The warm-up' : G.mode === 'daily' ? `${dateStr}, case ${dayNumber()}` : 'An older case';
+  const when = tut ? 'The warm-up' : G.day ? `${esc(dayName(G.day))}, No. ${G.day}${G.mode === 'daily' ? '' : ' <span class="soft">(past case)</span>'}` : 'A practice case';
   const mk = (v, k) => `<span class="mini">${penMark(v, k, 18)}</span>`;
   app().innerHTML = `
     <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to the cases">Inquest</button>
@@ -1672,7 +1817,7 @@ function renderCase() {
       <button class="quiet" data-act="how">How to play</button>${themeButton()}
       <button class="btn accuse" data-act="accuse">Name the killer</button></div>
     <header class="case-head">
-      <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></p>
+      <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${TIER_LEVEL[P.tier]} of 4">${dayDots(P.tier)}</span></p>
       <h1>${esc(P.title)}</h1>
       <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
       ${tut ? warmHeadHTML() : ''}
@@ -2207,9 +2352,9 @@ function solveCase() {
     const st = loadStats(), t = G.puzzle.tier;
     st.solved[t] = (st.solved[t] || 0) + 1;
     st.best[t] = st.best[t] ? Math.min(st.best[t], G.elapsed) : G.elapsed;
-    if (G.mode === 'daily') {
-      const today = dayNumber();
-      if (st.lastDay !== today) { st.streak = st.lastDay === today - 1 ? st.streak + 1 : 1; st.lastDay = today; }
+    // the streak counts today's case closed on its day (or just after midnight), never an archived one
+    if (G.mode === 'daily' && G.day >= todayN() - 1 && st.lastDay !== G.day) {
+      st.streak = st.lastDay === G.day - 1 ? st.streak + 1 : 1; st.lastDay = G.day;
       st.bestStreak = Math.max(st.bestStreak, st.streak);
     }
     LS.set('inq1:stats', st);
@@ -2221,10 +2366,11 @@ function solveCase() {
 
 function shareText() {
   const P = G.puzzle;
-  const head = G.mode === 'daily' ? `INQUEST No. ${dayNumber()}` : 'INQUEST, cold case';
+  const head = G.day ? `INQUEST No. ${G.day}, ${WEEKDAY[weekdayOf(G.day)]}` : 'INQUEST, practice case';
   const wrong = G.wrong === 1 ? '1 wrong accusation' : `${G.wrong} wrong accusations`;
   const hints = G.hints === 1 ? '1 hint' : `${G.hints} hints`;
-  return `${head}  ${'★'.repeat(P.rating)}${'☆'.repeat(5 - P.rating)}\n${P.tierName}: ${P.title}\nClosed in ${fmtTime(G.elapsed)}, ${hints}, ${wrong}.`;
+  const lvl = TIER_LEVEL[P.tier];
+  return `${head}  ${'●'.repeat(lvl)}${'○'.repeat(4 - lvl)}\n${P.title}\nClosed in ${fmtTime(G.elapsed)}, ${hints}, ${wrong}.`;
 }
 
 function openVerdict() {
@@ -2239,19 +2385,16 @@ function openVerdict() {
       <p class="soft">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
     <div class="share" id="share">${esc(shareText())}</div>
     ${nextStepHTML()}
-    <div class="actions"><button class="btn" data-act="copy-share">Copy result</button><button class="btn ghost" data-act="home">Back to the cases</button><button class="btn ghost" data-act="random">Another case</button></div></div>`);
+    <div class="actions"><button class="btn" data-act="copy-share">Copy result</button><button class="btn ghost" data-act="home">Back to today</button><button class="btn ghost" data-act="archive">Past cases</button></div></div>`);
 }
 
-// After a win, point at the next thing worth doing: the next level up today, or tomorrow's case.
+// After a win, point at the next thing worth doing: today's case if this wasn't it, else tomorrow.
 function nextStepHTML() {
-  const st = loadStats(), closed = Object.values(st.solved).reduce((a, b) => a + b, 0);
-  const up = TIER_ORDER[TIER_ORDER.indexOf(G.puzzle.tier) + 1];
-  const record = `${closed} case${closed === 1 ? '' : 's'} closed${st.streak > 1 ? `, a ${st.streak}-day streak` : ''}.`;
-  if (G.mode === 'daily' && up) {
-    const s = LS.get(caseKey(dailySpec(up)), null);
-    if (!(s && s.solved)) return `<div class="next"><p>${record} Ready for more? Today's <b>${TIERS[up].name}</b> case is waiting. ${esc(TIER_COPY[up].line)}</p><button class="btn red" data-act="open-daily" data-tier="${up}">Open today's ${TIERS[up].name} case</button></div>`;
-  }
-  return `<div class="next"><p>${record} A new set of cases opens at midnight.</p></div>`;
+  const st = loadStats(), closed = closedCount(st), streak = liveStreak(st), n = todayN();
+  const record = `${closed} case${closed === 1 ? '' : 's'} closed${streak > 1 ? `, a ${streak}-day streak` : ''}.`;
+  if (G.mode !== 'daily' && !caseState(dailyFor(n).spec).solved) return `<div class="next"><p>${record} Today’s case is still open.</p><button class="btn" data-act="open-day" data-n="${n}">Play today’s case</button></div>`;
+  const t = WEEK_TIER[weekdayOf(n + 1)];
+  return `<div class="next"><p>${record} Tomorrow is ${WEEKDAY[weekdayOf(n + 1)]}. ${esc(DAY_FEEL[t])} It opens at midnight.</p></div>`;
 }
 
 async function copyShare() {
@@ -2356,8 +2499,8 @@ function hintMore() {
 
 function openStats() {
   const st = loadStats();
-  const row = (t) => `<tr><td>${TIERS[t].name}</td><td>${st.solved[t] || 0}</td><td>${st.best[t] ? fmtTime(st.best[t]) : 'none yet'}</td></tr>`;
-  openModal(`<h2>Your record</h2><div class="stats"><div><b>${st.streak}</b><span>day streak</span></div><div><b>${st.bestStreak}</b><span>best streak</span></div><div><b>${Object.values(st.solved).reduce((a, b) => a + b, 0)}</b><span>cases closed</span></div></div>
+  const row = (t) => `<tr><td>${DAY_GROUP[t]}</td><td>${st.solved[t] || 0}</td><td>${st.best[t] ? fmtTime(st.best[t]) : 'none yet'}</td></tr>`;
+  openModal(`<h2>Your record</h2><div class="stats"><div><b>${liveStreak(st)}</b><span>day streak</span></div><div><b>${st.bestStreak}</b><span>best streak</span></div><div><b>${Object.values(st.solved).reduce((a, b) => a + b, 0)}</b><span>cases closed</span></div></div>
     <table class="verdict" style="width:100%"><thead><tr><td></td><td>Closed</td><td>Best time</td></tr></thead><tbody>${TIER_ORDER.map(row).join('')}</tbody></table>`, 'verdict');
 }
 
@@ -2543,7 +2686,7 @@ function finishWarmup() {
     <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
     <p>Five true statements, and the notebook did the rest. Real cases have more guests and trickier statements, but every one is solved the same way.</p>
     <p class="soft">Stuck later on? <b>Hint</b> points to the next step, and tells you if a mark doesn’t add up.</p>
-    <div class="actions"><button class="btn" data-act="open-daily" data-tier="constable">Play a first real case</button><button class="btn ghost" data-act="home">Back to the cases</button></div></div>`);
+    <div class="actions"><button class="btn" data-act="gentle">Play a gentle first case</button><button class="btn ghost" data-act="home">Today\u2019s case</button></div></div>`);
   const cs = document.getElementById('closed-stamp');
   if (cs) cs.textContent = 'Case closed.';
 }
@@ -2559,7 +2702,11 @@ document.addEventListener('click', (e) => {
   const a = e.target.closest('[data-act]');
   if (a) {
     const act = a.dataset.act, i = +a.dataset.i;
-    if (act === 'open-daily') openCase(dailySpec(a.dataset.tier), 'daily');
+    if (act === 'open-day') openDay(+a.dataset.n);
+    else if (act === 'gentle') openGentle();
+    else if (act === 'archive') { closeModal(); ARCH.weeks = 6; renderArchive(); window.scrollTo(0, 0); }
+    else if (act === 'archfilter') { LS.set('inq1:archfilter', a.dataset.f); ARCH.weeks = 6; renderArchive(); }
+    else if (act === 'archmore') { ARCH.weeks += 6; renderArchive(); }
     else if (act === 'home') { closeModal(); homeOrLesson(); }
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
@@ -2569,11 +2716,6 @@ document.addEventListener('click', (e) => {
     else if (act === 'undo') undo();
     else if (act === 'clear') clearAll();
     else if (act === 'stats') openStats();
-    else if (act === 'random') {
-      closeModal();
-      const t = G ? G.puzzle.tier : TIER_ORDER[Math.floor(Math.random() * TIER_ORDER.length)];
-      pickRandom(t);
-    }
     else if (act === 'close') closeModal();
     else if (act === 'accuse') {
       closeModal();
@@ -2584,7 +2726,6 @@ document.addEventListener('click', (e) => {
     else if (act === 'hint') openHint();
     else if (act === 'hint-more') hintMore();
     else if (act === 'copy-share') copyShare();
-    else if (act === 'pick-tier') { closeModal(); openCase(randomSpec(a.dataset.tier), 'random'); }
     // the case screen
     else if (act === 'pick-stmt') { closeModal(); selectStatement(i); }
     else if (act === 'use') toggleUsed(i);
@@ -2611,15 +2752,6 @@ document.addEventListener('click', (e) => {
   if (room && !e.target.closest('.cell') && G) { openRoomSheet(+room.dataset.room); return; }
   if (e.target.id === 'scrim') closeModal();
 });
-
-function pickRandom(tier) {
-  closeModal();
-  openRandomChoice(tier);
-}
-function openRandomChoice(tier) {
-  openModal(`<h2>Play an older case</h2><p>Pick a level. You will get a case you have not closed yet, when there is one.</p>
-    <div class="actions">${TIER_ORDER.map((t) => `<button class="btn ${t === tier ? '' : 'ghost'}" data-act="pick-tier" data-tier="${t}">${TIERS[t].name}</button>`).join('')}</div>`);
-}
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();

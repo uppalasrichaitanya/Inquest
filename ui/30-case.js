@@ -44,8 +44,7 @@ function renderCase() {
   VIEW = 'case';
   const P = G.puzzle, ctx = P.ctx, w = ctx.world, n = P.n, tut = G.mode === 'tutorial';
   const unit = w.layoutKind === 'line' ? 'carriage' : 'room';
-  const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const when = tut ? 'The warm-up' : G.mode === 'daily' ? `${dateStr}, case ${dayNumber()}` : 'An older case';
+  const when = tut ? 'The warm-up' : G.day ? `${esc(dayName(G.day))}, No. ${G.day}${G.mode === 'daily' ? '' : ' <span class="soft">(past case)</span>'}` : 'A practice case';
   const mk = (v, k) => `<span class="mini">${penMark(v, k, 18)}</span>`;
   app().innerHTML = `
     <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to the cases">Inquest</button>
@@ -53,7 +52,7 @@ function renderCase() {
       <button class="quiet" data-act="how">How to play</button>${themeButton()}
       <button class="btn accuse" data-act="accuse">Name the killer</button></div>
     <header class="case-head">
-      <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></p>
+      <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${TIER_LEVEL[P.tier]} of 4">${dayDots(P.tier)}</span></p>
       <h1>${esc(P.title)}</h1>
       <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
       ${tut ? warmHeadHTML() : ''}

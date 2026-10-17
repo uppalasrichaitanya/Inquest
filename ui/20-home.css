@@ -1,28 +1,80 @@
+/* ---- home: today's case, this week, the way into the past */
 .home { padding-top: clamp(24px, 6vw, 56px); display: grid; gap: 44px; max-width: 920px; }
 .home .date { margin: 0 0 8px; font-style: italic; color: var(--muted); }
 .home h1 { margin: 0; max-width: 15em; font-size: clamp(38px, 6vw, 62px); line-height: 1.02; font-weight: 500; letter-spacing: -.015em; font-variation-settings: 'opsz' 72; text-wrap: balance; }
 .home .lede { margin: 18px 0 0; max-width: 34em; font-size: 20px; }
 .home .cta { margin: 24px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
-.cases { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--rule); }
-.cases li { border-bottom: 1px solid var(--rule); }
-.case-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 6px 28px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; padding: 18px 8px 20px 0; color: var(--ink); }
-.case-row:hover { background: linear-gradient(90deg, var(--wash), transparent 90%); }
-.case-row .tier { font-size: 26px; font-weight: 500; font-variation-settings: 'opsz' 48; margin-right: 12px; }
-.case-row .start { font-style: italic; color: var(--pen); font-size: 16px; }
-.case-row .line { display: block; color: var(--muted); font-size: 16px; }
-.case-row .title { display: block; font-style: italic; font-size: 18px; }
-.case-row .how { display: grid; justify-items: end; gap: 2px; font-size: 15px; color: var(--muted); }
-.case-row .state.done { color: var(--ink); }
 .level { display: inline-flex; gap: 4px; }
 .level i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--muted); }
 .level i.on { background: var(--ink); border-color: var(--ink); }
+.label .sep, .date .sep { display: inline-block; width: 14px; }
+
+/* today's case: the one thing on the page */
+.today-case { border-top: 2px solid var(--ink); padding-top: 14px; }
+.today-case .label { display: flex; align-items: center; }
+.today-case h2 { margin: 10px 0 0; font-size: clamp(32px, 4.4vw, 46px); line-height: 1.05; font-weight: 500; font-style: italic; font-variation-settings: 'opsz' 60; }
+.today-case .line { margin: 10px 0 0; color: var(--muted); font-size: 17px; max-width: 40em; }
+.today-case .feel { color: var(--ink); }
+.today-case .go { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 22px; }
+.btn.big { padding: 13px 30px 14px; font-size: 19px; }
+.state { font-style: italic; color: var(--muted); }
+.state.done { color: var(--ink); }
+.gentle { margin: 18px 0 0; font-size: 16px; color: var(--muted); }
+.gentle .link { margin-left: 4px; }
+
+/* this week: Monday to Sunday */
+.days { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.days li { display: flex; }
+.day { position: relative; flex: 1; display: grid; justify-items: center; gap: 4px; padding: 12px 2px 14px; background: none; border: 0; color: var(--ink); font-size: 15px; }
+.days li + li .day { border-left: 1px solid var(--rule); }
+button.day:hover { background: var(--wash); }
+.day .dname { font-style: italic; color: var(--muted); }
+.day .dnum { font-size: 22px; line-height: 1.1; font-variant-numeric: lining-nums; }
+.day .level { gap: 3px; }
+.day .level i { width: 5px; height: 5px; }
+.day.is-today { box-shadow: inset 0 -3px 0 var(--ink); }
+.day.is-today .dname { color: var(--ink); }
+.day.future, .day.before { color: var(--ghost); }
+.day.future .dname, .day.before .dname { color: var(--ghost); }
+.day.future .level i, .day.before .level i { border-color: var(--ghost); }
+.day.future .level i.on, .day.before .level i.on { background: var(--ghost); }
+.day .dmark { position: absolute; top: 6px; right: 6px; width: 18px; height: 16px; }
+.day .dmark .tick { width: 18px; height: 16px; }
+.weekline { margin: 10px 0 0; font-size: 15px; }
+
 .home .row { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; }
 .home .row .grow { flex: 1; min-width: 12px; }
+
+/* past cases */
+.archive { gap: 30px; }
+.archive h1 { max-width: none; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { min-height: 40px; padding: 6px 14px; background: none; border: 1px solid var(--rule); border-radius: 2px; color: var(--muted); font-size: 16px; }
+.filters button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.wk .label { margin-bottom: 0; }
+.cases { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.cases li { border-bottom: 1px solid var(--rule); }
+.case-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 8.5em; gap: 4px 28px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; padding: 14px 8px 16px 0; color: var(--ink); }
+.case-row:hover { background: linear-gradient(90deg, var(--wash), transparent 90%); }
+.case-row .day-name { display: block; font-size: 19px; }
+.case-row .line { display: block; color: var(--muted); font-size: 15px; }
+.case-row .title { display: block; font-style: italic; font-size: 18px; }
+.case-row .how { display: grid; justify-items: end; gap: 2px; font-size: 15px; }
+.archive > .btn { justify-self: start; }
+
 @media (max-width: 760px) {
-  .home { gap: 32px; padding-top: 16px; }
-  .home .lede { font-size: 18px; }
-  .case-row { grid-template-columns: minmax(0, 1fr) auto; padding: 14px 0 16px; }
+  .home { gap: 30px; padding-top: 16px; }
+  .home h1 { font-size: 32px; }
+  .home .lede { font-size: 17px; }
+  .today-case h2 { font-size: 30px; }
+  .today-case .line { font-size: 16px; }
+  .btn.big { width: 100%; }
+  .day { padding: 10px 0 12px; font-size: 13px; }
+  .day .dnum { font-size: 19px; }
+  .day .dmark { top: 3px; right: 2px; width: 14px; height: 13px; }
+  .day .dmark .tick { width: 14px; height: 13px; }
+  .case-row { grid-template-columns: minmax(0, 1fr) auto; padding: 12px 0 14px; }
   .case-row .today { grid-column: 1; grid-row: 2; }
   .case-row .how { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
-  .case-row .tier { font-size: 22px; }
+  .filters button { font-size: 15px; padding: 6px 11px; }
 }

@@ -86,9 +86,9 @@ function solveCase() {
     const st = loadStats(), t = G.puzzle.tier;
     st.solved[t] = (st.solved[t] || 0) + 1;
     st.best[t] = st.best[t] ? Math.min(st.best[t], G.elapsed) : G.elapsed;
-    if (G.mode === 'daily') {
-      const today = dayNumber();
-      if (st.lastDay !== today) { st.streak = st.lastDay === today - 1 ? st.streak + 1 : 1; st.lastDay = today; }
+    // the streak counts today's case closed on its day (or just after midnight), never an archived one
+    if (G.mode === 'daily' && G.day >= todayN() - 1 && st.lastDay !== G.day) {
+      st.streak = st.lastDay === G.day - 1 ? st.streak + 1 : 1; st.lastDay = G.day;
       st.bestStreak = Math.max(st.bestStreak, st.streak);
     }
     LS.set('inq1:stats', st);
@@ -100,10 +100,11 @@ function solveCase() {
 
 function shareText() {
   const P = G.puzzle;
-  const head = G.mode === 'daily' ? `INQUEST No. ${dayNumber()}` : 'INQUEST, cold case';
+  const head = G.day ? `INQUEST No. ${G.day}, ${WEEKDAY[weekdayOf(G.day)]}` : 'INQUEST, practice case';
   const wrong = G.wrong === 1 ? '1 wrong accusation' : `${G.wrong} wrong accusations`;
   const hints = G.hints === 1 ? '1 hint' : `${G.hints} hints`;
-  return `${head}  ${'★'.repeat(P.rating)}${'☆'.repeat(5 - P.rating)}\n${P.tierName}: ${P.title}\nClosed in ${fmtTime(G.elapsed)}, ${hints}, ${wrong}.`;
+  const lvl = TIER_LEVEL[P.tier];
+  return `${head}  ${'●'.repeat(lvl)}${'○'.repeat(4 - lvl)}\n${P.title}\nClosed in ${fmtTime(G.elapsed)}, ${hints}, ${wrong}.`;
 }
 
 function openVerdict() {
@@ -118,19 +119,16 @@ function openVerdict() {
       <p class="soft">Only the killer's row can be proved from the statements. The rest is one story that fits.</p></details>
     <div class="share" id="share">${esc(shareText())}</div>
     ${nextStepHTML()}
-    <div class="actions"><button class="btn" data-act="copy-share">Copy result</button><button class="btn ghost" data-act="home">Back to the cases</button><button class="btn ghost" data-act="random">Another case</button></div></div>`);
+    <div class="actions"><button class="btn" data-act="copy-share">Copy result</button><button class="btn ghost" data-act="home">Back to today</button><button class="btn ghost" data-act="archive">Past cases</button></div></div>`);
 }
 
-// After a win, point at the next thing worth doing: the next level up today, or tomorrow's case.
+// After a win, point at the next thing worth doing: today's case if this wasn't it, else tomorrow.
 function nextStepHTML() {
-  const st = loadStats(), closed = Object.values(st.solved).reduce((a, b) => a + b, 0);
-  const up = TIER_ORDER[TIER_ORDER.indexOf(G.puzzle.tier) + 1];
-  const record = `${closed} case${closed === 1 ? '' : 's'} closed${st.streak > 1 ? `, a ${st.streak}-day streak` : ''}.`;
-  if (G.mode === 'daily' && up) {
-    const s = LS.get(caseKey(dailySpec(up)), null);
-    if (!(s && s.solved)) return `<div class="next"><p>${record} Ready for more? Today's <b>${TIERS[up].name}</b> case is waiting. ${esc(TIER_COPY[up].line)}</p><button class="btn red" data-act="open-daily" data-tier="${up}">Open today's ${TIERS[up].name} case</button></div>`;
-  }
-  return `<div class="next"><p>${record} A new set of cases opens at midnight.</p></div>`;
+  const st = loadStats(), closed = closedCount(st), streak = liveStreak(st), n = todayN();
+  const record = `${closed} case${closed === 1 ? '' : 's'} closed${streak > 1 ? `, a ${streak}-day streak` : ''}.`;
+  if (G.mode !== 'daily' && !caseState(dailyFor(n).spec).solved) return `<div class="next"><p>${record} Today’s case is still open.</p><button class="btn" data-act="open-day" data-n="${n}">Play today’s case</button></div>`;
+  const t = WEEK_TIER[weekdayOf(n + 1)];
+  return `<div class="next"><p>${record} Tomorrow is ${WEEKDAY[weekdayOf(n + 1)]}. ${esc(DAY_FEEL[t])} It opens at midnight.</p></div>`;
 }
 
 async function copyShare() {
@@ -235,7 +233,7 @@ function hintMore() {
 
 function openStats() {
   const st = loadStats();
-  const row = (t) => `<tr><td>${TIERS[t].name}</td><td>${st.solved[t] || 0}</td><td>${st.best[t] ? fmtTime(st.best[t]) : 'none yet'}</td></tr>`;
-  openModal(`<h2>Your record</h2><div class="stats"><div><b>${st.streak}</b><span>day streak</span></div><div><b>${st.bestStreak}</b><span>best streak</span></div><div><b>${Object.values(st.solved).reduce((a, b) => a + b, 0)}</b><span>cases closed</span></div></div>
+  const row = (t) => `<tr><td>${DAY_GROUP[t]}</td><td>${st.solved[t] || 0}</td><td>${st.best[t] ? fmtTime(st.best[t]) : 'none yet'}</td></tr>`;
+  openModal(`<h2>Your record</h2><div class="stats"><div><b>${liveStreak(st)}</b><span>day streak</span></div><div><b>${st.bestStreak}</b><span>best streak</span></div><div><b>${Object.values(st.solved).reduce((a, b) => a + b, 0)}</b><span>cases closed</span></div></div>
     <table class="verdict" style="width:100%"><thead><tr><td></td><td>Closed</td><td>Best time</td></tr></thead><tbody>${TIER_ORDER.map(row).join('')}</tbody></table>`, 'verdict');
 }
