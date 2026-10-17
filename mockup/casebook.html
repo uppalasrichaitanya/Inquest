@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Inquest — Casebook mockup</title>
+<!-- Milestone 2: a static mockup of the case screen in direction A ("Casebook"). No game logic: the marks are
+     hand-placed for "The Storm at Blackwood" (bank-detective-2) part-way through a solve. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
+<style>
+:root {
+  --paper: #F1F2EE; --ink: #1D2430; --muted: #5D6571; --rule: #CDD1CB; --wash: #E3E6E0; --ghost: #B9BEB8;
+  --pen: #CF3F28; --pen-faint: rgba(207, 63, 40, .34);
+  --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --cell: 53px; --name: 112px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15181D; --ink: #E5E2D9; --muted: #9AA0A8; --rule: #343841; --wash: #23272E; --ghost: #4A4F58;
+    --pen: #F0694E; --pen-faint: rgba(240, 105, 78, .38); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15181D; --ink: #E5E2D9; --muted: #9AA0A8; --rule: #343841; --wash: #23272E; --ghost: #4A4F58;
+  --pen: #F0694E; --pen-faint: rgba(240, 105, 78, .38); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 400 18px/1.5 var(--serif); font-optical-sizing: auto;
+  font-variant-numeric: oldstyle-nums proportional-nums;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.label { font-style: italic; color: var(--muted); font-size: 16px; font-weight: 400; margin: 0; }
+
+/* ---- masthead */
+.top { max-width: 1240px; margin: 0 auto; padding: 22px 40px 0; display: flex; align-items: baseline; gap: 20px; }
+.wordmark { font-size: 24px; font-weight: 600; letter-spacing: .01em; font-variation-settings: 'opsz' 72; margin-right: auto; }
+.wordmark i { font-weight: 400; }
+.quiet { background: none; border: 0; padding: 6px 2px; color: var(--muted); font-size: 17px; cursor: pointer;
+  text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.quiet:hover { color: var(--ink); text-decoration-color: currentColor; }
+
+.head { max-width: 1240px; margin: 0 auto; padding: 34px 40px 30px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 48px; align-items: end; border-bottom: 1px solid var(--rule); }
+.date { margin: 0 0 6px; color: var(--muted); font-style: italic; }
+h1 { margin: 0; font-size: 62px; line-height: 1; font-weight: 500; letter-spacing: -.015em; font-variation-settings: 'opsz' 72; }
+.scene { margin: 16px 0 0; max-width: 34em; font-size: 19px; }
+.rules { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.45; }
+.rules b { color: var(--ink); font-weight: 600; }
+
+/* ---- the two columns */
+.case { max-width: 1240px; margin: 0 auto; padding: 30px 40px 120px; display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 48px; }
+
+/* statements */
+.stmts { list-style: none; margin: 14px 0 0; padding: 0; }
+.stmt { position: relative; display: grid; grid-template-columns: 30px 1fr; padding: 13px 8px 15px 0; border-top: 1px solid var(--rule); cursor: pointer; }
+.stmt:last-child { border-bottom: 1px solid var(--rule); }
+.stmt .n { font-variant-numeric: lining-nums; color: var(--muted); font-size: 16px; padding-top: 2px; }
+.stmt p { margin: 0; }
+.stmt .who { display: block; margin-top: 4px; font-style: italic; color: var(--muted); font-size: 16px; }
+.stmt.used p { color: var(--muted); }
+.stmt.used .n { visibility: hidden; }
+.stmt .tick, .stmt .brace { position: absolute; pointer-events: none; }
+.stmt .tick { left: -4px; top: 13px; width: 22px; height: 20px; }
+.stmt .brace { left: -18px; top: 8px; bottom: 8px; width: 12px; height: calc(100% - 16px); }
+.stmt.on { background: linear-gradient(90deg, var(--wash), transparent 85%); }
+.s-tok { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: hsl(var(--h) 38% 55% / .7); }
+.w-tok { font-style: italic; }
+.r-tok { font-variant-caps: small-caps; letter-spacing: .02em; }
+
+/* notebook */
+.nb-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.howmark { color: var(--muted); font-size: 15px; margin: 4px 0 0; }
+.howmark svg { width: 18px; height: 18px; vertical-align: -4px; }
+.tabs { display: none; }
+.tablewrap { margin-top: 14px; }
+table.grid { border-collapse: collapse; }
+.grid th, .grid td { padding: 0; }
+.grid col.name { width: var(--name); }
+.grid col.c { width: var(--cell); }
+.grid .gap { width: 14px; min-width: 14px; padding: 0; }
+.grid td.sq, .grid thead .nm th.c { width: var(--cell); min-width: var(--cell); max-width: var(--cell); }
+.grid thead .grp th { font-weight: 400; font-style: italic; color: var(--muted); font-size: 14px; line-height: 1.15; text-align: left; vertical-align: bottom; padding: 0 0 3px 2px; border-bottom: 1px solid var(--rule); hyphens: manual; }
+.grid thead .grp th.blank { border: 0; }
+.grid thead .grp th.on { color: var(--ink); }
+.grid thead .nm th { font-weight: 400; font-size: 13.5px; line-height: 1.15; vertical-align: bottom; text-align: center; padding: 8px 2px 8px; hyphens: manual; }
+.grid thead .nm th .g { display: block; margin: 0 auto 5px; width: 16px; height: 16px; color: var(--muted); }
+.grid thead .nm th.on { background: var(--wash); }
+.grid tbody th { text-align: left; font-weight: 400; font-size: 17px; padding-right: 8px; white-space: nowrap; }
+.grid tbody th .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: hsl(var(--h) 34% 52%); margin-right: 8px; vertical-align: 1px; }
+.grid td.sq { height: var(--cell); border: 1px solid var(--rule); position: relative; }
+.grid td.sq button { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: none; padding: 0; cursor: pointer; }
+.grid td.sq button:hover { background: var(--wash); }
+.grid td.sq.on { background: var(--wash); }
+.grid td.sq svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.grid td.k { border-left: 2px solid var(--ink); }
+
+/* plan */
+.plan { margin-top: 34px; }
+.plan-key { margin: 4px 0 12px; color: var(--muted); font-size: 15.5px; max-width: 38em; }
+.plan svg.house { display: block; width: 100%; max-width: 640px; height: auto; overflow: visible; }
+.house text { font-family: var(--serif); fill: var(--ink); }
+.house .floor-name { font-style: italic; fill: var(--muted); font-size: 13px; }
+.house .room-name { font-size: 14px; }
+.house .wall { fill: none; stroke: var(--ink); stroke-width: 2; }
+.house .ghost { fill: none; stroke: var(--ghost); stroke-width: 1; stroke-dasharray: 3 4; }
+.house .ghost-name { fill: var(--ghost); font-style: italic; font-size: 13px; }
+.house .door { stroke: var(--paper); stroke-width: 4; }
+.house .stair { fill: none; stroke: var(--ink); stroke-width: 1.3; }
+.house .lit { fill: var(--wash); }
+.house .chip rect { fill: none; stroke: var(--rule); }
+.house .chip use { color: var(--muted); }
+.wr-table { display: none; }
+.plan.as-table svg.house { display: none; }
+.plan.as-table .wr-table { display: block; }
+
+.accuse-bar { margin-top: 30px; display: flex; align-items: center; gap: 18px; }
+.accuse { background: var(--ink); color: var(--paper); border: 0; padding: 13px 26px 14px; font-size: 18px; font-weight: 500; cursor: pointer; border-radius: 2px; }
+.accuse:hover { opacity: .9; }
+.accuse-bar span { color: var(--muted); font-size: 15.5px; font-style: italic; }
+
+/* phone-only pieces */
+.strip, .allbtn { display: none; }
+
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  :root { --cell: 40px; --name: 84px; }
+  .grid tbody th { font-size: 15px; padding-right: 6px; }
+  .grid tbody th .dot { width: 8px; height: 8px; margin-right: 5px; }
+  .grid .gap { width: 8px; min-width: 8px; }
+  .grid thead .grp th { font-size: 13px; padding-left: 2px; }
+  .top { padding: 14px 16px 0; gap: 14px; }
+  .wordmark { font-size: 21px; }
+  .quiet { font-size: 16px; }
+  .head { display: block; padding: 16px 16px 18px; }
+  h1 { font-size: 40px; }
+  .scene { font-size: 17px; margin-top: 10px; }
+  .rules { margin-top: 10px; font-size: 15px; }
+  .case { display: block; padding: 0 16px 110px; }
+  .case > .left { display: none; }
+
+  /* one statement at a time, right above the notebook */
+  .strip { display: block; position: sticky; top: 0; z-index: 3; background: var(--paper); margin: 0 -16px; padding: 12px 16px 12px; border-bottom: 1px solid var(--rule); }
+  .strip .nav { display: flex; align-items: center; gap: 4px; }
+  .strip .nav .count { margin-right: auto; color: var(--muted); font-style: italic; font-size: 15px; }
+  .strip .arrow { width: 44px; height: 40px; border: 1px solid var(--rule); background: none; border-radius: 2px; font-size: 20px; line-height: 1; cursor: pointer; }
+  .strip .stmt { border: 0; padding: 6px 0 2px; grid-template-columns: 1fr; background: none; }
+  .strip .stmt .n { display: none; }
+  .allbtn { display: inline; }
+
+  .notebook { margin-top: 18px; }
+  .tabs { display: flex; margin-top: 12px; border: 1px solid var(--rule); border-radius: 2px; }
+  .tabs button { flex: 1; background: none; border: 0; padding: 9px 0 10px; font-size: 16px; cursor: pointer; color: var(--muted); }
+  .tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+  .notebook[data-tab="weapons"] .rooms-part, .notebook[data-tab="rooms"] .weapons-part { display: none; }
+  .grid thead .nm th { font-size: 11.5px; padding: 6px 1px 7px; }
+  .plan-key { font-size: 14.5px; }
+  .accuse-bar { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); z-index: 4; }
+  .accuse-bar .accuse { flex: none; }
+  .accuse-bar span { font-size: 14.5px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stmt, .grid td.sq button { transition: background-color .15s; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- weapon kinds, drawn as printer's marks: a blade, a weight, a loop -->
+  <symbol id="k-blade" viewBox="0 0 16 16"><path d="M8 1 L10 9.5 L6 9.5 Z" fill="currentColor"/><path d="M4.5 10.5h7M8 11v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="k-blunt" viewBox="0 0 16 16"><circle cx="8" cy="8.5" r="5" fill="currentColor"/></symbol>
+  <symbol id="k-cord" viewBox="0 0 16 16"><path d="M2 10c2-6 5-6 6-2s4 4 6-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="k-poison" viewBox="0 0 16 16"><path d="M8 2.5c2.8 3.6 4.2 6 4.2 7.8a4.2 4.2 0 0 1-8.4 0C3.8 8.5 5.2 6.1 8 2.5z" fill="currentColor"/></symbol>
+  <symbol id="k-firearm" viewBox="0 0 16 16"><path d="M2 6h12v3H7l-1 4H3.5l1-4H2z" fill="currentColor"/></symbol>
+</svg>
+
+<header class="top">
+  <span class="wordmark">Inquest</span>
+  <button class="quiet" type="button">How to play</button>
+  <button class="quiet" type="button">Hint</button>
+</header>
+
+<section class="head">
+  <div>
+    <p class="date">Wednesday 21 October, case 7</p>
+    <h1>The Storm at Blackwood</h1>
+    <p class="scene">The storm cut the telephone wires at nine. Sir Aldous Blackwood was found at one in the morning, and nobody has gone to bed since. Five guests, five rooms, five weapons. One of them did it.</p>
+  </div>
+  <p class="rules"><b>Each guest</b> had one weapon and was in one room; no two shared. <b>Every statement is true.</b> <b>The killer</b> held the murder weapon in the room where the body was found.</p>
+</section>
+
+<main class="case">
+  <section class="left" aria-label="Statements">
+    <p class="label">Statements</p>
+    <ol class="stmts" id="stmts"></ol>
+  </section>
+
+  <section aria-label="Notebook">
+    <div class="strip" id="strip" aria-live="polite">
+      <div class="nav">
+        <span class="count" id="strip-count"></span>
+        <button class="quiet allbtn" type="button">All statements</button>
+        <button class="arrow" type="button" aria-label="Previous statement" data-step="-1">&lsaquo;</button>
+        <button class="arrow" type="button" aria-label="Next statement" data-step="1">&rsaquo;</button>
+      </div>
+      <div id="strip-body"></div>
+    </div>
+
+    <div class="notebook" id="notebook" data-tab="weapons">
+      <div class="nb-head">
+        <p class="label">Notebook</p>
+      </div>
+      <p class="howmark">Tap once to rule out <span id="mk-x"></span>, twice for a match <span id="mk-o"></span>. Faint marks follow from yours.</p>
+      <div class="tabs" role="tablist" aria-label="Notebook page">
+        <button type="button" role="tab" aria-selected="true" data-tab="weapons">Weapons</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="rooms">Rooms</button>
+      </div>
+      <div class="tablewrap"><table class="grid" id="grid"></table></div>
+
+      <div class="plan" id="plan">
+        <div class="nb-head">
+          <p class="label">Blackwood Manor</p>
+          <button class="quiet" type="button" id="plan-toggle">Show as a table</button>
+        </div>
+        <p class="plan-key">Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. Each room lists the weapons that could have been in it.</p>
+        <div id="house"></div>
+        <div class="wr-table"><table class="grid" id="wr-grid"></table></div>
+      </div>
+    </div>
+
+    <div class="accuse-bar">
+      <button class="accuse" type="button">Name the killer</button>
+      <span>Who, with what, and where.</span>
+    </div>
+  </section>
+</main>
+
+<script>
+// ---- the case, as the engine would hand it over (bank-detective-2)
+const S = [
+  { name: 'Lady Vane', full: 'Lady Ottoline Vane', h: 340 },
+  { name: 'Major Crisp', full: 'Major Barnaby Crisp', h: 28 },
+  { name: 'Rev. Thorne', full: 'Reverend Silas Thorne', h: 265 },
+  { name: 'Mrs. Marrow', full: 'Mrs. Edith Marrow', h: 95 },
+  { name: 'Miss Lark', full: 'Imogen Lark', h: 5 },
+];
+const W = [
+  { name: 'Moroccan Dagger', short: 'Dagger', kind: 'blade' },
+  { name: 'Silver Letter Opener', short: 'Letter opener', kind: 'blade' },
+  { name: 'Brass Candlestick', short: 'Candle&shy;stick', kind: 'blunt' },
+  { name: 'Fire Poker', short: 'Poker', kind: 'blunt' },
+  { name: 'Curtain Cord', short: 'Curtain cord', kind: 'cord' },
+];
+const KIND = { blade: 'Sharp', blunt: 'Blunt', cord: 'Cord', poison: 'Poison', firearm: 'Gun' };
+const R = [
+  { name: 'Study', floor: 'Upstairs', rect: { x: 5, y: 0, w: 4 } },
+  { name: 'Dining Hall', floor: 'Ground floor', rect: { x: 2, y: 1, w: 3 } },
+  { name: 'Library', floor: 'Ground floor', rect: { x: 5, y: 1, w: 2 } },
+  { name: 'Conservatory', label: 'Conser&shy;vatory', floor: 'Ground floor', rect: { x: 7, y: 1, w: 2 } },
+  { name: 'Wine Cellar', floor: 'Cellar', rect: { x: 0, y: 2, w: 2 } },
+];
+const GHOSTS = [{ name: 'Master Bedroom', rect: { x: 0, y: 0, w: 5 } }, { name: 'Kitchen', rect: { x: 0, y: 1, w: 2 } }];
+const FLOORS = ['Upstairs', 'Ground floor', 'Cellar'];
+// statements: {s:i} {w:i} {r:i} tokens, as in src/25-text.js
+const ST = [
+  { by: 'Police report', t: 'The body was found in a room next to the {r:2}.' },
+  { by: 'Imogen Lark', say: 1, t: '{s:0} and {s:2} were carrying the same kind of weapon. I thought that was odd.', used: 1 },
+  { by: 'Coroner', t: 'The coroner is certain: the cause of death was a single heavy blow.', used: 1 },
+  { by: 'Lady Ottoline Vane', say: 1, t: '{s:1} was carrying something heavy and blunt. I noticed it straight away.', used: 1 },
+  { by: 'Major Barnaby Crisp', say: 1, t: 'Whoever was in the {r:1} had something sharp. I saw it myself.', on: { r: [1], kind: 'blade' } },
+  { by: 'Police report', t: "The killer was on the same floor as {s:1}, but it wasn't {s:1}." },
+  { by: 'Imogen Lark', say: 1, t: '{s:1} and {s:3} were on the same floor. I heard the boards creak under both of them.' },
+  { by: 'Mrs. Edith Marrow', say: 1, t: "Either {s:1} or {s:2} had the {w:3}. I couldn't tell you which.", used: 1 },
+];
+const CUR = 4; // statement 5 is the one being worked on
+
+// ---- the notebook part-way through: x ruled out, o a match, ax / ao follow from those (drawn faint)
+const M = {};
+const put = (k, v) => { M[k] = v; };
+put('sw:1:3', 'o'); [0, 1, 2, 4].forEach((w) => put(`sw:1:${w}`, 'ax')); [0, 2, 3, 4].forEach((s) => put(`sw:${s}:3`, 'ax'));
+[0, 2].forEach((s) => { put(`sw:${s}:2`, 'x'); put(`sw:${s}:4`, 'x'); });
+[3, 4].forEach((s) => { put(`sw:${s}:0`, 'x'); put(`sw:${s}:1`, 'x'); });
+[1, 3, 4].forEach((s) => put(`sr:${s}:1`, 'x'));
+[0, 1, 2].forEach((s) => put(`k:${s}`, 'x'));
+[2, 3, 4].forEach((w) => put(`wr:${w}:1`, 'x'));
+
+// ---- pen marks: a slightly different stroke for every square, the same one every time
+function rng(key) { let h = 2166136261; for (const c of key) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296; }
+function pen(kind, key, size = 46) {
+  const r = rng(key), j = (a) => (r() - 0.5) * a, c = size / 2;
+  const faint = kind[0] === 'a', k = faint ? kind[1] : kind;
+  const stroke = faint ? 'var(--pen-faint)' : 'var(--pen)', sw = (faint ? 1.6 : 2.3) * Math.max(0.55, Math.min(1, size / 40));
+  let d;
+  if (k === 'x') {
+    const p = size * 0.27, q = size - p;
+    d = `M${p + j(4)} ${p + j(4)} Q${c + j(5)} ${c + j(5)} ${q + j(4)} ${q + j(3)} M${q + j(4)} ${p + j(4)} Q${c + j(5)} ${c + j(5)} ${p + j(3)} ${q + j(4)}`;
+  } else {
+    const rad = size * 0.3, a0 = r() * 6.28, pts = [];
+    for (let i = 0; i <= 26; i++) { const a = a0 + (i / 24) * 6.28, rr = rad * (1 + j(0.12) + (i > 23 ? 0.08 : 0)); pts.push(`${(c + Math.cos(a) * rr * 1.06).toFixed(1)} ${(c + Math.sin(a) * rr).toFixed(1)}`); }
+    d = 'M' + pts.join(' L');
+  }
+  return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true"><path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+const tick = (key) => { const r = rng(key), j = (a) => (r() - 0.5) * a; return `<svg class="tick" viewBox="0 0 22 20" aria-hidden="true"><path d="M3 ${11 + j(2)} Q7 ${15 + j(2)} 8.5 ${17 + j(1)} Q12 ${8 + j(3)} 19 ${3 + j(2)}" fill="none" stroke="var(--pen)" stroke-width="2.1" stroke-linecap="round"/></svg>`; };
+const brace = () => `<svg class="brace" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M10 2 Q3 3 3.5 12 L4 88 Q3.5 98 10.5 98" fill="none" stroke="var(--pen)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
+const glyph = (kind) => `<svg class="g" aria-hidden="true"><use href="#k-${kind}"/></svg>`;
+
+// ---- statements
+function words(t) {
+  return t.replace(/\{([swr]):(\d)\}/g, (_, k, i) => k === 's' ? `<span class="s-tok" style="--h:${S[i].h}">${S[i].name}</span>`
+    : k === 'w' ? `<span class="w-tok">${W[i].name}</span>` : `<span class="r-tok">${R[i].name}</span>`);
+}
+function stmtHTML(st, i) {
+  const body = st.say ? `&ldquo;${words(st.t)}&rdquo;` : words(st.t);
+  return `<li class="stmt${st.used ? ' used' : ''}${i === CUR ? ' on' : ''}" tabindex="0" aria-current="${i === CUR}">
+    ${st.used ? tick('t' + i) : ''}${i === CUR ? brace() : ''}
+    <span class="n">${i + 1}</span><p>${body}<span class="who">${st.by}${st.used ? ', used' : ''}</span></p></li>`;
+}
+document.getElementById('stmts').innerHTML = ST.map(stmtHTML).join('');
+document.getElementById('strip-count').textContent = `Statement ${CUR + 1} of ${ST.length}`;
+document.getElementById('strip-body').innerHTML = `<ol class="stmts" style="margin:0">${stmtHTML(ST[CUR], CUR)}</ol>`;
+document.getElementById('mk-x').innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true" style="width:18px;height:18px;vertical-align:-4px">${pen('x', 'leg-x', 18).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
+document.getElementById('mk-o').innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true" style="width:18px;height:18px;vertical-align:-4px">${pen('o', 'leg-o', 18).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
+
+// ---- the one table: weapons (grouped by kind), rooms (grouped by floor), and who did it
+const on = ST[CUR].on || {};
+function groups(list, keyOf) { const g = []; list.forEach((x, i) => { const k = keyOf(x); if (!g.length || g[g.length - 1].k !== k) g.push({ k, n: 0 }); g[g.length - 1].n++; }); return g; }
+function buildGrid() {
+  const wg = groups(W, (w) => w.kind), rg = groups(R, (r) => r.floor);
+  let h = `<colgroup><col class="name">${W.map(() => '<col class="c weapons-part">').join('')}<col class="gap weapons-part">${R.map(() => '<col class="c rooms-part">').join('')}<col class="gap rooms-part"><col class="c"></colgroup>`;
+  h += '<thead><tr class="grp"><th class="blank"></th>';
+  h += wg.map((g) => `<th colspan="${g.n}" class="weapons-part${g.k === on.kind ? ' on' : ''}">${KIND[g.k]}</th>`).join('') + '<th class="blank weapons-part"></th>';
+  h += rg.map((g) => `<th colspan="${g.n}" class="rooms-part">${g.k.replace('Upstairs', 'Up&shy;stairs')}</th>`).join('') + '<th class="blank rooms-part"></th><th class="blank"></th></tr>';
+  h += '<tr class="nm"><th><span class="sr">Suspect</span></th>';
+  h += W.map((w) => `<th scope="col" class="c weapons-part${w.kind === on.kind ? ' on' : ''}" title="${w.name}">${glyph(w.kind)}${w.short}</th>`).join('') + '<th class="gap weapons-part"></th>';
+  h += R.map((r, i) => `<th scope="col" class="c rooms-part${(on.r || []).includes(i) ? ' on' : ''}">${(r.label || r.name).replace(' ', '<br>')}</th>`).join('') + '<th class="gap rooms-part"></th>';
+  h += '<th scope="col" class="c">Did it?</th></tr></thead><tbody>';
+  S.forEach((s, si) => {
+    h += `<tr><th scope="row"><span class="dot" style="--h:${s.h}"></span>${s.name}</th>`;
+    h += W.map((w, wi) => sq(`sw:${si}:${wi}`, `${s.name} with the ${w.name}`, 'weapons-part')).join('') + '<td class="gap weapons-part"></td>';
+    h += R.map((r, ri) => sq(`sr:${si}:${ri}`, `${s.name} in the ${r.name}`, 'rooms-part' + ((on.r || []).includes(ri) ? ' on' : ''))).join('') + '<td class="gap rooms-part"></td>';
+    h += sq(`k:${si}`, `${s.name} is the killer`, 'k') + '</tr>';
+  });
+  document.getElementById('grid').innerHTML = h + '</tbody>';
+}
+function sq(key, label, cls) {
+  const v = M[key];
+  const state = !v ? 'open' : v.endsWith('x') ? 'ruled out' : 'a match';
+  return `<td class="sq ${cls}"><button type="button" aria-label="${label}: ${state}"></button>${v ? pen(v, key) : ''}</td>`;
+}
+buildGrid();
+
+// ---- the fallback third block: which weapon was in which room, as a plain table
+(function buildWR() {
+  let h = `<colgroup><col class="name">${W.map(() => '<col class="c">').join('')}</colgroup><thead><tr class="nm"><th><span class="sr">Room</span></th>`;
+  h += W.map((w) => `<th scope="col" class="${w.kind === on.kind ? 'on' : ''}">${glyph(w.kind)}${w.short}</th>`).join('') + '</tr></thead><tbody>';
+  R.forEach((r, ri) => { h += `<tr><th scope="row">${r.name}</th>` + W.map((w, wi) => sq(`wr:${wi}:${ri}`, `The ${w.name} in the ${r.name}`, (on.r || []).includes(ri) ? 'on' : '')).join('') + '</tr>'; });
+  document.getElementById('wr-grid').innerHTML = h + '</tbody>';
+})();
+
+// ---- the house: walls, doorways and stairs for "next to", and each room's weapon list (the third block, in place)
+function buildHouse(narrow) {
+  const u = narrow ? 40 : 64, rowH = narrow ? 84 : 96, padL = narrow ? 0 : 92, padT = 6, cols = 9;
+  const Wd = padL + cols * u + 2, Hd = padT + 3 * rowH + 2;
+  const box = (r) => ({ x: padL + r.rect.x * u, y: padT + r.rect.y * rowH, w: r.rect.w * u, h: rowH });
+  let g = '';
+  if (!narrow) FLOORS.forEach((f, y) => { g += `<text class="floor-name" x="0" y="${padT + y * rowH + 22}">${f}</text>`; });
+  GHOSTS.forEach((r) => { const b = box(r); g += `<rect class="ghost" x="${b.x + 3}" y="${b.y + 3}" width="${b.w - 6}" height="${b.h - 6}"/><text class="ghost-name" x="${b.x + 10}" y="${b.y + 22}">${r.name}</text>`; });
+  R.forEach((r, ri) => {
+    const b = box(r), lit = (on.r || []).includes(ri);
+    g += `<g><rect class="${lit ? 'lit' : ''}" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="transparent"/><rect class="wall" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}"/>`;
+    g += `<text class="room-name" x="${b.x + (narrow ? 5 : 8)}" y="${b.y + 20}" style="${narrow ? 'font-size:11px' : ''}">${r.name}</text>`;
+    // the weapons that could have been here: crossable, in a row along the floor of the room
+    const cs = narrow ? 12 : 18, gap = narrow ? 1.5 : 4, cx0 = b.x + 7, cy = b.y + b.h - cs - 8;
+    W.forEach((w, wi) => {
+      const x = cx0 + wi * (cs + gap), key = `wr:${wi}:${ri}`, v = M[key];
+      g += `<g class="chip"><rect x="${x}" y="${cy}" width="${cs}" height="${cs}"/><use href="#k-${w.kind}" x="${x + cs * 0.2}" y="${cy + cs * 0.2}" width="${cs * 0.6}" height="${cs * 0.6}"/>`;
+      if (v) g += `<g transform="translate(${x} ${cy}) ">${pen(v, key, cs).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`;
+      g += '</g>';
+    });
+    g += '</g>';
+  });
+  // doorways on shared walls, and a stair where one room sits on another
+  for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) {
+    const a = box(R[i]), b = box(R[j]);
+    if (a.y === b.y && (a.x + a.w === b.x || b.x + b.w === a.x)) {
+      const x = a.x + a.w === b.x ? b.x : a.x, ym = a.y + a.h / 2;
+      g += `<line class="door" x1="${x}" y1="${ym - 13}" x2="${x}" y2="${ym + 13}"/>`;
+    } else if (a.y + a.h === b.y || b.y + b.h === a.y) {
+      const top = a.y < b.y ? a : b, bot = a.y < b.y ? b : a;
+      const lo = Math.max(top.x, bot.x), hi = Math.min(top.x + top.w, bot.x + bot.w);
+      if (lo >= hi) continue;
+      const mx = hi - (narrow ? 14 : 22), y = bot.y;
+      g += `<line class="door" x1="${mx - 12}" y1="${y}" x2="${mx + 12}" y2="${y}"/>`;
+      g += `<path class="stair" d="M${mx - 9} ${y + 9} h6 v-6 h6 v-6 h6 v-6"/>`;
+    }
+  }
+  document.getElementById('house').innerHTML = `<svg class="house" viewBox="-2 0 ${Wd + 4} ${Hd}" role="img" aria-label="Plan of Blackwood Manor: Study upstairs over the Library and the Conservatory; Dining Hall, Library and Conservatory in a row on the ground floor; Wine Cellar below, joined to none of them.">${g}</svg>`;
+}
+const narrowQ = matchMedia('(max-width: 760px)');
+buildHouse(narrowQ.matches);
+narrowQ.addEventListener('change', (e) => buildHouse(e.matches));
+
+// ---- the few things that move in a mockup
+document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
+  document.getElementById('notebook').dataset.tab = b.dataset.tab;
+  document.querySelectorAll('.tabs button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+}));
+document.getElementById('plan-toggle').addEventListener('click', (e) => {
+  const p = document.getElementById('plan'), t = p.classList.toggle('as-table');
+  e.target.textContent = t ? 'Show on the plan' : 'Show as a table';
+});
+// ?theme=dark|light and ?tab=rooms and ?wr=table, so every state can be screenshotted
+const q = new URLSearchParams(location.search);
+if (q.get('theme')) document.documentElement.dataset.theme = q.get('theme');
+if (q.get('tab') === 'rooms') document.querySelector('.tabs [data-tab="rooms"]').click();
+if (q.get('wr') === 'table') document.getElementById('plan-toggle').click();
+</script>
+</body>
+</html>

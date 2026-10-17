@@ -147,6 +147,11 @@ A newspaper puzzle column: black on white, a strict grid, a condensed headline f
   1. ...          │  ■□□□□ ...
 ```
 
+**Changes made while building the mockup (milestone 2):**
+- The paper moved from warm cream (`#F5F0E6`) to a cool ledger white (`#F1F2EE`), with blue-black ink (`#1D2430`). Cream, a high-contrast serif and a clay accent is the most common generic look right now. On cool paper, the red pen is the only warm thing on the page.
+- Labels are set in italic, as a book would set them, not in tracked capitals.
+- The weapon-kind glyphs are a small dagger, a weight and a loop. The first blade glyph was a slash, which looked like a cross-out mark.
+
 ### Why A has more taste than the current look
 
 The current look piles up *references* to a theme: desk, paper, typewriter, blueprint, wax, stamp. Each adds noise and none adds meaning. A keeps **one idea that carries meaning: printed ink vs. your ink**. It tells you at a glance what was given and what you worked out, and it makes the finish moment and the share image from the same material. It removes about 80% of the surface decoration, two fonts out of three, and all the textures, and it gives dark mode a real design.
@@ -181,7 +186,10 @@ The current look piles up *references* to a theme: desk, paper, typewriter, blue
 - **Tapping a statement highlights the names it mentions** in the grid and the plan, as the current token highlight does, but stronger, and it is the main way of working.
 - **Marks**: tap = cross, second tap = circle, third = clear. Automatic crossing (the row and column of a circle) is always on and drawn fainter than your own marks.
 - **The killer**: a final short row, "Killer: ○ ○ ○ ○ ○" under the table, so the third question has a place. Murder clues ("not Crisp", "same floor as Pell") get marked there.
-- **The plan draws "next to"**: thin lines (doors and stairs) between connected rooms, so "next to" is *seen*, not explained. Rooms not in this case are left out or drawn as faint ghosts.
+- **The plan draws "next to"**: doorways (gaps in shared walls) and stairs (where one room sits on another), so "next to" is *seen*, not explained. Rooms not in this case are drawn as faint ghosts. The engine's meaning of "next to" is unchanged (rooms above and below count).
+- **The plan is the third block** (decided after your note on weapon-and-room clues, about 1 clue in 6). Each room on the plan carries a row of weapon chips that can be crossed out, right where the doorways and stairs are, which is where `weaponNear` and `murderAdjRoom` reasoning happens. A "Show as a table" switch shows the same marks as the classic rooms×weapons grid. That is the fallback if play-testing shows people struggle, and it can become the default. On the phone the chips are too small to tap, so tapping a room should open its weapons at full size (to design in milestone 4).
+- **Column groups use the clues' own words**: weapons under *Sharp / Blunt / Cord / Poison / Gun*, rooms under *Upstairs / Ground floor / Cellar* (on the train, front to back). Weapons need a `short` name in the world data for these headers. That is UI-only and does not touch the bank.
+- **The killer is a column, "Did it?"**, at the end of each suspect's row, not a separate row.
 
 **On a phone (390px):** the case page is one screen, not three stacked panels.
 ```
