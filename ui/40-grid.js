@@ -1,164 +1,151 @@
-// ---- the notebook: three blocks (who/what, who/where, what/where). By default one block at a time,
-// with a plain note on what it is for; "All three" shows the classic L-shaped grid on wide screens.
-const BLOCKS = {
-  sw: { name: 'Who had what', rows: 'Suspects', cols: 'Weapons',
-    note: () => 'Each person held exactly one weapon, and no two held the same one.' },
-  sr: { name: 'Who was where', rows: 'Suspects', cols: 'Rooms',
-    note: () => 'Each person was in exactly one room, and no two shared a room.' },
-  wr: { name: 'What was where', rows: 'Rooms', cols: 'Weapons',
-    note: (ctx) => `Which weapon was in which room. Statements rarely say this outright: fill it in from blocks 1 and 2. If someone had the ${esc(ctx.weapons[0].name)} and was in the ${esc(ctx.rooms[0].name)}, then the ${esc(ctx.weapons[0].name)} was in the ${esc(ctx.rooms[0].name)}.` },
-};
+// ---- the notebook: one table. A row per person; their weapon (grouped by kind, in the words the statements use),
+// their room (grouped by floor, or front to back on the train), and "Did it?". Which weapon was in which room
+// lives on the floor plan (45-plan.js), or in a table under it for those who prefer one.
+const KIND_ORDER = ['blade', 'blunt', 'poison', 'cord', 'firearm'];
+const isLine = (ctx) => ctx.world.layoutKind === 'line';
+function weaponOrder(ctx) {
+  return [...Array(ctx.n).keys()].sort((a, b) => KIND_ORDER.indexOf(ctx.types[a]) - KIND_ORDER.indexOf(ctx.types[b]) || a - b);
+}
+// rooms as you would read the plan: top floor first, left to right; carriages from the engine back
+function roomOrder(ctx) {
+  return [...Array(ctx.n).keys()].sort((a, b) => (isLine(ctx) ? 0 : ctx.floor[b] - ctx.floor[a]) || ctx.rooms[a].rect.x - ctx.rooms[b].rect.x);
+}
+function groupsOf(order, keyOf) {
+  const g = [];
+  order.forEach((x) => { const k = keyOf(x); if (!g.length || g[g.length - 1].key !== k) g.push({ key: k, items: [] }); g[g.length - 1].items.push(x); });
+  return g;
+}
+// "in the cellar" -> "Cellar"; long single words get a place to break in a narrow column
+const floorLabel = (ctx, f) => cap(ctx.world.floors[f].replace(/^(in|on) the /, '')).replace('Upstairs', 'Up&shy;stairs');
 
-function chooseGridMode() {
-  const nb = document.getElementById('nb');
-  if (!nb) return;
-  buildGrid(); paintAll();
+// one square: a button that holds a pen mark. data-r / data-c place it for the arrow keys.
+function cellHTML(grid, b, i, j, label, r, c, tdCls, col) {
+  return `<td class="sq ${tdCls}" data-col="${col}"><button type="button" class="cell" data-grid="${grid}" data-r="${r}" data-c="${c}" data-b="${b}" data-i="${i}" data-j="${j}" data-v="-1" data-label="${esc(label)}" tabindex="${r === 0 && c === 0 ? 0 : -1}"></button></td>`;
 }
 
 function buildGrid() {
+  const ctx = G.puzzle.ctx, el = document.getElementById('grid');
+  if (!el) return;
+  const WO = weaponOrder(ctx), RO = roomOrder(ctx), line = isLine(ctx);
+  const wg = groupsOf(WO, (w) => ctx.types[w]), rg = groupsOf(RO, (r) => (line ? 'line' : ctx.floor[r]));
+  const grp = (g, cls, attr, label) => `<th scope="colgroup" colspan="${g.items.length}" class="grp ${cls}" ${attr}><span>${label}</span></th>`;
+  let h = '<thead><tr class="grps"><td class="corner"></td>';
+  h += wg.map((g) => grp(g, 'wpart', `data-kind="${g.key}"`, KIND_WORD[g.key])).join('') + '<td class="gap wpart"></td>';
+  h += rg.map((g) => grp(g, 'rpart', line ? '' : `data-floor="${g.key}"`, line ? 'From the engine back' : floorLabel(ctx, g.key))).join('');
+  h += '<td class="gap rpart"></td><td class="kpart"></td></tr><tr class="names"><td class="corner"><span class="sr">Suspect</span></td>';
+  h += WO.map((w) => `<th scope="col" class="c wpart" data-col="w${w}" title="${esc(ctx.weapons[w].name)}">${glyph(ctx.types[w])}<span>${shortName(ctx.weapons[w])}</span></th>`).join('') + '<td class="gap wpart"></td>';
+  h += RO.map((r) => `<th scope="col" class="c rpart" data-col="r${r}" title="${esc(ctx.rooms[r].name)}"><span>${shortName(ctx.rooms[r])}</span></th>`).join('');
+  h += '<td class="gap rpart"></td><th scope="col" class="c kpart" data-col="k"><span>Did it?</span></th></tr></thead><tbody>';
+  ctx.suspects.forEach((S, s) => {
+    let c = 0;
+    h += `<tr><th scope="row" data-row="s${s}"><span class="dot" style="--h:${S.hue}"></span><span class="who">${esc(S.short)}</span></th>`;
+    h += WO.map((w) => cellHTML('grid', 'sw', s, w, `${S.short} with the ${ctx.weapons[w].name}`, s, c++, 'wpart', `w${w}`)).join('') + '<td class="gap wpart"></td>';
+    h += RO.map((r) => cellHTML('grid', 'sr', s, r, `${S.short} in the ${ctx.rooms[r].name}`, s, c++, 'rpart', `r${r}`)).join('') + '<td class="gap rpart"></td>';
+    h += cellHTML('grid', 'k', s, 0, `${S.short} did it`, s, c++, 'kpart', 'k') + '</tr>';
+  });
+  el.innerHTML = h + '</tbody>';
+}
+
+// six suspects make thirteen columns. Shrink the squares until the notebook fits its column (never below
+// 30px, still a fair tap), and if that is not enough, set the labels smaller.
+function fitGrid() {
+  const g = document.getElementById('grid');
+  if (!g || !g.parentElement.clientWidth) return;
+  g.classList.remove('tight');
+  g.style.removeProperty('--cell');
+  const avail = g.parentElement.clientWidth, sq = [...g.querySelectorAll('td.sq')].find((x) => x.getClientRects().length);
+  if (!sq) return;
+  let c = Math.floor(sq.getBoundingClientRect().width);
+  for (const tight of [false, true]) {
+    g.classList.toggle('tight', tight);
+    while (g.offsetWidth > avail && c > 30) g.style.setProperty('--cell', --c + 'px');
+    if (g.offsetWidth <= avail) return;
+  }
+}
+
+function setTab(tab) {
+  G.tab = tab;
   const nb = document.getElementById('nb');
-  const wide = nb.clientWidth >= 560 || nb.clientWidth === 0;
-  const all = G.view === 'all' && wide;
-  G.gridMode = all ? 'L' : G.tab;
-  nb.classList.toggle('tabbed', !all);
-  nb.classList.toggle('narrow', !wide);
-  const ctx = G.puzzle.ctx, n = ctx.n, m = G.gridMode;
-  const showSW = m === 'L' || m === 'sw', showSR = m === 'L' || m === 'sr', showWR = m === 'L' || m === 'wr';
-  const colsW = showSW || showWR, colsR = showSR, rowsS = showSW || showSR, rowsR = showWR;
-  const cols = (colsW ? n : 0) + (colsR ? n : 0);
-  const lg = document.getElementById('lg');
-  // one block at a time gets roomier squares, sized to the space there is
-  // and names get whatever width is left over, so they are not cut short
-  if (!all && nb.clientWidth) {
-    const cs = getComputedStyle(nb);
-    const rhw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rhw')) || 120;
-    const avail = nb.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0) - 4;
-    const size = Math.max(30, Math.min(50, Math.floor((avail - rhw) / n)));
-    lg.style.setProperty('--cell', size + 'px');
-    lg.style.setProperty('--rhw', Math.max(rhw, Math.min(180, avail - size * n)) + 'px');
-  } else { lg.style.removeProperty('--cell'); lg.style.removeProperty('--rhw'); }
-  lg.style.gridTemplateColumns = `var(--rhw) repeat(${cols}, var(--cell))`;
-  const ch = (kind, i, name) => `<div class="ch" data-ent="${kind}${i}"><span>${esc(name)}</span></div>`;
-  // column group labels, then the names
-  let h = `<div class="grp-corner">${m === 'wr' ? 'Rooms' : 'Suspects'} &darr;</div>`;
-  if (colsW) h += `<div class="grp" style="grid-column: span ${n}">Weapons &rarr;</div>`;
-  if (colsR) h += `<div class="grp" style="grid-column: span ${n}">Rooms &rarr;</div>`;
-  h += '<div></div>';
-  if (colsW) for (let w = 0; w < n; w++) h += ch('w', w, ctx.weapons[w].name);
-  if (colsR) for (let r = 0; r < n; r++) h += ch('r', r, ctx.rooms[r].name);
-  const cell = (b, i, j, cls, label) => `<button type="button" class="mk cell ${cls}" data-b="${b}" data-i="${i}" data-j="${j}" data-v="0" aria-label="${esc(label)}"></button>`;
-  if (rowsS) for (let s = 0; s < n; s++) {
-    const S = ctx.suspects[s];
-    h += `<div class="rh" data-ent="s${s}"><span>${esc(S.short)}</span>${seal(S)}</div>`;
-    if (showSW) for (let w = 0; w < n; w++) h += cell('sw', s, w, w === 0 ? 'bl' : '', `${S.short} with the ${ctx.weapons[w].name}`);
-    if (showSR) for (let r = 0; r < n; r++) h += cell('sr', s, r, r === 0 ? 'bl' : '', `${S.short} in the ${ctx.rooms[r].name}`);
-  }
-  if (rowsR && m === 'L') h += `<div class="grp-corner sub">Rooms &darr;</div><div class="grp-gap" style="grid-column: span ${2 * n}"></div>`;
-  if (rowsR) for (let r = 0; r < n; r++) {
-    h += `<div class="rh" data-ent="r${r}"><span>${esc(ctx.rooms[r].name)}</span></div>`;
-    if (showWR) for (let w = 0; w < n; w++) h += cell('wr', w, r, (w === 0 ? 'bl ' : '') + (r === 0 && m === 'L' ? 'bt' : ''), `The ${ctx.weapons[w].name} in the ${ctx.rooms[r].name}`);
-    if (showSR && m === 'L') for (let k = 0; k < n; k++) h += '<div class="dead"></div>';
-  }
-  lg.innerHTML = h;
-  document.querySelectorAll('#nb-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === G.tab)));
-  document.querySelectorAll('.nb-view button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.v === 'all') === all)));
-  const note = document.getElementById('nb-note');
-  if (note) note.innerHTML = all
-    ? '<b>Three blocks in one.</b> Top left: who had what. Top right: who was where. Bottom: which weapon was in which room.'
-    : `<b>${BLOCKS[m].name}.</b> ${BLOCKS[m].note(ctx)}`;
-  if (COACH.on) coachHighlight();
+  if (nb) nb.dataset.tab = tab;
+  document.querySelectorAll('[data-act="nbtab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  fitGrid();
 }
 
-function paintCell(el, d) {
-  const b = el.dataset.b, i = +el.dataset.i, j = +el.dataset.j;
-  el.dataset.v = d[b][i][j];
-}
+// ---- marks
+const markOf = (d, b, i, j) => (b === 'k' ? d.k[i] : d[b][i][j]);
+const MARK_WORD = ['open', 'ruled out', 'a match', 'ruled out, follows from your marks', 'a match, follows from your marks'];
 function paintAll() {
-  const n = G.puzzle.n, d = derive(G.marks, n, G.opts);
-  document.querySelectorAll('#lg .cell').forEach((c) => paintCell(c, d));
-  // progress on each block: how many matches are circled
-  for (const b of ['sw', 'sr', 'wr']) {
-    const el = document.getElementById('tp-' + b);
-    if (!el) continue;
-    const k = d[b].reduce((a, row) => a + row.filter((v) => v === 2 || v === 4).length, 0);
-    el.textContent = `${k}/${n}`;
-    el.parentElement.classList.toggle('done', k === n);
-  }
-  paintPlan();
+  if (!G) return;
+  const d = derive(G.marks, G.puzzle.n, G.opts);
+  document.querySelectorAll('.cell').forEach((el) => {
+    const v = markOf(d, el.dataset.b, +el.dataset.i, +el.dataset.j);
+    if (+el.dataset.v === v) return;
+    el.dataset.v = v;
+    const key = el.dataset.b + el.dataset.i + '-' + el.dataset.j;
+    if (el.dataset.cs) el.querySelector('.mk').innerHTML = penMark(v, key, +el.dataset.cs).replace('<svg class="pen"', `<svg width="${el.dataset.cs}" height="${el.dataset.cs}"`);
+    else el.innerHTML = penMark(v, key, 46);
+    el.setAttribute('aria-label', `${el.dataset.label}: ${MARK_WORD[v]}`);
+  });
+  paintPins(d);
 }
-
+function userMark(b, i, j) { return b === 'k' ? G.marks.k[i] : G.marks[b][i][j]; }
 function setMark(b, i, j, v) {
   if (G.mode === 'tutorial' && !coachAllows(b, i, j)) return;
-  G.marks[b][i][j] = v;
+  if (b === 'k') G.marks.k[i] = v; else G.marks[b][i][j] = v;
   persist();
   paintAll();
   if (G.mode === 'tutorial') coachCheck();
 }
-
 const cellInfo = (el) => ({ b: el.dataset.b, i: +el.dataset.i, j: +el.dataset.j });
-// which suspect/weapon/room entities a cell sits between (for highlighting headers)
-function cellEnts(el) {
-  const { b, i, j } = cellInfo(el);
-  return b === 'sw' ? [`s${i}`, `w${j}`] : b === 'sr' ? [`s${i}`, `r${j}`] : [`w${i}`, `r${j}`];
-}
-function lightEnts(ents, on) {
-  ents.forEach((e) => document.querySelectorAll(`[data-ent="${e}"]`).forEach((x) => x.classList.toggle('hl-ent', on)));
-}
+const cycle = (el) => { const { b, i, j } = cellInfo(el); setMark(b, i, j, (userMark(b, i, j) + 1) % 3); };
 
+// ---- input, wired once for every square on the page (notebook, plan, table, room sheet).
+// Mouse: press to mark, drag to paint the same mark along a row. Touch: a tap, not a scroll. Keys: Space/Enter, arrows.
 let drag = null, lastTouch = null;
 function wireGrid() {
-  const lg = document.getElementById('lg');
-  if (!lg || lg._wired) return;
-  lg._wired = true;
-  lg.addEventListener('pointerdown', (e) => {
+  document.addEventListener('pointerdown', (e) => {
     const c = e.target.closest('.cell');
-    if (!c || G.solved) return;
-    const { b, i, j } = cellInfo(c);
+    if (!c || !G || G.solved) return;
     if (e.pointerType === 'mouse') {
+      if (e.button !== 0) return;
       e.preventDefault();
-      const next = (G.marks[b][i][j] + 1) % 3;
-      drag = { v: next };
+      const { b, i, j } = cellInfo(c), next = (userMark(b, i, j) + 1) % 3;
+      drag = { v: next, b };
       setMark(b, i, j, next);
-    } else {
-      lastTouch = { c, x: e.clientX, y: e.clientY };
-    }
+      if (c.focus) c.focus({ preventScroll: true });
+    } else lastTouch = { c, x: e.clientX, y: e.clientY };
   });
-  lg.addEventListener('pointerover', (e) => {
+  document.addEventListener('pointerover', (e) => {
     const c = e.target.closest('.cell');
-    if (!c) return;
-    lightEnts(cellEnts(c), true);
-    if (drag && e.buttons === 1) { const { b, i, j } = cellInfo(c); if (G.marks[b][i][j] !== drag.v) setMark(b, i, j, drag.v); }
+    if (!c || !drag || e.buttons !== 1 || c.dataset.b !== drag.b) return;
+    const { b, i, j } = cellInfo(c);
+    if (userMark(b, i, j) !== drag.v) setMark(b, i, j, drag.v);
   });
-  lg.addEventListener('pointerout', (e) => {
+  document.addEventListener('pointerup', (e) => {
+    drag = null;
+    if (e.pointerType === 'mouse' || !lastTouch || !G || G.solved) { lastTouch = null; return; }
     const c = e.target.closest('.cell');
-    if (c) lightEnts(cellEnts(c), false);
-  });
-  lg.addEventListener('pointerup', (e) => {
-    if (e.pointerType !== 'mouse' && lastTouch && !G.solved) {
-      const c = e.target.closest('.cell');
-      if (c && c === lastTouch.c && Math.abs(e.clientX - lastTouch.x) < 8 && Math.abs(e.clientY - lastTouch.y) < 8) {
-        const { b, i, j } = cellInfo(c);
-        setMark(b, i, j, (G.marks[b][i][j] + 1) % 3);
-      }
-    }
+    if (c && c === lastTouch.c && Math.abs(e.clientX - lastTouch.x) < 8 && Math.abs(e.clientY - lastTouch.y) < 8) cycle(c);
     lastTouch = null;
   });
-  lg.addEventListener('click', (e) => { // keyboard activation only
+  document.addEventListener('click', (e) => { // keyboard activation only (pointer input is handled above)
     const c = e.target.closest('.cell');
-    if (!c || e.detail !== 0 || G.solved) return;
-    const { b, i, j } = cellInfo(c);
-    setMark(b, i, j, (G.marks[b][i][j] + 1) % 3);
+    if (c && e.detail === 0 && G && !G.solved) cycle(c);
   });
-  lg.addEventListener('keydown', (e) => {
-    const c = e.target.closest('.cell');
+  document.addEventListener('keydown', (e) => {
+    const c = e.target.closest && e.target.closest('.cell[data-grid]');
     if (!c) return;
-    let d = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
+    const d = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
     if (!d) return;
     e.preventDefault();
-    const { b, i, j } = cellInfo(c);
-    if (b === 'wr') d = [d[1], d[0]]; // this block is drawn with rooms down the side
-    const t = lg.querySelector(`.cell[data-b="${b}"][data-i="${i + d[0]}"][data-j="${j + d[1]}"]`);
-    if (t) t.focus();
+    const all = [...document.querySelectorAll(`.cell[data-grid="${c.dataset.grid}"]`)].filter((x) => x.getClientRects().length);
+    let r = +c.dataset.r, col = +c.dataset.c, t = null;
+    for (let step = 0; step < 40 && !t; step++) {
+      r += d[0]; col += d[1];
+      t = all.find((x) => +x.dataset.r === r && +x.dataset.c === col);
+      if (r < -1 || col < -1 || r > 40 || col > 40) break;
+    }
+    if (!t) return;
+    c.tabIndex = -1; t.tabIndex = 0; t.focus();
   });
 }
-window.addEventListener('pointerup', () => { drag = null; });

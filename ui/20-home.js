@@ -67,13 +67,13 @@ function openCase(spec, mode) {
 
 function howToHTML() {
   return `<h2>How to play</h2>
-    <p>Someone has been murdered. Each suspect was in a different room, holding a different weapon. Find <b>who</b> did it, <b>with what</b>, and <b>where</b>.</p>
+    <p>Someone has been murdered. Each guest was in a different room, holding a different weapon. Find <b>who</b> did it, <b>with what</b>, and <b>where</b>.</p>
     <ol>
-      <li><b>Everything in the case file is true.</b> Read a statement and work out what it rules in or out. Tap a statement to strike it through once you have used it.</li>
-      <li><b>Use the notebook.</b> Tap a square once to cross it out (&times;), twice to circle a match (&#9711;), a third time to clear it. A circle crosses out the rest of its row and column for you, because each person had one weapon and was in one room.</li>
-      <li><b>Use the floor plan.</b> "Next to" means rooms that share a wall, or sit directly above or below each other. On the train, it means carriages coupled together.</li>
-      <li><b>Accuse.</b> The killer held the murder weapon in the room where the body was found. A wrong accusation goes on your record, and tells you which statement it breaks.</li>
+      <li><b>Every statement is true.</b> Pick one up and work out what it rules in or out. The names it mentions light up in the notebook. Tick it off when you have used it.</li>
+      <li><b>Mark the notebook.</b> Tap a square once to rule it out, twice to circle a match, a third time to clear it. A circle rules out the rest of its row and column for you, in fainter ink, because each person had one weapon and was in one room.</li>
+      <li><b>Use the plan.</b> Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. On the train, carriages coupled together are next to each other. Each room lists the weapons that could have been in it.</li>
+      <li><b>Name the killer.</b> The killer held the murder weapon in the room where the body was found. A wrong guess goes on your record, and tells you which statement it breaks.</li>
     </ol>
-    <p>Every case has exactly one answer and can be solved by logic alone. Stuck? Inspector Mallory will give you a hint, and will tell you if something in your notebook doesn't add up.</p>
-    <div class="actions"><button class="btn" data-act="tutorial">Play the tutorial</button><button class="btn ghost" data-act="close">Got it</button></div>`;
+    <p class="soft">Every case has exactly one answer and can be solved by logic alone. Stuck? The hint points you to the next step, and tells you if a mark doesn't add up.</p>
+    <div class="actions"><button class="btn" data-act="tutorial">Play the lesson</button><button class="btn ghost" data-act="close">Got it</button></div>`;
 }

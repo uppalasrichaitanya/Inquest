@@ -116,17 +116,20 @@ function newGame(spec, mode) {
   const key = caseKey(spec);
   const saved = mode === 'tutorial' ? {} : LS.get(key, null) || {};
   const n = puzzle.n;
+  const marks = saved.marks || { sw: zeros(n), sr: zeros(n), wr: zeros(n) };
+  if (!marks.k) marks.k = new Array(n).fill(0); // the "Did it?" column (cases saved before it existed have none)
+  const struck = saved.struck || [];
   G = {
-    spec, puzzle, key, mode,
-    marks: saved.marks || { sw: zeros(n), sr: zeros(n), wr: zeros(n) },
-    struck: saved.struck || [],
+    spec, puzzle, key, mode, marks,
+    struck,
     elapsed: saved.elapsed || 0,
     hints: saved.hints || 0,
     wrong: saved.wrong || 0,
     solved: !!saved.solved,
     opts: saved.opts || { cross: true, chain: false },
-    gridMode: 'L', tab: 'sw',
-    view: mode === 'tutorial' ? 'one' : LS.get('inq1:nbview', 'one'), // notebook: one block at a time, or all three
+    tab: 'sw', // on a phone the notebook shows weapons (sw) or rooms (sr); wide screens show both
+    cur: Math.max(0, puzzle.clues.findIndex((c, i) => !struck.includes(i))), // the statement in hand
+    wrView: LS.get('inq1:wrview', 'plan'), // which weapon was where: on the floor plan, or as a table
     pick: { killer: null, weapon: null, room: null },
     csp: null,
   };
@@ -137,13 +140,21 @@ function persist() {
 }
 
 // Marks you made: 0 blank, 1 crossed out, 2 confirmed. The notebook can add faint auto marks (3, 4).
+// Always: a circle crosses out the rest of its row and column, and a person's weapon and room, once both are
+// circled, place that weapon in that room. With opts.chain, more follows between the blocks.
 function derive(marks, n, opts) {
-  const d = { sw: marks.sw.map((r) => r.slice()), sr: marks.sr.map((r) => r.slice()), wr: marks.wr.map((r) => r.slice()) };
+  const d = { sw: marks.sw.map((r) => r.slice()), sr: marks.sr.map((r) => r.slice()), wr: marks.wr.map((r) => r.slice()), k: (marks.k || new Array(n).fill(0)).slice() };
   const yes = (v) => v === 2 || v === 4, no = (v) => v === 1 || v === 3;
   const B = ['sw', 'sr', 'wr'];
   let changed = true, guard = 0;
+  const killer = d.k.findIndex(yes);
+  if (killer >= 0) for (let i = 0; i < n; i++) if (i !== killer && d.k[i] === 0) d.k[i] = 3;
   while (changed && guard++ < 40) {
     changed = false;
+    for (let s = 0; s < n; s++) {
+      const w = d.sw[s].findIndex(yes), r = d.sr[s].findIndex(yes);
+      if (w >= 0 && r >= 0 && d.wr[w][r] === 0) { d.wr[w][r] = 4; changed = true; }
+    }
     if (opts.cross || opts.chain) {
       for (const b of B) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (yes(d[b][i][j])) {
         for (let k = 0; k < n; k++) {

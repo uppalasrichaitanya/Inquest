@@ -8,7 +8,6 @@ const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true
   w.matchMedia = w.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
   if (process.env.FIRST_VISIT !== '1') w.localStorage.setItem('inq1:tutorial', '1');
   w.HTMLElement.prototype.scrollIntoView = () => {};
-  Object.defineProperty(w.HTMLElement.prototype, 'clientWidth', { get() { return this.id === 'nb' ? 640 : 800; } });
 } });
 const w = dom.window, d = w.document;
 const $ = (s) => d.querySelector(s), $$ = (s) => [...d.querySelectorAll(s)];
@@ -19,32 +18,50 @@ ok($('.bar .mark') && $('.bar .mark').textContent === 'Inquest', 'home renders')
 ok($$('.case-row').length === 4, 'four cases listed');
 ok(/Exactly one answer/.test($('.home h1').textContent), 'home says what the game is');
 click($$('.case-row')[1]);
-ok($('.dossier h2'), 'case opens: ' + ($('.dossier h2') || {}).textContent);
-const n = w.eval('G.puzzle.n');
+ok($('.case-head h1'), 'case opens: ' + ($('.case-head h1') || {}).textContent);
+const n = w.eval('G.puzzle.n'), ctx = w.eval('G.puzzle.ctx');
+const key = (el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
+const cell = (sel) => $('#grid .cell' + sel);
 ok($$('.stmt').length === w.eval('G.puzzle.clues.length'), 'statements rendered: ' + $$('.stmt').length);
-ok($$('#lg .cell').length === n * n, `one block by default: ${n * n} cells (${$$('#lg .cell').length})`);
-ok(/Each person held exactly one weapon/.test($('#nb-note').textContent), 'block note explains the block');
-click($('#nb-tabs [data-tab="wr"]'));
-ok($('#lg .cell[data-b="wr"]') && !$('#lg .cell[data-b="sw"]'), 'tab turns to the what/where block');
-click($('[data-act="nbview"][data-v="all"]'));
-ok($$('#lg .cell').length === 3 * n * n, `All three: L grid has ${3 * n * n} cells (${$$('#lg .cell').length})`);
-ok($('#plan svg') && $$('#plan .room').length === w.eval('G.puzzle.ctx.world.rooms.length'), 'floor plan rooms drawn');
-ok($$('.tk').length > 0, 'entity tokens present');
-// strike a statement
-click($('.stmt > button')); ok($('.stmt').dataset.struck === '1', 'statement strikes through');
-// keyboard-style cell activation cycles marks
-const c0 = $('#lg .cell[data-b="sw"][data-i="0"][data-j="0"]');
-click(c0); w.eval('0'); ok(c0.dataset.v === '0' || true, 'cell click handled');
-c0.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
-ok(c0.dataset.v === '1', 'cell: first press crosses out');
-c0.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
-ok(c0.dataset.v === '2', 'cell: second press confirms');
-ok($('#lg .cell[data-b="sw"][data-i="0"][data-j="1"]').dataset.v === '3', 'auto-cross fills the rest of the row');
-ok($('#plan .pin') === null, 'no pin yet for sw confirm');
-const c1 = $('#lg .cell[data-b="sr"][data-i="0"][data-j="0"]');
-c1.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
-c1.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
-ok($$('#plan .pin').length === 1, 'confirmed placement drops a pin on the plan');
+ok($('#strip .txt') && $('#strip .txt').innerHTML === $('.stmt .txt').innerHTML, 'the strip holds the first statement');
+ok($$('#grid .cell').length === 2 * n * n + n, `one notebook: weapons, rooms and "Did it?" (${$$('#grid .cell').length} squares)`);
+ok($$('#grid .grp').length >= 3 && $$('#grid .grp span').length === $$('#grid .grp').length, 'column groups carry their own rule: ' + $$('#grid .grp').map((g) => g.textContent).join(', '));
+ok($$('#plan .room').length === n && $$('#plan .chip').length === n * n, 'plan draws the rooms in play, each with its weapons');
+ok($$('#plan .door').length === ctx.adj.flat().filter(Boolean).length / 2, 'one doorway or stair per pair of rooms next to each other');
+ok($$('.tk').length > 0, 'names in the statements are marked up');
+ok($$('.hl').length > 0, 'the statement in hand lights up what it mentions');
+// statements: use, step, pick
+click($('.stmt .use')); ok(w.eval('G.struck.includes(0)') && $('.stmt.used'), 'a statement can be ticked off');
+click($('.stmt .use')); ok(!w.eval('G.struck.includes(0)'), 'and ticked back on');
+click($('[data-act="stmt-step"][data-d="1"]')); ok(w.eval('G.cur') === 1 && /2 of/.test($('#strip .count').textContent), 'next statement');
+click($$('.stmt .say')[0]); ok(w.eval('G.cur') === 0 && $$('.stmt')[0].classList.contains('on'), 'picking a statement puts it in hand');
+click($('[data-act="all-stmts"]')); ok($$('#scrim .allstmts li').length === w.eval('G.puzzle.clues.length'), 'all statements open in a sheet');
+click($$('#scrim .pickrow')[2]); ok(w.eval('G.cur') === 2 && !$('#scrim'), 'choosing one there closes the sheet');
+click($('[data-act="nbtab"][data-tab="sr"]')); ok($('#nb').dataset.tab === 'sr', 'phone tab turns to rooms');
+// marks
+const c0 = cell('[data-b="sw"][data-i="0"][data-j="0"]');
+key(c0); ok(c0.dataset.v === '1' && /ruled out/.test(c0.getAttribute('aria-label')), 'cell: first press crosses out');
+key(c0); ok(c0.dataset.v === '2', 'cell: second press circles');
+ok(cell('[data-b="sw"][data-i="0"][data-j="1"]').dataset.v === '3', 'a circle crosses the rest of its row, faintly');
+ok(cell('[data-b="sw"][data-i="1"][data-j="0"]').dataset.v === '3', 'and the rest of its column');
+ok(!$('#plan .pin'), 'no one on the plan yet');
+const c1 = cell('[data-b="sr"][data-i="0"][data-j="0"]');
+key(c1); key(c1);
+ok($$('#plan .pin').length === 1, 'circling a room puts the person on the plan');
+ok($('#plan .chip[data-i="0"][data-j="0"]').dataset.v === '4', "a person's weapon and room together place the weapon on the plan");
+const k1 = cell('[data-b="k"][data-i="1"]');
+key(k1); key(k1); ok(cell('[data-b="k"][data-i="2"]').dataset.v === '3', 'naming one killer rules out the others');
+key(k1);
+// the plan: a room opens its weapons at full size; the table fallback holds the same marks
+click($('#plan .room[data-room="1"] .floorspace'));
+ok($$('#scrim .wr-list .cell').length === n, 'a room opens its weapons in a sheet');
+const sheetCell = $('#scrim .wr-list .cell[data-i="2"]');
+key(sheetCell); ok(w.eval('G.marks.wr[2][1]') === 1 && $('#plan .chip[data-i="2"][data-j="1"]').dataset.v === '1', 'marking in the sheet marks the plan');
+click($('#scrim [data-act="close"]'));
+click($('[data-act="wrview"]'));
+ok($$('#plan table.wr .cell').length === n * n && $('#plan table.wr .cell[data-i="2"][data-j="1"]').dataset.v === '1', 'show as a table: the same marks, rooms by weapons');
+ok(w.localStorage.getItem('inq1:wrview') === '"table"' || w.localStorage.getItem('inq1:wrview') === 'table', 'the choice is remembered');
+click($('[data-act="wrview"]')); ok($('#plan svg'), 'and back to the plan');
 // hint
 click($('[data-act="hint"]'));
 ok($('#scrim .hintbox'), 'hint opens: ' + ($('#scrim .hintbox') || {}).textContent);
@@ -81,7 +98,7 @@ w.eval(`newGame(BANK.constable[0], 'random'); renderCase();`);
 w.eval('startTutorial()');
 ok($('#coach') && /Welcome/.test($('#coach').textContent), 'tutorial opens with a welcome');
 click($('[data-act="coach-next"]'));
-const tapCell = (b, i, j) => { const c = $(`#lg .cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`); if (c) c.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 })); return c; };
+const tapCell = (b, i, j) => { const c = $(`#grid .cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`); if (c) c.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 })); return c; };
 tapCell('sr', 0, 0);
 ok(w.eval('G.marks.sr[0][0]') === 0, 'tutorial blocks squares the coach is not pointing at');
 let guard = 0;
@@ -93,14 +110,14 @@ while (w.eval('COACH.on') && guard++ < 40) {
   else click($('[data-act="coach-next"]'));
 }
 ok(w.eval('COACH.step') === w.eval('tutSteps().length - 1'), 'tutorial walks every step: ' + w.eval('COACH.step'));
-ok($$('#plan .pin').length === 3 && $$('#plan .wpin').length === 3, 'tutorial plan shows every person and weapon');
+ok($$('#plan .pin').length === 3 && $$('#plan .chip[data-v="4"]').length === 3, 'tutorial plan shows every person and weapon');
 click($('[data-act="accuse"]'));
 const ts = w.eval('G.puzzle.solution');
 click($(`[data-pick="killer"][data-v="${ts.killer}"]`)); click($(`[data-pick="weapon"][data-v="${ts.weapon}"]`)); click($(`[data-pick="room"][data-v="${ts.room}"]`));
 click($('#do-accuse'));
 ok(/whole game/.test($('#scrim').textContent) && w.localStorage.getItem('inq1:tutorial') === '1', 'tutorial ends with a closed case and is remembered');
 click($('[data-act="open-daily"][data-tier="constable"]'));
-ok($('.dossier h2') && w.eval('G.puzzle.tier') === 'constable' && !$('#coach'), 'tutorial leads into the first Constable case');
+ok($('.case-head h1') && w.eval('G.puzzle.tier') === 'constable' && !$('#coach'), 'tutorial leads into the first Constable case');
 
 // every banked case: hints never throw, and following hints to the end leaves the answer settled
 let bad = 0;

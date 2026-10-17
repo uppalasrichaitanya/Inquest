@@ -1,3 +1,11 @@
+// ---- the case screen: the story, the statements, the notebook (40-grid.js) and the floor plan (45-plan.js).
+// One statement is always "in hand": its names are lit in the notebook and on the plan. On a phone it sits in a
+// strip pinned above the notebook, so the statement and the squares it talks about are on screen together.
+const NARROW = matchMedia('(max-width: 1179px)'); // one statement at a time, in the strip
+const PHONE = matchMedia('(max-width: 760px)'); // the small plan, worked through the room sheet
+const NUM_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+
 function noteLabel(c) {
   if (c.type === 'murderType' || c.type === 'murderNotType') return 'Coroner';
   if (c.type === 'murderNotWeapon') return 'Forensics';
@@ -6,165 +14,137 @@ function noteLabel(c) {
   return 'Case notes';
 }
 
-function statementHTML(c, i, ctx) {
-  const say = c.voice === 'say';
-  const who = say ? `${seal(ctx.suspects[c.speaker])}${esc(ctx.suspects[c.speaker].name)}` : esc(noteLabel(c));
-  const body = tokens(c.text, ctx);
-  const struck = G.struck.includes(i) ? '1' : '0';
-  return `<li class="stmt ${say ? '' : 'note'}" data-i="${i}" data-struck="${struck}">
-    <button type="button" aria-pressed="${struck === '1'}" aria-label="Statement ${i + 1}, tap to strike through">
-      <span class="no" aria-hidden="true">${i + 1}</span>
-      <span><span class="who">${who}</span><span class="body"><span class="txt">${say ? '&ldquo;' + body + '&rdquo;' : body}</span></span></span>
-    </button></li>`;
+// what a statement talks about: people, weapons, rooms, a kind of weapon, a floor, the killer
+function clueFocus(c) {
+  const a = c.args, f = { s: [], w: [], r: [], kind: a.t || null, floor: a.f === undefined ? null : a.f, k: c.kind === 'M' };
+  for (const k of ['s', 'a', 'b']) if (a[k] !== undefined) f.s.push(a[k]);
+  if (a.w !== undefined) f.w.push(a.w);
+  if (a.r !== undefined) f.r.push(a.r);
+  return f;
 }
 
-// a crossed square, a circled square and a faint auto-cross, drawn exactly as the notebook draws them
-const mini = (v) => `<span class="mk mini" data-v="${v}" aria-hidden="true"></span>`;
+function stmtParts(c, ctx) {
+  const say = c.voice === 'say', body = tokens(c.text, ctx);
+  return { text: say ? `&ldquo;${body}&rdquo;` : body, who: say ? esc(ctx.suspects[c.speaker].name) : esc(noteLabel(c)) };
+}
+
+function statementHTML(c, i, ctx) {
+  const { text, who } = stmtParts(c, ctx);
+  const used = G.struck.includes(i), on = i === G.cur;
+  return `<li class="stmt${used ? ' used' : ''}${on ? ' on' : ''}" data-i="${i}">${on ? penBrace() : ''}
+    <button type="button" class="use" data-act="use" data-i="${i}" aria-pressed="${used}" aria-label="Statement ${i + 1}, ${used ? 'used' : 'not used yet'}">${used ? penTick('t' + i) : `<span>${i + 1}</span>`}</button>
+    <button type="button" class="say" data-act="pick-stmt" data-i="${i}" aria-current="${on}"><span class="txt">${text}</span><span class="who">${who}</span></button></li>`;
+}
 
 function renderCase() {
   VIEW = 'case';
-  const P = G.puzzle, ctx = P.ctx, w = ctx.world;
-  const tut = G.mode === 'tutorial';
-  const num = G.mode === 'daily' ? dayNumber() : null;
-  const easy = tut || P.n <= 4;
-  const cast = ctx.suspects.map((s) => `<li>${seal(s)} <b>${esc(s.name)}</b>, ${esc(s.role)}</li>`).join('');
-  const evid = ctx.weapons.map((x) => `<li>${glyph(x.type)} <b>${esc(x.name)}</b> <span class="kind">${esc(WEAPON_TYPES[x.type].label)}</span>, ${esc(x.note)}</li>`).join('');
-  const fileNo = tut ? 'Training case' : num ? 'Case No. ' + num : 'Cold case';
+  const P = G.puzzle, ctx = P.ctx, w = ctx.world, n = P.n, tut = G.mode === 'tutorial';
+  const unit = w.layoutKind === 'line' ? 'carriage' : 'room';
+  const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const when = tut ? 'The lesson' : G.mode === 'daily' ? `${dateStr}, case ${dayNumber()}` : 'An older case';
+  const mk = (v, k) => `<span class="mini">${penMark(v, k, 18)}</span>`;
   app().innerHTML = `
-    <div class="bar">
-      <button class="mark" data-act="home" aria-label="Back to the cases">Inquest</button>
-      <span class="mid">${esc(P.title)}</span>
-      <span class="clock" id="clock" aria-label="Time on this case">${fmtTime(G.elapsed)}</span>
-      <button class="tool jump" data-act="jump">Notebook</button>
-      ${tut ? '' : '<button class="tool" data-act="hint">Hint</button>'}
-      <button class="tool go" data-act="accuse">Accuse</button>
-    </div>
-    <div class="case">
-      <section class="dossier paper" aria-label="Case file">
-        <div class="file-no"><span>${fileNo}, ${esc(P.tierName)} <span class="stars" aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></span><span>${esc(w.name)}, ${w.year}</span></div>
-        <div id="closed-stamp">${G.solved ? '<span class="stamp on-file">Case closed</span>' : ''}</div>
-        <h2>${esc(P.title)}</h2>
-        <p class="scene">${w.scene.map(esc).join(' ')}</p>
-        <p class="victim"><b>${esc(w.victim.name)}</b>, ${esc(w.victim.desc)}, is dead. ${ctx.n} people were there. One of them did it.</p>
-        <p class="rules-line"><b>The rules.</b> Each suspect was in a different ${w.layoutKind === 'line' ? 'carriage' : 'room'}, holding a different weapon. Every statement is true. The killer held the murder weapon where the body was found.</p>
-        <h3>Statements <small>${P.clues.length} on file. Tap one to strike it out when you have used it.</small></h3>
-        <ol class="stmts" id="stmts">${P.clues.map((c, i) => statementHTML(c, i, ctx)).join('')}</ol>
-        <details class="rules" ${easy ? 'open' : ''}><summary>Who was there (${ctx.n})</summary><ul>${cast}</ul></details>
-        <details class="rules" id="evidence" ${easy ? 'open' : ''}><summary>What was found (${ctx.n})</summary><ul>${evid}</ul></details>
+    <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to the cases">Inquest</button>
+      ${tut ? '' : '<button class="quiet" data-act="hint">Hint</button>'}
+      <button class="quiet" data-act="how">How to play</button>${themeButton()}
+      <button class="btn accuse" data-act="accuse">Name the killer</button></div>
+    <header class="case-head">
+      <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></p>
+      <h1>${esc(P.title)}</h1>
+      <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
+      <details class="story"${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
+        <div class="story-body">
+          <p class="scene">${w.scene.map(esc).join(' ')} ${cap(NUM_WORD[n])} guests, ${NUM_WORD[n]} ${unit}s, ${NUM_WORD[n]} weapons. One of them did it.</p>
+          <p class="rules"><b>Each guest</b> had one weapon and was in one ${unit}; no two shared. <b>Every statement is true.</b> <b>The killer</b> held the murder weapon in the ${unit} where the body was found.</p>
+        </div></details>
+    </header>
+    <main class="case" id="case">
+      <section class="stmts-col" aria-labelledby="stmts-label">
+        <p class="label" id="stmts-label">Statements</p>
+        <ol class="stmts" id="stmts"></ol>
       </section>
-      <section aria-label="Working notes">
-        <div class="notebook paper" id="nb">
-          <div class="nb-head"><h3>Notebook</h3>
-            <div class="nb-view" role="group" aria-label="Notebook layout">
-              <button type="button" data-act="nbview" data-v="one" aria-pressed="${G.view !== 'all'}">One block</button><button type="button" data-act="nbview" data-v="all" aria-pressed="${G.view === 'all'}">All three</button>
-            </div></div>
-          <p class="nb-legend">${mini(1)} ruled out <span class="dot">&middot;</span> ${mini(2)} a match <span class="dot">&middot;</span> ${mini(3)} crossed for you<br><span class="soft">Tap a square once to cross it out, twice to circle it, a third time to clear it.</span></p>
-          <div class="nb-tabs" id="nb-tabs" role="tablist" aria-label="Notebook blocks">
-            ${['sw', 'sr', 'wr'].map((b, k) => `<button type="button" role="tab" data-tab="${b}"><span class="tn">${k + 1}</span><span class="tl">${BLOCKS[b].name}</span><span class="tp" id="tp-${b}"></span></button>`).join('')}
+      <section class="nb-col" aria-label="Notebook">
+        <div class="strip" id="strip"></div>
+        <div class="notebook" id="nb" data-tab="${G.tab}">
+          <div class="nb-head"><p class="label">Notebook</p>
+            <p class="howmark">Tap once to rule out ${mk(1, 'leg-x')}, twice for a match ${mk(2, 'leg-o')}. Faint marks follow from yours.</p></div>
+          <div class="tabs" role="tablist" aria-label="Notebook columns">
+            <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons</button>
+            <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s</button>
           </div>
-          <p class="nb-note" id="nb-note"></p>
-          <div class="gridwrap"><div class="lg" id="lg"></div></div>
-          <details class="nb-set"><summary>Notebook settings</summary>
-            <label><input type="checkbox" id="opt-cross" ${G.opts.cross ? 'checked' : ''}> When I circle a match, cross out the rest of its row and column</label>
-            <label><input type="checkbox" id="opt-chain" ${G.opts.chain ? 'checked' : ''}> Also fill in what follows between blocks (for example, a person's weapon and room tell you where that weapon was)</label>
-            <p class="soft">Drag with a mouse to mark several squares at once. Arrow keys move between squares.</p>
-          </details>
+          <div class="tablewrap"><table class="grid" id="grid"></table></div>
         </div>
         <div class="plan" id="plan"></div>
       </section>
-    </div>`;
+    </main>`;
+  renderStatements();
   buildGrid();
   buildPlan();
   paintAll();
-  wireGrid();
+  applyFocus();
+  fitGrid();
+  if (document.fonts) document.fonts.ready.then(fitGrid);
   window.scrollTo(0, 0);
 }
 
-// ---- the floor plan
-function wrapLabel(name, max) {
-  const words = name.split(' '), lines = [''];
-  words.forEach((w) => { const l = lines[lines.length - 1]; if ((l + ' ' + w).trim().length > max && l) lines.push(w); else lines[lines.length - 1] = (l + ' ' + w).trim(); });
-  return lines;
+function renderStatements() {
+  const P = G.puzzle, list = document.getElementById('stmts');
+  if (list) list.innerHTML = P.clues.map((c, i) => statementHTML(c, i, P.ctx)).join('');
+  const strip = document.getElementById('strip');
+  if (!strip) return;
+  const i = G.cur, c = P.clues[i], used = G.struck.includes(i), { text, who } = stmtParts(c, P.ctx);
+  strip.innerHTML = `<div class="nav"><span class="count">Statement ${i + 1} of ${P.clues.length}</span>
+      <button type="button" class="quiet" data-act="all-stmts" aria-label="All statements">All</button>
+      <button type="button" class="arrow" data-act="stmt-step" data-d="-1" aria-label="Previous statement">&lsaquo;</button>
+      <button type="button" class="arrow" data-act="stmt-step" data-d="1" aria-label="Next statement">&rsaquo;</button></div>
+    <p class="txt${used ? ' used' : ''}" data-i="${i}">${text}</p>
+    <div class="foot"><span class="who">${who}</span>
+      <button type="button" class="usebtn" data-act="use" data-i="${i}" aria-pressed="${used}">${used ? `${penTick('s' + i)}Used` : 'Done with this one'}</button></div>`;
 }
 
-function buildPlan() {
-  const ctx = G.puzzle.ctx, w = ctx.world, el = document.getElementById('plan');
-  const inPlay = new Map(ctx.roomIdx.map((wi, li) => [wi, li]));
-  let u, rowH, padL, padT, maxX = 0, maxY = 0;
-  w.rooms.forEach((r) => { maxX = Math.max(maxX, r.rect.x + r.rect.w); maxY = Math.max(maxY, r.rect.y + r.rect.h); });
-  const line = w.layoutKind === 'line';
-  const narrow = el.clientWidth > 0 && el.clientWidth < 520;
-  if (line && narrow) return buildTrainColumn(ctx, el, inPlay);
-  u = line ? 82 : 62; rowH = line ? 78 : 64; padL = line ? 74 : 98; padT = line ? 20 : 30;
-  const W = padL + maxX * u + 14, H = padT + maxY * rowH + (line ? 40 : 16);
-  const rooms = w.rooms.map((r, wi) => {
-    const li = inPlay.get(wi), on = li !== undefined;
-    const x = padL + r.rect.x * u + 2, y = padT + r.rect.y * rowH + 2, rw = r.rect.w * u - 4, rh = r.rect.h * rowH - 4;
-    const lines = wrapLabel(r.name, Math.max(8, Math.floor(rw / 7.4)));
-    const text = lines.map((t, k) => `<text x="${x + 8}" y="${y + 18 + k * 14}">${esc(t)}</text>`).join('');
-    const rx = line ? 7 : 2;
-    return `<g class="room ${on ? '' : 'off'}" ${on ? `data-ent="r${li}"` : ''} data-x="${x}" data-y="${y}" data-w="${rw}" data-h="${rh}"><rect x="${x}" y="${y}" width="${rw}" height="${rh}" rx="${rx}"/>${text}${on ? '' : `<text x="${x + 8}" y="${y + rh - 8}" style="font-size:10px">${line ? 'sealed' : 'locked'}</text>`}</g>`;
+function selectStatement(i) {
+  G.cur = i;
+  renderStatements();
+  applyFocus();
+}
+function stepStatement(d) {
+  const len = G.puzzle.clues.length;
+  selectStatement((G.cur + d + len) % len);
+}
+// tick a statement off (or back on). On a phone, ticking the one in hand moves on to the next one still unused.
+function toggleUsed(i) {
+  const on = !G.struck.includes(i);
+  G.struck = on ? G.struck.concat(i) : G.struck.filter((x) => x !== i);
+  persist();
+  if (on && i === G.cur && NARROW.matches) {
+    const len = G.puzzle.clues.length;
+    for (let k = 1; k < len; k++) { const j = (i + k) % len; if (!G.struck.includes(j)) { G.cur = j; break; } }
+  }
+  renderStatements();
+  applyFocus();
+}
+function openAllStatements() {
+  const P = G.puzzle;
+  const rows = P.clues.map((c, i) => {
+    const { text, who } = stmtParts(c, P.ctx), used = G.struck.includes(i);
+    return `<li class="${used ? 'used' : ''}"><button type="button" class="pickrow" data-act="pick-stmt" data-i="${i}" aria-current="${i === G.cur}">
+      <span class="n">${used ? penTick('a' + i) : i + 1}</span><span><span class="txt">${text}</span><span class="who">${who}</span></span></button></li>`;
   }).join('');
-  let extra = '';
-  if (line) {
-    const y = padT + rowH - 2;
-    extra += `<path d="M${padL - 6} ${padT + 8} h-44 l-8 ${rowH - 18} h52z" fill="rgba(207,226,240,.16)" stroke="#cfe2f0" stroke-width="1.5"/><text class="ahead" x="6" y="${padT + rowH + 22}">engine</text>`;
-    for (let i = 0; i < maxX; i++) extra += `<circle cx="${padL + i * u + 18}" cy="${y + 8}" r="5" fill="none" stroke="#cfe2f0" stroke-width="1.4"/><circle cx="${padL + i * u + u - 18}" cy="${y + 8}" r="5" fill="none" stroke="#cfe2f0" stroke-width="1.4"/>`;
-    extra += `<line x1="${padL - 6}" y1="${y + 14}" x2="${padL + maxX * u}" y2="${y + 14}" stroke="#cfe2f0" stroke-width="1.4"/>`;
-  } else {
-    for (let f = 0; f <= 2; f++) extra += `<text class="floorlbl" x="4" y="${padT + (2 - f) * rowH + 22}">${['Cellar', 'Ground floor', 'Upstairs'][f]}</text>`;
-    extra += `<path d="M${padL - 6} ${padT - 2} L${padL + maxX * u / 2} ${padT - 22} L${padL + maxX * u + 6} ${padT - 2}" fill="none" stroke="#cfe2f0" stroke-width="1.5" opacity=".6"/>`;
-  }
-  const legend = line
-    ? '"Next to" means carriages coupled together. The engine is at the front. Sealed carriages are not part of this case.'
-    : '"Next to" means rooms that share a wall, or sit directly above or below each other. Locked rooms are not part of this case.';
-  el.innerHTML = `<h3>${esc(w.name)}, as it stood</h3>
-    <p class="plan-key">${legend} Circle a match in the notebook and it appears here.</p>
-    <div class="planwrap ${narrow ? 'scroll' : ''}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Plan of ${esc(w.name)}"><defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#cfe2f0" stroke-opacity=".25" stroke-width="2"/></pattern></defs>${extra}${rooms}<g id="pins"></g></svg></div>${narrow ? '<p class="swipe">Swipe the plan sideways to see the whole house.</p>' : ''}`;
+  openModal(`<h2>Statements</h2><ol class="allstmts">${rows}</ol>`, 'listsheet');
 }
 
-// On a phone the train is drawn top to bottom, engine first, so the carriage names stay readable.
-function buildTrainColumn(ctx, el, inPlay) {
-  const w = ctx.world, W = 340, x = 8, rw = W - 16, rowH = 50, top = 44;
-  const order = w.rooms.map((r, wi) => wi).sort((a, b) => w.rooms[a].rect.x - w.rooms[b].rect.x);
-  let svg = `<path d="M${x + 40} ${top - 8} h${rw - 80} l-16 -28 h${-(rw - 112)}z" fill="rgba(207,226,240,.16)" stroke="#cfe2f0" stroke-width="1.5"/><text class="ahead" x="${W / 2}" y="${top - 18}" text-anchor="middle">engine (front)</text>`;
-  order.forEach((wi, k) => {
-    const r = w.rooms[wi], li = inPlay.get(wi), on = li !== undefined;
-    const y = top + k * rowH, rh = rowH - 10;
-    if (k) svg += `<line x1="${W / 2}" y1="${y - 10}" x2="${W / 2}" y2="${y}" stroke="#cfe2f0" stroke-width="2"/>`;
-    svg += `<g class="room ${on ? '' : 'off'}" ${on ? `data-ent="r${li}"` : ''} data-lay="row" data-x="${x}" data-y="${y}" data-w="${rw}" data-h="${rh}"><rect x="${x}" y="${y}" width="${rw}" height="${rh}" rx="7"/><text class="big" x="${x + 12}" y="${y + rh / 2 + 5}">${esc(r.name)}${on ? '' : ' (sealed)'}</text></g>`;
-  });
-  const H = top + order.length * rowH;
-  el.innerHTML = `<h3>${esc(w.name)}, as it stood</h3>
-    <p class="plan-key">"Next to" means carriages coupled together. The engine is at the front. Sealed carriages are not part of this case. Circle a match in the notebook and it appears here.</p>
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Plan of ${esc(w.name)}, front to back"><defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#cfe2f0" stroke-opacity=".25" stroke-width="2"/></pattern></defs>${svg}<g id="pins"></g></svg>`;
-}
-
-function paintPlan() {
-  const ctx = G.puzzle.ctx, n = ctx.n, d = derive(G.marks, n, G.opts);
-  const pins = document.getElementById('pins');
-  if (!pins) return;
-  const yes = (v) => v === 2 || v === 4;
-  let out = '';
-  for (let r = 0; r < n; r++) {
-    const g = document.querySelector(`#plan .room[data-ent="r${r}"]`);
-    if (!g) continue;
-    const gx = +g.dataset.x, gy = +g.dataset.y, gw = +g.dataset.w, gh = +g.dataset.h;
-    const row = g.dataset.lay === 'row'; // phone train: pins sit on the right, in a line
-    let k = 0;
-    for (let s = 0; s < n; s++) if (yes(d.sr[s][r])) {
-      const cx = row ? gx + gw - 20 - k * 26 : gx + 20 + k * 24, cy = row ? gy + gh / 2 : gy + gh - 20; k++;
-      const su = ctx.suspects[s];
-      out += `<g class="pin"><title>${esc(su.name)}</title><circle cx="${cx}" cy="${cy}" r="10.5" fill="hsl(${su.hue} 50% 38%)" stroke="#f3e6d2" stroke-width="1.2"/><text x="${cx}" y="${cy + 3.5}">${initials(su.name)}</text></g>`;
-    }
-    // a weapon placed in this room, directly or through the person holding it
-    let q = 0;
-    for (let w = 0; w < n; w++) {
-      const there = yes(d.wr[w][r]) || [...Array(n).keys()].some((s) => yes(d.sr[s][r]) && yes(d.sw[s][w]));
-      if (!there) continue;
-      const x = row ? gx + gw - 20 - Math.max(k, 1) * 26 - 16 - q * 26 : gx + gw - 30 - q * 24, y = row ? gy + gh / 2 - 11 : gy + gh - 31; q++;
-      out += `<g class="wpin"><title>${esc(ctx.weapons[w].name)}</title><rect x="${x}" y="${y}" width="22" height="22" rx="3"/><use href="#k-${ctx.types[w]}" x="${x + 3}" y="${y + 3}" width="16" height="16"/></g>`;
-    }
-  }
-  pins.innerHTML = out;
+// light up everything the statement in hand talks about
+function applyFocus() {
+  document.querySelectorAll('.hl').forEach((e) => e.classList.remove('hl'));
+  if (!G) return;
+  const ctx = G.puzzle.ctx, f = clueFocus(G.puzzle.clues[G.cur]);
+  const lit = (sel) => document.querySelectorAll(sel).forEach((e) => e.classList.add('hl'));
+  f.s.forEach((s) => lit(`[data-row="s${s}"]`));
+  const ws = f.w.concat(f.kind ? ctx.types.map((t, i) => (t === f.kind ? i : -1)).filter((i) => i >= 0) : []);
+  ws.forEach((w) => lit(`[data-col="w${w}"]`));
+  if (f.kind) lit(`[data-kind="${f.kind}"]`);
+  const rs = f.r.concat(f.floor === null ? [] : ctx.floor.map((fl, i) => (fl === f.floor ? i : -1)).filter((i) => i >= 0));
+  rs.forEach((r) => { lit(`[data-col="r${r}"]`); lit(`[data-row="r${r}"]`); lit(`[data-room="${r}"]`); });
+  if (f.floor !== null) lit(`[data-floor="${f.floor}"]`);
+  if (f.k) lit('[data-col="k"]');
 }

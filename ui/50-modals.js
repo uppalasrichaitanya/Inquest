@@ -27,14 +27,14 @@ function toast(msg) {
 function openAccuse() {
   const ctx = G.puzzle.ctx;
   const group = (title, key, items) => `<div class="pick"><h4>${title}</h4><div class="opts">${items.map((it, i) => `<button type="button" class="opt" data-pick="${key}" data-v="${i}" aria-pressed="${G.pick[key] === i}">${it}</button>`).join('')}</div></div>`;
-  openModal(`<h2>Make an accusation</h2>
-    <p>Name the killer, the weapon and the room. A wrong accusation goes on your record.</p>
+  openModal(`<h2>Name the killer</h2>
+    <p>Who did it, with what, and where. A wrong guess goes on your record.</p>
     ${group('Who did it?', 'killer', ctx.suspects.map((s) => `${seal(s)}${esc(s.name)}`))}
     ${group('With what?', 'weapon', ctx.weapons.map((w) => `${glyph(w.type)}${esc(w.name)}`))}
     ${group('Where?', 'room', ctx.rooms.map((r) => esc(r.name)))}
     <p class="said" id="said"></p>
     <div id="accuse-result"></div>
-    <div class="actions"><button class="btn red" id="do-accuse" data-act="submit-accuse">Accuse</button><button class="btn ghost" data-act="close">Not yet</button></div>`);
+    <div class="actions"><button class="btn" id="do-accuse" data-act="submit-accuse">Name them</button><button class="btn ghost" data-act="close">Not yet</button></div>`);
   updateSaid();
 }
 function updateSaid() {
@@ -197,7 +197,7 @@ function openHint() {
   const h = nextHint();
   hintNow = h;
   if (h.type === 'ready') {
-    openModal(`<h2>Inspector Mallory</h2><div class="hintbox">Your notes already settle it. Nothing left to look up, so make your accusation.</div><div class="actions"><button class="btn red" data-act="accuse">Accuse</button><button class="btn ghost" data-act="close">Keep looking</button></div>`);
+    openModal(`<h2>Inspector Mallory</h2><div class="hintbox">Your notes already settle it. Nothing left to look up, so name the killer.</div><div class="actions"><button class="btn" data-act="accuse">Name the killer</button><button class="btn ghost" data-act="close">Keep looking</button></div>`);
     return;
   }
   G.hints++; persist();
@@ -210,6 +210,7 @@ function openHint() {
   openModal(`<h2>Inspector Mallory</h2><div class="hintbox" id="hintbox">${nudge}</div>
     <div class="actions"><button class="btn" data-act="hint-more">Spell it out</button><button class="btn ghost" data-act="close">I'll take it from here</button></div>`);
   if (h.clue >= 0) {
+    selectStatement(h.clue);
     const li = document.querySelector(`.stmt[data-i="${h.clue}"]`);
     if (li) { li.classList.add('nudge'); setTimeout(() => li.classList.remove('nudge'), 5000); }
   }

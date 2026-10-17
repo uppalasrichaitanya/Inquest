@@ -1,24 +1,21 @@
 // ---- events
+// first visit: go straight into the guided case (it opens with a welcome and a way to skip)
+function homeOrLesson() {
+  renderHome();
+  if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();
+}
+
 document.addEventListener('click', (e) => {
   const a = e.target.closest('[data-act]');
   if (a) {
-    const act = a.dataset.act;
+    const act = a.dataset.act, i = +a.dataset.i;
     if (act === 'open-daily') openCase(dailySpec(a.dataset.tier), 'daily');
-    else if (act === 'home') { closeModal(); renderHome();
-// first visit: go straight into the guided case (it opens with a welcome and a way to skip)
-if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial(); }
+    else if (act === 'home') { closeModal(); homeOrLesson(); }
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
     else if (act === 'tutorial') startTutorial();
     else if (act === 'coach-next') coachNext();
-    else if (act === 'coach-skip') { LS.set('inq1:tutorial', 1); endCoach(); renderHome();
-// first visit: go straight into the guided case (it opens with a welcome and a way to skip)
-if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial(); }
-    else if (act === 'nbview') {
-      G.view = a.dataset.v;
-      if (G.mode !== 'tutorial') LS.set('inq1:nbview', G.view);
-      buildGrid(); paintAll();
-    }
+    else if (act === 'coach-skip') { LS.set('inq1:tutorial', 1); endCoach(); homeOrLesson(); }
     else if (act === 'stats') openStats();
     else if (act === 'random') {
       closeModal();
@@ -28,11 +25,21 @@ if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();
     else if (act === 'close') closeModal();
     else if (act === 'accuse') { closeModal(); openAccuse(); }
     else if (act === 'submit-accuse') submitAccuse();
-    else if (act === 'jump') { const nb = document.getElementById('nb'); if (nb) nb.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     else if (act === 'hint') openHint();
     else if (act === 'hint-more') hintMore();
     else if (act === 'copy-share') copyShare();
     else if (act === 'pick-tier') { closeModal(); openCase(randomSpec(a.dataset.tier), 'random'); }
+    // the case screen
+    else if (act === 'pick-stmt') { closeModal(); selectStatement(i); }
+    else if (act === 'use') toggleUsed(i);
+    else if (act === 'stmt-step') stepStatement(+a.dataset.d);
+    else if (act === 'all-stmts') openAllStatements();
+    else if (act === 'nbtab') setTab(a.dataset.tab);
+    else if (act === 'wrview') {
+      G.wrView = G.wrView === 'table' ? 'plan' : 'table';
+      LS.set('inq1:wrview', G.wrView);
+      buildPlan(); paintAll(); applyFocus();
+    }
     return;
   }
   const pk = e.target.closest('[data-pick]');
@@ -43,17 +50,10 @@ if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();
     updateSaid();
     return;
   }
-  const st = e.target.closest('.stmt > button');
-  if (st) {
-    const li = st.parentElement, i = +li.dataset.i, on = li.dataset.struck !== '1';
-    li.dataset.struck = on ? '1' : '0'; st.setAttribute('aria-pressed', String(on));
-    G.struck = on ? G.struck.concat(i) : G.struck.filter((x) => x !== i);
-    persist();
-    return;
-  }
+  // a room on the plan opens its weapons at full size (a chip itself is marked where it is, on wide screens)
+  const room = e.target.closest('.room[data-room]');
+  if (room && !e.target.closest('.cell') && G) { openRoomSheet(+room.dataset.room); return; }
   if (e.target.id === 'scrim') closeModal();
-  const tab = e.target.closest('#nb-tabs button');
-  if (tab) { G.tab = tab.dataset.tab; buildGrid(); paintAll(); wireGrid(); }
 });
 
 function pickRandom(tier) {
@@ -61,30 +61,29 @@ function pickRandom(tier) {
   openRandomChoice(tier);
 }
 function openRandomChoice(tier) {
-  openModal(`<h2>Open a different case</h2><p>Pick a level. You will get a case you have not closed yet, when there is one.</p>
+  openModal(`<h2>Play an older case</h2><p>Pick a level. You will get a case you have not closed yet, when there is one.</p>
     <div class="actions">${TIER_ORDER.map((t) => `<button class="btn ${t === tier ? '' : 'ghost'}" data-act="pick-tier" data-tier="${t}">${TIERS[t].name}</button>`).join('')}</div>`);
 }
 
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-document.addEventListener('change', (e) => {
-  if (e.target.id === 'opt-cross') { G.opts.cross = e.target.checked; persist(); paintAll(); }
-  if (e.target.id === 'opt-chain') { G.opts.chain = e.target.checked; persist(); paintAll(); }
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  const room = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.room[data-room]');
+  if (room) { e.preventDefault(); openRoomSheet(+room.dataset.room); }
 });
-document.addEventListener('mouseover', (e) => { const t = e.target.closest('.tk'); if (t) lightEnts([t.dataset.ent], true); });
-document.addEventListener('mouseout', (e) => { const t = e.target.closest('.tk'); if (t) lightEnts([t.dataset.ent], false); });
 
 setInterval(() => {
   if (VIEW !== 'case' || !G || G.solved || document.hidden) return;
   G.elapsed++;
-  const c = document.getElementById('clock'); if (c) c.textContent = fmtTime(G.elapsed);
   if (G.elapsed % 5 === 0) persist();
 }, 1000);
 document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+// crossing the phone width redraws the plan for its new size
+const onPhone = () => { if (VIEW === 'case' && G) { buildPlan(); paintAll(); applyFocus(); } };
+if (PHONE.addEventListener) PHONE.addEventListener('change', onPhone); else if (PHONE.addListener) PHONE.addListener(onPhone);
 let rz = null;
-window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (VIEW === 'case') { buildPlan(); chooseGridMode(); } }, 120); });
+window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (VIEW === 'case') fitGrid(); }, 100); });
 
 applyTheme();
 document.body.insertAdjacentHTML('afterbegin', KIND_DEFS);
-renderHome();
-// first visit: go straight into the guided case (it opens with a welcome and a way to skip)
-if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();
+wireGrid();
+homeOrLesson();
