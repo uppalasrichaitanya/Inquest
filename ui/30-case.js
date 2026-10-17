@@ -56,8 +56,7 @@ function renderCase() {
       <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></p>
       <h1>${esc(P.title)}</h1>
       <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
-      ${tut ? `<div class="warm-head"><p class="warm-lede"><span class="scene-txt">${w.scene.map(esc).join(' ')} </span>Three guests, and three rules:</p>${rulesHTML()}
-        <p class="warm-skip"><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></p></div>` : ''}
+      ${tut ? warmHeadHTML() : ''}
       <details class="story"${tut ? ' hidden' : ''}${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
         <div class="story-body">
           <p class="scene">${w.scene.map(esc).join(' ')} ${cap(NUM_WORD[n])} guests, ${NUM_WORD[n]} ${unit}s, ${NUM_WORD[n]} weapons. One of them did it.</p>
@@ -71,15 +70,15 @@ function renderCase() {
       </section>
       <section class="nb-col" aria-label="Notebook">
         <div class="strip" id="strip"></div>
-        <div class="notebook" id="nb" data-tab="${G.tab}">
+        <div class="notebook${tut ? ' warm' : ''}" id="nb" data-tab="${G.tab}">
           <div class="nb-head"><p class="label">Notebook</p>
             <p class="howmark">Tap once to rule out ${mk(1, 'leg-x')}, twice for a match ${mk(2, 'leg-o')}. Faint marks follow from yours.</p></div>
           ${tut ? `<p class="wnote wide" aria-live="polite">${WARM.note}</p>` : ''}
-          <div class="tabs" role="tablist" aria-label="Notebook columns">
+          <div class="nb-bar"><div class="tabs" role="tablist" aria-label="Notebook columns">
             <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
             <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
           </div>
-          <div class="nbtools"><button type="button" class="quiet" data-act="undo" disabled>Undo</button><button type="button" class="quiet" data-act="clear">Clear all</button></div>
+          <div class="nbtools"><button type="button" class="quiet" data-act="undo" disabled>Undo</button><button type="button" class="quiet" data-act="clear">Clear all</button></div></div>
           <div class="tablewrap"><table class="grid" id="grid"></table></div>
         </div>
         <div class="plan" id="plan"></div>

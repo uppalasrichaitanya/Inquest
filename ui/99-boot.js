@@ -14,6 +14,7 @@ document.addEventListener('click', (e) => {
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
     else if (act === 'tutorial') startWarmup();
+    else if (act === 'warm-fold') foldRules(true);
     else if (act === 'warm-skip') { LS.set('inq1:tutorial', 1); renderHome(); }
     else if (act === 'undo') undo();
     else if (act === 'clear') clearAll();

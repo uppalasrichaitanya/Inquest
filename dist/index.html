@@ -242,8 +242,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .rules3 .joined .rsq { background: var(--paper); }
 .rlab3 { position: absolute; left: 0; top: 33px; display: flex; gap: 0; font-size: 12px; color: var(--muted); }
 .rlab3 i { width: 46px; text-align: center; margin-left: -8px; white-space: nowrap; }
-.warm-skip { margin: 12px 0 0; font-size: 15px; }
-.warm-skip .link { color: var(--muted); }
+.warm-skip { display: flex; align-items: center; gap: 20px; margin: 14px 0 0; font-size: 15px; }
+.warm-skip .btn { padding: 7px 22px 8px; font-size: 16px; }
+.warm-skip .link, .warm-fold .link { color: var(--muted); }
+.warm-fold { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 8px 0 0; font-size: 15px; }
+.nb-bar { display: flex; align-items: flex-end; gap: 16px; }
+.nb-bar .nbtools { margin-left: auto; }
 .sheetbox .rules3 { grid-template-columns: minmax(0, 1fr); margin: 14px 0; }
 .try { display: block; margin-top: 6px; font-size: 15px; font-style: italic; color: var(--muted); }
 .wnote { margin: 8px 0 0; padding: 8px 12px; border-left: 2px solid var(--pen); background: var(--wash); font-size: 16px; line-height: 1.45; }
@@ -252,7 +256,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .strip .wnote { display: none; }
 .grid .cell.pencil .pen path, .plan-svg .cell.pencil .pen path, .wr-list .cell.pencil .pen path { stroke: var(--muted); stroke-dasharray: 2.5 3; }
 .bar .accuse[aria-disabled='true'] { background: none; color: var(--muted); border: 1px solid var(--rule); }
-.nbtools { display: flex; justify-content: flex-end; gap: 18px; margin: 10px 0 -4px; }
+.nbtools { display: flex; justify-content: flex-end; gap: 18px; margin: 10px 0 -4px; flex: none; }
 .nbtools .quiet { font-size: 15px; min-height: 32px; }
 .nbtools .quiet:disabled { color: var(--ghost); text-decoration-color: transparent; cursor: default; }
 .tabs .cue { display: none; }
@@ -285,13 +289,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .usebtn .tick { width: 18px; height: 16px; }
   .notebook { margin-top: 12px; }
   .notebook .nb-head > .label { display: none; }
-  .tabs { display: flex; margin-top: 10px; max-width: 560px; border: 1px solid var(--rule); border-radius: 2px; }
+  .tabs { display: flex; flex: 1; margin-top: 10px; max-width: 560px; border: 1px solid var(--rule); border-radius: 2px; }
+  .nb-bar .nbtools { margin: 0; gap: 12px; align-self: center; padding-top: 10px; }
+  .notebook.warm .nb-head { display: none; }
   .tabs button { flex: 1; min-height: 40px; background: none; border: 0; font-size: 16px; color: var(--muted); }
   .tabs button[aria-selected='true'] { background: var(--ink); color: var(--paper); }
   .notebook[data-tab='sw'] .rpart, .notebook[data-tab='sr'] .wpart { display: none; }
   .grid { --cell: 53px; }
   .plan { margin-top: 28px; }
   .strip .wnote { display: block; }
+  .strip .wnote:empty { display: none; }
   .wnote.wide { display: none; }
   .strip .try { margin: 4px 0 0; padding-left: 12px; }
   .rules3 { gap: 10px 24px; }
@@ -331,7 +338,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .rlab3 { top: 29px; font-size: 10.5px; }
   .rlab3 i { width: 38px; margin-left: -6px; }
   .strip .wnote { font-size: 15px; padding: 6px 10px; margin-top: 6px; }
-  .nbtools { margin-top: 6px; }
+  .tabs button { min-width: 0; }
 }
 @media (max-width: 380px) {
   .grid { --cell: 34px; }
@@ -1668,8 +1675,7 @@ function renderCase() {
       <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></p>
       <h1>${esc(P.title)}</h1>
       <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
-      ${tut ? `<div class="warm-head"><p class="warm-lede"><span class="scene-txt">${w.scene.map(esc).join(' ')} </span>Three guests, and three rules:</p>${rulesHTML()}
-        <p class="warm-skip"><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></p></div>` : ''}
+      ${tut ? warmHeadHTML() : ''}
       <details class="story"${tut ? ' hidden' : ''}${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
         <div class="story-body">
           <p class="scene">${w.scene.map(esc).join(' ')} ${cap(NUM_WORD[n])} guests, ${NUM_WORD[n]} ${unit}s, ${NUM_WORD[n]} weapons. One of them did it.</p>
@@ -1683,15 +1689,15 @@ function renderCase() {
       </section>
       <section class="nb-col" aria-label="Notebook">
         <div class="strip" id="strip"></div>
-        <div class="notebook" id="nb" data-tab="${G.tab}">
+        <div class="notebook${tut ? ' warm' : ''}" id="nb" data-tab="${G.tab}">
           <div class="nb-head"><p class="label">Notebook</p>
             <p class="howmark">Tap once to rule out ${mk(1, 'leg-x')}, twice for a match ${mk(2, 'leg-o')}. Faint marks follow from yours.</p></div>
           ${tut ? `<p class="wnote wide" aria-live="polite">${WARM.note}</p>` : ''}
-          <div class="tabs" role="tablist" aria-label="Notebook columns">
+          <div class="nb-bar"><div class="tabs" role="tablist" aria-label="Notebook columns">
             <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
             <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
           </div>
-          <div class="nbtools"><button type="button" class="quiet" data-act="undo" disabled>Undo</button><button type="button" class="quiet" data-act="clear">Clear all</button></div>
+          <div class="nbtools"><button type="button" class="quiet" data-act="undo" disabled>Undo</button><button type="button" class="quiet" data-act="clear">Clear all</button></div></div>
           <div class="tablewrap"><table class="grid" id="grid"></table></div>
         </div>
         <div class="plan" id="plan"></div>
@@ -2360,7 +2366,7 @@ function openStats() {
 // prove lands in ink with a one-line reason; anything else stays in pencil with a gentle note and does nothing to
 // the rest of the notebook. Nothing is locked, and nothing covers the notebook: the notes sit in the statement
 // strip on a phone and above the notebook on a wide screen.
-const WARM = { alive: null, note: '', toldFaint: false, toldReady: false };
+const WARM = { alive: null, note: '', toldFaint: false, toldReady: false, folded: false };
 
 // the three rules, each with its picture. Shown above the warm-up and in "How to play".
 function rulesHTML() {
@@ -2372,6 +2378,23 @@ function rulesHTML() {
       <span><b>Every statement is true.</b><span class="more"> Each one lets you rule something out, or in.</span></span></li>
     <li><span class="pic joined" aria-hidden="true">${sq(2, 5)}${sq(2, 6)}${sq(2, 7)}<span class="rlab3"><i>who</i><i>what</i><i>where</i></span></span>
       <span><b>The killer</b> held the murder weapon in the room where the body was found.</span></li></ol>`;
+}
+
+// the rules above the warm-up. Once read ("Got it", or the first mark) they fold to one line, so the statement
+// and the notebook share the screen; they stay in How to play.
+function warmHeadHTML() {
+  const w = G.puzzle.ctx.world;
+  if (WARM.folded) return `<div class="warm-head folded"><p class="warm-fold"><button type="button" class="link" data-act="how">The three rules</button><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></p></div>`;
+  return `<div class="warm-head"><p class="warm-lede"><span class="scene-txt">${w.scene.map(esc).join(' ')} </span>Three guests, and three rules:</p>${rulesHTML()}
+    <div class="warm-skip"><button type="button" class="btn" data-act="warm-fold">Got it</button><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></div></div>`;
+}
+// fold the rules away (from "Got it" the page goes back to the top; after a mark, warmAfter keeps the square still)
+function foldRules(toTop) {
+  if (WARM.folded) return;
+  WARM.folded = true;
+  const head = document.querySelector('.warm-head');
+  if (head) head.outerHTML = warmHeadHTML();
+  if (toTop) window.scrollTo(0, 0);
 }
 
 // what each statement asks of you, said once, under the statement in hand
@@ -2387,7 +2410,7 @@ function startWarmup() {
   closeModal();
   newGame(TUTORIAL, 'tutorial');
   G.opts = { cross: true, chain: false };
-  Object.assign(WARM, { alive: null, note: '', toldFaint: false, toldReady: false });
+  Object.assign(WARM, { alive: null, note: '', toldFaint: false, toldReady: false, folded: false });
   renderCase();
   setWarmNote('');
 }
@@ -2462,13 +2485,26 @@ function warmReason(b, i, j, v, k) {
   return `Right: ${what}. That follows from statement ${k + 1}${k ? ' and the ones before it' : ''}.`;
 }
 
+// the square as it shows right now (notebook, plan chip, table or room sheet)
+function visibleCell(b, i, j) {
+  const all = [...document.querySelectorAll(`.cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`)];
+  return all.find((x) => x.getClientRects().length) || all[0] || null;
+}
+
 function setWarmNote(html) {
   WARM.note = html;
   document.querySelectorAll('.wnote').forEach((e) => { e.innerHTML = html; });
 }
 
 // after each mark: say why it is right, or why it stays in pencil
+// The rules folding and the note changing both move the notebook; the square just tapped stays where it was.
 function warmAfter(b, i, j, v) {
+  const keep = visibleCell(b, i, j), y0 = keep && keep.getBoundingClientRect().top;
+  warmExplain(b, i, j, v);
+  if (keep && keep.isConnected && window.scrollBy) window.scrollBy(0, keep.getBoundingClientRect().top - y0);
+}
+function warmExplain(b, i, j, v) {
+  foldRules(false);
   if (!v) { setWarmNote('Cleared.'); return; }
   const r = warmJudge(b, i, j, v);
   let note;
@@ -2528,6 +2564,7 @@ document.addEventListener('click', (e) => {
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
     else if (act === 'tutorial') startWarmup();
+    else if (act === 'warm-fold') foldRules(true);
     else if (act === 'warm-skip') { LS.set('inq1:tutorial', 1); renderHome(); }
     else if (act === 'undo') undo();
     else if (act === 'clear') clearAll();

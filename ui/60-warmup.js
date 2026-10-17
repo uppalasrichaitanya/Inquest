@@ -3,7 +3,7 @@
 // prove lands in ink with a one-line reason; anything else stays in pencil with a gentle note and does nothing to
 // the rest of the notebook. Nothing is locked, and nothing covers the notebook: the notes sit in the statement
 // strip on a phone and above the notebook on a wide screen.
-const WARM = { alive: null, note: '', toldFaint: false, toldReady: false };
+const WARM = { alive: null, note: '', toldFaint: false, toldReady: false, folded: false };
 
 // the three rules, each with its picture. Shown above the warm-up and in "How to play".
 function rulesHTML() {
@@ -15,6 +15,23 @@ function rulesHTML() {
       <span><b>Every statement is true.</b><span class="more"> Each one lets you rule something out, or in.</span></span></li>
     <li><span class="pic joined" aria-hidden="true">${sq(2, 5)}${sq(2, 6)}${sq(2, 7)}<span class="rlab3"><i>who</i><i>what</i><i>where</i></span></span>
       <span><b>The killer</b> held the murder weapon in the room where the body was found.</span></li></ol>`;
+}
+
+// the rules above the warm-up. Once read ("Got it", or the first mark) they fold to one line, so the statement
+// and the notebook share the screen; they stay in How to play.
+function warmHeadHTML() {
+  const w = G.puzzle.ctx.world;
+  if (WARM.folded) return `<div class="warm-head folded"><p class="warm-fold"><button type="button" class="link" data-act="how">The three rules</button><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></p></div>`;
+  return `<div class="warm-head"><p class="warm-lede"><span class="scene-txt">${w.scene.map(esc).join(' ')} </span>Three guests, and three rules:</p>${rulesHTML()}
+    <div class="warm-skip"><button type="button" class="btn" data-act="warm-fold">Got it</button><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></div></div>`;
+}
+// fold the rules away (from "Got it" the page goes back to the top; after a mark, warmAfter keeps the square still)
+function foldRules(toTop) {
+  if (WARM.folded) return;
+  WARM.folded = true;
+  const head = document.querySelector('.warm-head');
+  if (head) head.outerHTML = warmHeadHTML();
+  if (toTop) window.scrollTo(0, 0);
 }
 
 // what each statement asks of you, said once, under the statement in hand
@@ -30,7 +47,7 @@ function startWarmup() {
   closeModal();
   newGame(TUTORIAL, 'tutorial');
   G.opts = { cross: true, chain: false };
-  Object.assign(WARM, { alive: null, note: '', toldFaint: false, toldReady: false });
+  Object.assign(WARM, { alive: null, note: '', toldFaint: false, toldReady: false, folded: false });
   renderCase();
   setWarmNote('');
 }
@@ -105,13 +122,26 @@ function warmReason(b, i, j, v, k) {
   return `Right: ${what}. That follows from statement ${k + 1}${k ? ' and the ones before it' : ''}.`;
 }
 
+// the square as it shows right now (notebook, plan chip, table or room sheet)
+function visibleCell(b, i, j) {
+  const all = [...document.querySelectorAll(`.cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`)];
+  return all.find((x) => x.getClientRects().length) || all[0] || null;
+}
+
 function setWarmNote(html) {
   WARM.note = html;
   document.querySelectorAll('.wnote').forEach((e) => { e.innerHTML = html; });
 }
 
 // after each mark: say why it is right, or why it stays in pencil
+// The rules folding and the note changing both move the notebook; the square just tapped stays where it was.
 function warmAfter(b, i, j, v) {
+  const keep = visibleCell(b, i, j), y0 = keep && keep.getBoundingClientRect().top;
+  warmExplain(b, i, j, v);
+  if (keep && keep.isConnected && window.scrollBy) window.scrollBy(0, keep.getBoundingClientRect().top - y0);
+}
+function warmExplain(b, i, j, v) {
+  foldRules(false);
   if (!v) { setWarmNote('Cleared.'); return; }
   const r = warmJudge(b, i, j, v);
   let note;

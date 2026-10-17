@@ -8,6 +8,7 @@ function page(seeded) {
   const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://example.test/', beforeParse(w) {
     w.addEventListener('error', (e) => errors.push('window error: ' + e.message));
     w.scrollTo = () => {};
+    w.scrollBy = () => {};
     w.matchMedia = w.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
     if (seeded) w.localStorage.setItem('inq1:tutorial', '1');
     w.HTMLElement.prototype.scrollIntoView = () => {};
@@ -24,6 +25,11 @@ function page(seeded) {
   ok($$('.rules3 li').length === 3 && $$('.rules3 li .pic').length === 3, 'three rules, each with a picture');
   ok($('.stmt.on .try') && /Try it/.test($('.stmt.on .try').textContent), 'the statement in hand says what to try');
   ok(!$('#coach') && !$('.coach'), 'no coach card over the notebook');
+  click($('[data-act="warm-fold"]'));
+  ok($('.warm-head.folded') && !$('.case-head .rules3'), '"Got it" folds the rules away');
+  click($('.warm-fold [data-act="how"]'));
+  ok($$('#scrim .rules3 li').length === 3, 'the rules stay in How to play');
+  click($('#scrim [data-act="close"]'));
   ok($('.bar .accuse').getAttribute('aria-disabled') === 'true', '"Name the killer" waits for an answer');
   click($('.bar .accuse'));
   ok(!$('#scrim') && /Not yet/.test($('.wnote').textContent), 'pressed too soon, it says why, inline');
@@ -70,7 +76,9 @@ function page(seeded) {
   click($('#scrim [data-act="home"]'));
   ok($$('.case-row').length === 4 && !$('.warm-head'), 'then home lists the cases, and the warm-up does not come back');
   click($('[data-act="tutorial"]'));
-  ok($('.warm-head') && w.eval('G.marks.sw[0][1]') === 0, 'the warm-up can be replayed, fresh');
+  ok($('.warm-head') && $('.case-head .rules3') && w.eval('G.marks.sw[0][1]') === 0, 'the warm-up can be replayed, fresh, rules open');
+  $('#grid .cell[data-b="sw"][data-i="0"][data-j="1"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 }));
+  ok($('.warm-head.folded'), 'the first mark folds the rules too');
   click($('[data-act="warm-skip"]'));
   ok($('.home h1'), 'and skipped');
 }
