@@ -2,18 +2,81 @@ const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const html = fs.readFileSync('dist/test.html', 'utf8').replace(/<link[^>]*>/g, '');
 const errors = [];
-const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://example.test/', beforeParse(w) {
-  w.addEventListener('error', (e) => errors.push('window error: ' + e.message));
-  w.scrollTo = () => {};
-  w.matchMedia = w.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
-  if (process.env.FIRST_VISIT !== '1') w.localStorage.setItem('inq1:tutorial', '1');
-  w.HTMLElement.prototype.scrollIntoView = () => {};
-} });
-const w = dom.window, d = w.document;
-const $ = (s) => d.querySelector(s), $$ = (s) => [...d.querySelectorAll(s)];
-const click = (el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 1 }));
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console.log('ok  ', m); };
+// a fresh page; seeded = someone who has already done the warm-up
+function page(seeded) {
+  const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://example.test/', beforeParse(w) {
+    w.addEventListener('error', (e) => errors.push('window error: ' + e.message));
+    w.scrollTo = () => {};
+    w.matchMedia = w.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
+    if (seeded) w.localStorage.setItem('inq1:tutorial', '1');
+    w.HTMLElement.prototype.scrollIntoView = () => {};
+  } });
+  const w = dom.window, d = w.document;
+  return { w, d, $: (s) => d.querySelector(s), $$: (s) => [...d.querySelectorAll(s)], click: (el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 1 })) };
+}
 
+// ---- a first visit, from empty storage: the warm-up opens by itself and is played to the end
+{
+  const { w, $, $$, click } = page(false);
+  ok(w.localStorage.length === 0 || !w.localStorage.getItem('inq1:tutorial'), 'first visit starts with nothing stored');
+  ok($('.warm-head') && w.eval('G.mode') === 'tutorial', 'a first visit opens the warm-up');
+  ok($$('.rules3 li').length === 3 && $$('.rules3 li .pic').length === 3, 'three rules, each with a picture');
+  ok($('.stmt.on .try') && /Try it/.test($('.stmt.on .try').textContent), 'the statement in hand says what to try');
+  ok(!$('#coach') && !$('.coach'), 'no coach card over the notebook');
+  ok($('.bar .accuse').getAttribute('aria-disabled') === 'true', '"Name the killer" waits for an answer');
+  click($('.bar .accuse'));
+  ok(!$('#scrim') && /Not yet/.test($('.wnote').textContent), 'pressed too soon, it says why, inline');
+  const tap = (b, i, j) => { const c = $(`#grid .cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`); c.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 })); return c; };
+  const note = () => $('.wnote').textContent;
+  // a mark nothing proves stays in pencil, has no effect, and Undo takes it back
+  const p = tap('sw', 0, 0);
+  ok(p.dataset.v === '1' && p.dataset.p === '1' && /pencil/.test(note()), 'an unproven mark stays in pencil: ' + note());
+  ok($('#grid .cell[data-b="sw"][data-i="0"][data-j="1"]').dataset.v === '0', 'and nothing follows from it');
+  click($('[data-act="undo"]'));
+  ok(w.eval('G.marks.sw[0][0]') === 0 && p.dataset.v === '0', 'Undo takes it back');
+  // the right mark lands in ink with its reason, and ticks the statement
+  const c = tap('sw', 0, 1);
+  ok(c.dataset.v === '1' && c.dataset.p === '0' && /Statement 1 says/.test(note()), 'a proven mark lands in ink: ' + note());
+  ok(w.eval('G.struck.includes(0)'), 'and ticks off the statement it used');
+  tap('sw', 0, 1);
+  ok(c.dataset.p === '1' && /says otherwise/.test(note()), 'circling a ruled-out pair is pencilled, with the statement that says otherwise');
+  click($('[data-act="undo"]'));
+  ok(c.dataset.v === '1' && c.dataset.p === '0', 'Undo restores the cross');
+  // statement 2: a match, and the faint crosses explained once
+  click($$('.stmt .say')[1]);
+  tap('sr', 2, 0); tap('sr', 2, 0);
+  ok(/A circle means a match/.test(note()) && /faint crosses/.test(note()), 'circle explained, and the faint crosses named: ' + note());
+  ok($('#grid .cell[data-b="sr"][data-i="0"][data-j="0"]').dataset.v === '3', 'the rest of the column is crossed faintly');
+  // a true guess made too early is pencil, then ink once the statement that proves it is read
+  const early = tap('sr', 1, 1); tap('sr', 1, 1);
+  ok(early.dataset.p === '1', 'a right guess made too early is still pencil');
+  click($$('.stmt .say')[2]);
+  ok(early.dataset.p === '0' && early.dataset.v === '2', 'it turns to ink once statement 3 proves it');
+  tap('sr', 1, 2); tap('sr', 0, 2); tap('sr', 0, 2);
+  click($$('.stmt .say')[3]);
+  for (const [i, j] of [[2, 0], [0, 2], [1, 1]]) { tap('sw', i, j); tap('sw', i, j); }
+  ok(/weapon that/.test(note()), 'the last weapon, explained: ' + note());
+  click($$('.stmt .say')[4]);
+  ok($('.bar .accuse').getAttribute('aria-disabled') === 'true', 'still waiting until the killer is marked');
+  tap('k', 1, 0); tap('k', 1, 0);
+  ok($('.bar .accuse').getAttribute('aria-disabled') === 'false' && /has its answer/.test(note()), 'the answer wakes the button: ' + note());
+  ok(!$$('#grid .cell').some((x) => x.dataset.p === '1'), 'no pencil left');
+  click($('.bar .accuse'));
+  const ts = w.eval('G.puzzle.solution');
+  for (const [k, v] of [['killer', ts.killer], ['weapon', ts.weapon], ['room', ts.room]]) click($(`[data-pick="${k}"][data-v="${v}"]`));
+  click($('#do-accuse'));
+  ok(/whole game/.test($('#scrim').textContent) && w.localStorage.getItem('inq1:tutorial') === '1', 'the warm-up ends warmly and is remembered');
+  click($('#scrim [data-act="home"]'));
+  ok($$('.case-row').length === 4 && !$('.warm-head'), 'then home lists the cases, and the warm-up does not come back');
+  click($('[data-act="tutorial"]'));
+  ok($('.warm-head') && w.eval('G.marks.sw[0][1]') === 0, 'the warm-up can be replayed, fresh');
+  click($('[data-act="warm-skip"]'));
+  ok($('.home h1'), 'and skipped');
+}
+
+// ---- a returning player
+const { w, d, $, $$, click } = page(true);
 ok($('.bar .mark') && $('.bar .mark').textContent === 'Inquest', 'home renders');
 ok($$('.case-row').length === 4, 'four cases listed');
 ok(/Exactly one answer/.test($('.home h1').textContent), 'home says what the game is');
@@ -62,6 +125,35 @@ click($('[data-act="wrview"]'));
 ok($$('#plan table.wr .cell').length === n * n && $('#plan table.wr .cell[data-i="2"][data-j="1"]').dataset.v === '1', 'show as a table: the same marks, rooms by weapons');
 ok(w.localStorage.getItem('inq1:wrview') === '"table"' || w.localStorage.getItem('inq1:wrview') === 'table', 'the choice is remembered');
 click($('[data-act="wrview"]')); ok($('#plan svg'), 'and back to the plan');
+// undo and clear all
+{
+  const u = cell('[data-b="sw"][data-i="2"][data-j="2"]');
+  key(u);
+  ok(u.dataset.v === '1' && !$('[data-act="undo"]').disabled, 'a mark, and Undo is ready');
+  click($('[data-act="undo"]'));
+  ok(u.dataset.v === '0', 'Undo clears a mistap in one press');
+  const before = w.eval('JSON.stringify(G.marks)');
+  click($('[data-act="clear"]'));
+  ok(w.eval('[...G.marks.sw, ...G.marks.sr, ...G.marks.wr, [G.marks.k]].flat(2).every((v) => !v)'), 'Clear all empties the notebook');
+  click($('[data-act="undo"]'));
+  ok(w.eval('JSON.stringify(G.marks)') === before, 'and Undo brings every mark back');
+  d.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  ok(w.eval('JSON.stringify(G.marks)') !== before, 'Ctrl+Z undoes too');
+  click($('[data-act="undo"]')); // nothing left to undo from before Clear all is fine either way
+}
+// a statement about the half of the notebook that is not showing puts a cue on its tab
+{
+  click($('[data-act="nbtab"][data-tab="sw"]'));
+  const ri = w.eval('G.puzzle.clues.findIndex((c) => { const f = clueFocus(c); return (f.r.length || f.floor !== null) && !f.w.length && !f.kind; })');
+  ok(ri >= 0, 'the case has a statement about rooms only: ' + ri);
+  if (ri >= 0) {
+    click($$('.stmt .say')[ri]);
+    ok($('[data-act="nbtab"][data-tab="sr"]').classList.contains('has-cue') && !$('[data-act="nbtab"][data-tab="sw"]').classList.contains('has-cue'), 'a room statement cues the Rooms tab');
+    click($('[data-act="nbtab"][data-tab="sr"]'));
+    ok(!$('[data-act="nbtab"][data-tab="sr"]').classList.contains('has-cue'), 'and the cue goes once it is open');
+  }
+  click($$('.stmt .say')[0]);
+}
 // hint
 click($('[data-act="hint"]'));
 ok($('#scrim .hintbox'), 'hint opens: ' + ($('#scrim .hintbox') || {}).textContent);
@@ -93,31 +185,6 @@ w.eval(`newGame(BANK.constable[0], 'random'); renderCase();`);
   const h = w.eval('nextHint()');
   ok(h.type === 'mistake' && h.b === 'sw', 'wrong circle on the killer is flagged as a mistake: ' + h.type);
 }
-
-// the guided tutorial, start to finish, using only the coach's squares
-w.eval('startTutorial()');
-ok($('#coach') && /Welcome/.test($('#coach').textContent), 'tutorial opens with a welcome');
-click($('[data-act="coach-next"]'));
-const tapCell = (b, i, j) => { const c = $(`#grid .cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`); if (c) c.dispatchEvent(new w.MouseEvent('click', { bubbles: true, detail: 0 })); return c; };
-tapCell('sr', 0, 0);
-ok(w.eval('G.marks.sr[0][0]') === 0, 'tutorial blocks squares the coach is not pointing at');
-let guard = 0;
-while (w.eval('COACH.on') && guard++ < 40) {
-  const st = w.eval('JSON.stringify(tutSteps()[COACH.step])');
-  const step = JSON.parse(st);
-  if (step.cell) { const [b, i, j, v] = step.cell; for (let k = 0; k < v; k++) tapCell(b, i, j); w.eval('clearTimeout(COACH.timer); coachNext()'); }
-  else if (step.accuse) break;
-  else click($('[data-act="coach-next"]'));
-}
-ok(w.eval('COACH.step') === w.eval('tutSteps().length - 1'), 'tutorial walks every step: ' + w.eval('COACH.step'));
-ok($$('#plan .pin').length === 3 && $$('#plan .chip[data-v="4"]').length === 3, 'tutorial plan shows every person and weapon');
-click($('[data-act="accuse"]'));
-const ts = w.eval('G.puzzle.solution');
-click($(`[data-pick="killer"][data-v="${ts.killer}"]`)); click($(`[data-pick="weapon"][data-v="${ts.weapon}"]`)); click($(`[data-pick="room"][data-v="${ts.room}"]`));
-click($('#do-accuse'));
-ok(/whole game/.test($('#scrim').textContent) && w.localStorage.getItem('inq1:tutorial') === '1', 'tutorial ends with a closed case and is remembered');
-click($('[data-act="open-daily"][data-tier="constable"]'));
-ok($('.case-head h1') && w.eval('G.puzzle.tier') === 'constable' && !$('#coach'), 'tutorial leads into the first Constable case');
 
 // every banked case: hints never throw, and following hints to the end leaves the answer settled
 let bad = 0;

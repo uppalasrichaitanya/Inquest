@@ -39,6 +39,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 html, body { margin: 0; }
+button, .cell { -webkit-tap-highlight-color: transparent; }
 body {
   background: var(--paper); color: var(--ink);
   font: 400 18px/1.5 var(--serif); font-optical-sizing: auto;
@@ -224,21 +225,39 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* the phone strip: one statement, pinned above the notebook */
 .strip { display: none; }
 
-/* the guided lesson */
-.coach { position: fixed; z-index: 45; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(420px, calc(100vw - 32px)); padding: 16px 18px 18px; background: var(--paper); color: var(--ink); border: 1px solid var(--ink); border-radius: 2px; box-shadow: 0 18px 50px rgba(0, 0, 0, .22); }
-.coach .coach-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-style: italic; color: var(--muted); font-size: 15px; }
-.coach .coach-top button { background: none; border: 0; padding: 4px 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; font-size: 15px; }
-.coach p { margin: 8px 0 0; font-size: 17px; line-height: 1.45; }
-.coach .warn { color: var(--pen); font-style: italic; }
-.coach .warn:empty { display: none; }
-.coach .actions { margin-top: 12px; }
-body:has(.scrim) .coach { display: none; }
-body.coached { padding-bottom: 280px; }
-.coach-target { outline: 3px solid var(--pen) !important; outline-offset: -2px; }
-.plan-svg .coach-target rect { stroke: var(--pen); stroke-width: 2.5; }
-.stmt.coach-target { outline-offset: 2px; }
-.plan.flash { animation: flash 1.2s ease 2; }
-@keyframes flash { 50% { background: var(--wash); } }
+/* the warm-up: three rules with pictures, a "try it" line, and notes that sit in the page, never over it */
+.warm-head { margin-top: 14px; }
+.warm-lede { margin: 0 0 10px; max-width: 40em; font-size: 18px; }
+.rules3 { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 36px; }
+.rules3 li { display: grid; grid-template-rows: 44px auto; gap: 8px; font-size: 16px; line-height: 1.4; color: var(--muted); }
+.rules3 li b { color: var(--ink); font-weight: 600; }
+.rules3 .pic { display: flex; align-items: center; gap: 0; }
+.rsq { position: relative; display: inline-block; width: 30px; height: 30px; border: 1px solid var(--rule); margin-left: -1px; flex: none; }
+.rsq .pen { inset: 2px; width: 26px; height: 26px; }
+.rlab { font-size: 15px; color: var(--ink); margin-right: 10px; }
+.rq { font-size: 15px; font-style: italic; color: var(--ink); margin-right: 12px; line-height: 1.2; max-width: 13em; }
+.rules3 .joined { position: relative; gap: 16px; align-items: flex-start; padding-top: 2px; }
+.rules3 .joined .rsq { margin: 0; }
+.rules3 .joined::before { content: ''; position: absolute; left: 15px; top: 17px; width: 92px; height: 0; border-top: 1.5px solid var(--pen); }
+.rules3 .joined .rsq { background: var(--paper); }
+.rlab3 { position: absolute; left: 0; top: 33px; display: flex; gap: 0; font-size: 12px; color: var(--muted); }
+.rlab3 i { width: 46px; text-align: center; margin-left: -8px; white-space: nowrap; }
+.warm-skip { margin: 12px 0 0; font-size: 15px; }
+.warm-skip .link { color: var(--muted); }
+.sheetbox .rules3 { grid-template-columns: minmax(0, 1fr); margin: 14px 0; }
+.try { display: block; margin-top: 6px; font-size: 15px; font-style: italic; color: var(--muted); }
+.wnote { margin: 8px 0 0; padding: 8px 12px; border-left: 2px solid var(--pen); background: var(--wash); font-size: 16px; line-height: 1.45; }
+.wnote:empty { display: none; }
+.wnote .aside { display: block; margin-top: 4px; color: var(--muted); font-size: 15px; }
+.strip .wnote { display: none; }
+.grid .cell.pencil .pen path, .plan-svg .cell.pencil .pen path, .wr-list .cell.pencil .pen path { stroke: var(--muted); stroke-dasharray: 2.5 3; }
+.bar .accuse[aria-disabled='true'] { background: none; color: var(--muted); border: 1px solid var(--rule); }
+.nbtools { display: flex; justify-content: flex-end; gap: 18px; margin: 10px 0 -4px; }
+.nbtools .quiet { font-size: 15px; min-height: 32px; }
+.nbtools .quiet:disabled { color: var(--ghost); text-decoration-color: transparent; cursor: default; }
+.tabs .cue { display: none; }
+.tabs button.has-cue .cue { display: inline-block; width: 7px; height: 7px; margin-left: 7px; vertical-align: 2px; border-radius: 50%; background: var(--pen); }
+.tabs button:not(.has-cue) .cue-word { display: none; }
 
 @media (max-width: 1365px) {
   .story-body { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -272,6 +291,10 @@ body.coached { padding-bottom: 280px; }
   .notebook[data-tab='sw'] .rpart, .notebook[data-tab='sr'] .wpart { display: none; }
   .grid { --cell: 53px; }
   .plan { margin-top: 28px; }
+  .strip .wnote { display: block; }
+  .wnote.wide { display: none; }
+  .strip .try { margin: 4px 0 0; padding-left: 12px; }
+  .rules3 { gap: 10px 24px; }
 }
 
 /* ---- phone: a compressed header so the first screen shows the statement and the notebook; the button at the bottom */
@@ -293,6 +316,22 @@ body.coached { padding-bottom: 280px; }
   .grid .grps .grp span { font-size: 13px; }
   .plan-key { font-size: 14.5px; }
   .plan-key .tapnote { display: inline; }
+  .warm-lede { font-size: 16px; margin-bottom: 8px; }
+  .warm-head .scene-txt, .warm-head .more { display: none; }
+  .warm-head .rules3 li { align-items: center; }
+  .warm-skip { margin-top: 8px; }
+  .rules3 { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .rules3 li { grid-template-columns: 128px minmax(0, 1fr); grid-template-rows: auto; align-items: start; font-size: 14.5px; gap: 10px; }
+  .rules3 .rq { font-size: 12.5px; margin-right: 6px; }
+  .rules3 .rlab { font-size: 13px; margin-right: 6px; }
+  .rsq { width: 26px; height: 26px; }
+  .rsq .pen { width: 22px; height: 22px; }
+  .rules3 .joined { gap: 12px; padding-bottom: 16px; }
+  .rules3 .joined::before { left: 13px; top: 15px; width: 76px; }
+  .rlab3 { top: 29px; font-size: 10.5px; }
+  .rlab3 i { width: 38px; margin-left: -6px; }
+  .strip .wnote { font-size: 15px; padding: 6px 10px; margin-top: 6px; }
+  .nbtools { margin-top: 6px; }
 }
 @media (max-width: 380px) {
   .grid { --cell: 34px; }
@@ -1440,6 +1479,7 @@ function newGame(spec, mode) {
     cur: Math.max(0, puzzle.clues.findIndex((c, i) => !struck.includes(i))), // the statement in hand
     wrView: LS.get('inq1:wrview', 'plan'), // which weapon was where: on the floor plan, or as a table
     pick: { killer: null, weapon: null, room: null },
+    undo: [], // steps of [b, i, j, mark before], for Undo (this visit only)
     csp: null,
   };
 }
@@ -1514,7 +1554,6 @@ function folderState(spec) {
 
 function renderHome() {
   VIEW = 'home'; G = null;
-  endCoach();
   const st = loadStats();
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -1530,7 +1569,7 @@ function renderHome() {
   }).join('');
   const learn = tutorialDone()
     ? ''
-    : '<div class="cta"><button class="btn" data-act="tutorial">Learn to play</button><span class="soft">A three-suspect case, solved together in about two minutes.</span></div>';
+    : '<div class="cta"><button class="btn" data-act="tutorial">Learn to play</button><span class="soft">A three-guest warm-up. About a minute.</span></div>';
   app().innerHTML = `
     <div class="bar"><button class="mark" data-act="home">Inquest</button>
       <button class="quiet" data-act="how">How to play</button><button class="quiet" data-act="stats">Your record</button>${themeButton()}</div>
@@ -1546,7 +1585,7 @@ function renderHome() {
         <ol class="cases">${rows}</ol>
       </section>
       <div class="row">
-        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the lesson</button>' : ''}
+        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the warm-up</button>' : ''}
         <button class="link" data-act="random">Play an older case</button>
         <span class="grow"></span>
         <span class="soft">Streak ${st.streak}, best ${st.bestStreak}, ${solved} closed</span>
@@ -1557,7 +1596,6 @@ function renderHome() {
 
 function openCase(spec, mode) {
   closeModal();
-  endCoach();
   newGame(spec, mode);
   renderCase();
 }
@@ -1565,14 +1603,11 @@ function openCase(spec, mode) {
 function howToHTML() {
   return `<h2>How to play</h2>
     <p>Someone has been murdered. Each guest was in a different room, holding a different weapon. Find <b>who</b> did it, <b>with what</b>, and <b>where</b>.</p>
-    <ol>
-      <li><b>Every statement is true.</b> Pick one up and work out what it rules in or out. The names it mentions light up in the notebook. Tick it off when you have used it.</li>
-      <li><b>Mark the notebook.</b> Tap a square once to rule it out, twice to circle a match, a third time to clear it. A circle rules out the rest of its row and column for you, in fainter ink, because each person had one weapon and was in one room.</li>
-      <li><b>Use the plan.</b> Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. On the train, carriages coupled together are next to each other. Each room lists the weapons that could have been in it.</li>
-      <li><b>Name the killer.</b> The killer held the murder weapon in the room where the body was found. A wrong guess goes on your record, and tells you which statement it breaks.</li>
-    </ol>
-    <p class="soft">Every case has exactly one answer and can be solved by logic alone. Stuck? The hint points you to the next step, and tells you if a mark doesn't add up.</p>
-    <div class="actions"><button class="btn" data-act="tutorial">Play the lesson</button><button class="btn ghost" data-act="close">Got it</button></div>`;
+    ${rulesHTML()}
+    <p><b>The notebook.</b> Tap a square once to rule it out, twice to circle a match, a third time to clear it. Faint marks follow from yours. <b>Undo</b> takes back the last tap.</p>
+    <p><b>The plan.</b> Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. On the train, carriages coupled together are next to each other.</p>
+    <p class="soft">Every case has exactly one answer and can be solved by logic alone. A wrong guess goes on your record, and tells you which statement it breaks.</p>
+    <div class="actions"><button class="btn" data-act="tutorial">Play the warm-up</button><button class="btn ghost" data-act="close">Got it</button></div>`;
 }
 
 // ---- the case screen: the story, the statements, the notebook (40-grid.js) and the floor plan (45-plan.js).
@@ -1610,7 +1645,11 @@ function statementHTML(c, i, ctx) {
   const used = G.struck.includes(i), on = i === G.cur;
   return `<li class="stmt${used ? ' used' : ''}${on ? ' on' : ''}" data-i="${i}">${on ? penBrace() : ''}
     <button type="button" class="use" data-act="use" data-i="${i}" aria-pressed="${used}" aria-label="Statement ${i + 1}, ${used ? 'used' : 'not used yet'}">${used ? penTick('t' + i) : `<span>${i + 1}</span>`}</button>
-    <button type="button" class="say" data-act="pick-stmt" data-i="${i}" aria-current="${on}"><span class="txt">${text}</span><span class="who">${who}</span></button></li>`;
+    <button type="button" class="say" data-act="pick-stmt" data-i="${i}" aria-current="${on}"><span class="txt">${text}</span><span class="who">${who}</span>${on ? tryLine(i, 'span') : ''}</button></li>`;
+}
+// the warm-up says what each statement asks of you
+function tryLine(i, tag) {
+  return G.mode === 'tutorial' && WARM_TRY[i] ? `<${tag} class="try">${WARM_TRY[i]}</${tag}>` : '';
 }
 
 function renderCase() {
@@ -1618,7 +1657,7 @@ function renderCase() {
   const P = G.puzzle, ctx = P.ctx, w = ctx.world, n = P.n, tut = G.mode === 'tutorial';
   const unit = w.layoutKind === 'line' ? 'carriage' : 'room';
   const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const when = tut ? 'The lesson' : G.mode === 'daily' ? `${dateStr}, case ${dayNumber()}` : 'An older case';
+  const when = tut ? 'The warm-up' : G.mode === 'daily' ? `${dateStr}, case ${dayNumber()}` : 'An older case';
   const mk = (v, k) => `<span class="mini">${penMark(v, k, 18)}</span>`;
   app().innerHTML = `
     <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to the cases">Inquest</button>
@@ -1629,7 +1668,9 @@ function renderCase() {
       <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></p>
       <h1>${esc(P.title)}</h1>
       <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
-      <details class="story"${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
+      ${tut ? `<div class="warm-head"><p class="warm-lede"><span class="scene-txt">${w.scene.map(esc).join(' ')} </span>Three guests, and three rules:</p>${rulesHTML()}
+        <p class="warm-skip"><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></p></div>` : ''}
+      <details class="story"${tut ? ' hidden' : ''}${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
         <div class="story-body">
           <p class="scene">${w.scene.map(esc).join(' ')} ${cap(NUM_WORD[n])} guests, ${NUM_WORD[n]} ${unit}s, ${NUM_WORD[n]} weapons. One of them did it.</p>
           <p class="rules"><b>Each guest</b> had one weapon and was in one ${unit}; no two shared. <b>Every statement is true.</b> <b>The killer</b> held the murder weapon in the ${unit} where the body was found.</p>
@@ -1645,10 +1686,12 @@ function renderCase() {
         <div class="notebook" id="nb" data-tab="${G.tab}">
           <div class="nb-head"><p class="label">Notebook</p>
             <p class="howmark">Tap once to rule out ${mk(1, 'leg-x')}, twice for a match ${mk(2, 'leg-o')}. Faint marks follow from yours.</p></div>
+          ${tut ? `<p class="wnote wide" aria-live="polite">${WARM.note}</p>` : ''}
           <div class="tabs" role="tablist" aria-label="Notebook columns">
-            <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons</button>
-            <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s</button>
+            <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
+            <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
           </div>
+          <div class="nbtools"><button type="button" class="quiet" data-act="undo" disabled>Undo</button><button type="button" class="quiet" data-act="clear">Clear all</button></div>
           <div class="tablewrap"><table class="grid" id="grid"></table></div>
         </div>
         <div class="plan" id="plan"></div>
@@ -1658,6 +1701,7 @@ function renderCase() {
   buildGrid();
   buildPlan();
   paintAll();
+  autoTab();
   applyFocus();
   fitGrid();
   if (document.fonts) document.fonts.ready.then(fitGrid);
@@ -1674,15 +1718,17 @@ function renderStatements() {
       <button type="button" class="quiet" data-act="all-stmts" aria-label="All statements">All</button>
       <button type="button" class="arrow" data-act="stmt-step" data-d="-1" aria-label="Previous statement">&lsaquo;</button>
       <button type="button" class="arrow" data-act="stmt-step" data-d="1" aria-label="Next statement">&rsaquo;</button></div>
-    <p class="txt${used ? ' used' : ''}" data-i="${i}">${text}</p>
+    <p class="txt${used ? ' used' : ''}" data-i="${i}">${text}</p>${tryLine(i, 'p')}
     <div class="foot"><span class="who">${who}</span>
-      <button type="button" class="usebtn" data-act="use" data-i="${i}" aria-pressed="${used}">${used ? `${penTick('s' + i)}Used` : 'Done with this one'}</button></div>`;
+      <button type="button" class="usebtn" data-act="use" data-i="${i}" aria-pressed="${used}">${used ? `${penTick('s' + i)}Used` : 'Done with this one'}</button></div>${G.mode === 'tutorial' ? `<p class="wnote" aria-live="polite">${WARM.note}</p>` : ''}`;
 }
 
 function selectStatement(i) {
   G.cur = i;
   renderStatements();
+  autoTab();
   applyFocus();
+  if (G.mode === 'tutorial') paintAll(); // a pencil mark may be proven now
 }
 function stepStatement(d) {
   const len = G.puzzle.clues.length;
@@ -1698,6 +1744,7 @@ function toggleUsed(i) {
     for (let k = 1; k < len; k++) { const j = (i + k) % len; if (!G.struck.includes(j)) { G.cur = j; break; } }
   }
   renderStatements();
+  autoTab();
   applyFocus();
 }
 function openAllStatements() {
@@ -1724,6 +1771,16 @@ function applyFocus() {
   rs.forEach((r) => { lit(`[data-col="r${r}"]`); lit(`[data-row="r${r}"]`); lit(`[data-room="${r}"]`); });
   if (f.floor !== null) lit(`[data-floor="${f.floor}"]`);
   if (f.k) lit('[data-col="k"]');
+  // on a phone only half the notebook shows: a dot on the other tab when the statement is about it too
+  const touches = { sw: ws.length > 0, sr: rs.length > 0 };
+  document.querySelectorAll('[data-act="nbtab"]').forEach((b) => b.classList.toggle('has-cue', b.dataset.tab !== G.tab && touches[b.dataset.tab]));
+}
+// a statement only about weapons (or only about rooms) turns the phone notebook to that half by itself
+function autoTab() {
+  if (!NARROW.matches) return;
+  const f = clueFocus(G.puzzle.clues[G.cur]);
+  const w = f.w.length > 0 || !!f.kind, r = f.r.length > 0 || f.floor !== null;
+  if (w !== r) setTab(w ? 'sw' : 'sr');
 }
 
 // ---- the notebook: one table. A row per person; their weapon (grouped by kind, in the words the statements use),
@@ -1796,6 +1853,7 @@ function setTab(tab) {
   const nb = document.getElementById('nb');
   if (nb) nb.dataset.tab = tab;
   document.querySelectorAll('[data-act="nbtab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  applyFocus();
   fitGrid();
 }
 
@@ -1804,25 +1862,65 @@ const markOf = (d, b, i, j) => (b === 'k' ? d.k[i] : d[b][i][j]);
 const MARK_WORD = ['open', 'ruled out', 'a match', 'ruled out, follows from your marks', 'a match, follows from your marks'];
 function paintAll() {
   if (!G) return;
-  const d = derive(G.marks, G.puzzle.n, G.opts);
+  // in the warm-up, a mark the statements don't prove yet stays in pencil: drawn, but nothing follows from it
+  const pencil = G.mode === 'tutorial' ? warmPencil() : null;
+  const d = pencil && pencil.size ? stripPencil() : derive(G.marks, G.puzzle.n, G.opts);
   document.querySelectorAll('.cell').forEach((el) => {
-    const v = markOf(d, el.dataset.b, +el.dataset.i, +el.dataset.j);
-    if (+el.dataset.v === v) return;
+    const b = el.dataset.b, i = +el.dataset.i, j = +el.dataset.j, p = !!pencil && pencil.has(b + i + '-' + j);
+    const v = p ? userMark(b, i, j) : markOf(d, b, i, j);
+    if (+el.dataset.v === v && (el.dataset.p === '1') === p) return;
     el.dataset.v = v;
+    el.dataset.p = p ? '1' : '0';
+    el.classList.toggle('pencil', p);
     const key = el.dataset.b + el.dataset.i + '-' + el.dataset.j;
     if (el.dataset.cs) el.querySelector('.mk').innerHTML = penMark(v, key, +el.dataset.cs).replace('<svg class="pen"', `<svg width="${el.dataset.cs}" height="${el.dataset.cs}"`);
     else el.innerHTML = penMark(v, key, 46);
-    el.setAttribute('aria-label', `${el.dataset.label}: ${MARK_WORD[v]}`);
+    el.setAttribute('aria-label', `${el.dataset.label}: ${MARK_WORD[v]}${p ? ', in pencil' : ''}`);
   });
   paintPins(d);
+  const u = document.querySelector('[data-act="undo"]');
+  if (u) u.disabled = !G.undo.some((s) => s.length);
+  if (G.mode === 'tutorial') warmAccuseState();
 }
 function userMark(b, i, j) { return b === 'k' ? G.marks.k[i] : G.marks[b][i][j]; }
+// every change can be taken back. One step of Undo is one tap, one drag along a row, or one Clear all.
+let undoStep = null; // the step being recorded while a drag is under way
+function writeMark(b, i, j, v) { if (b === 'k') G.marks.k[i] = v; else G.marks[b][i][j] = v; }
 function setMark(b, i, j, v) {
-  if (G.mode === 'tutorial' && !coachAllows(b, i, j)) return;
-  if (b === 'k') G.marks.k[i] = v; else G.marks[b][i][j] = v;
+  const prev = userMark(b, i, j);
+  if (prev === v) return;
+  (undoStep || newUndoStep()).push([b, i, j, prev]);
+  writeMark(b, i, j, v);
   persist();
   paintAll();
-  if (G.mode === 'tutorial') coachCheck();
+  if (G.mode === 'tutorial') warmAfter(b, i, j, v);
+}
+function newUndoStep() {
+  const s = [];
+  G.undo.push(s);
+  if (G.undo.length > 300) G.undo.shift();
+  return s;
+}
+function undo() {
+  while (G.undo.length && !G.undo[G.undo.length - 1].length) G.undo.pop();
+  const s = G.undo.pop();
+  if (!s || G.solved) return;
+  for (let k = s.length - 1; k >= 0; k--) writeMark(...s[k]);
+  persist();
+  paintAll();
+  if (G.mode === 'tutorial') setWarmNote(s.length > 1 ? 'Those marks are back.' : 'Undone.');
+}
+function clearAll() {
+  if (G.solved) return;
+  const s = [], n = G.puzzle.n;
+  for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (G.marks[b][i][j]) s.push([b, i, j, G.marks[b][i][j]]);
+  for (let i = 0; i < n; i++) if (G.marks.k[i]) s.push(['k', i, 0, G.marks.k[i]]);
+  if (!s.length) return;
+  s.forEach(([b, i, j]) => writeMark(b, i, j, 0));
+  G.undo.push(s);
+  persist();
+  paintAll();
+  toast('Notebook cleared. Undo brings it back.');
 }
 const cellInfo = (el) => ({ b: el.dataset.b, i: +el.dataset.i, j: +el.dataset.j });
 const cycle = (el) => { const { b, i, j } = cellInfo(el); setMark(b, i, j, (userMark(b, i, j) + 1) % 3); };
@@ -1839,6 +1937,7 @@ function wireGrid() {
       e.preventDefault();
       const { b, i, j } = cellInfo(c), next = (userMark(b, i, j) + 1) % 3;
       drag = { v: next, b };
+      undoStep = newUndoStep();
       setMark(b, i, j, next);
       if (c.focus) c.focus({ preventScroll: true });
     } else lastTouch = { c, x: e.clientX, y: e.clientY };
@@ -1851,6 +1950,7 @@ function wireGrid() {
   });
   document.addEventListener('pointerup', (e) => {
     drag = null;
+    undoStep = null;
     if (e.pointerType === 'mouse' || !lastTouch || !G || G.solved) { lastTouch = null; return; }
     const c = e.target.closest('.cell');
     if (c && c === lastTouch.c && Math.abs(e.clientX - lastTouch.x) < 8 && Math.abs(e.clientY - lastTouch.y) < 8) cycle(c);
@@ -2011,7 +2111,6 @@ function openRoomSheet(r) {
   openModal(`<h2>${esc(room.name)}</h2><p class="soft">Which weapon was in this ${unit}? Tap once to rule one out, twice for the one that was.</p>
     <ul class="wr-list">${rows}</ul><div class="actions"><button type="button" class="btn" data-act="close">Done</button></div>`, 'roomsheet');
   paintAll();
-  if (COACH.on) coachHighlight();
 }
 
 let modalReturn = null;
@@ -2095,7 +2194,7 @@ function submitAccuse() {
 }
 
 function solveCase() {
-  if (G.mode === 'tutorial') { G.solved = true; finishTutorial(); return; }
+  if (G.mode === 'tutorial') { G.solved = true; finishWarmup(); return; }
   const first = !G.solved && !(LS.get(G.key, {}) || {}).solved;
   G.solved = true; persist();
   if (first) {
@@ -2256,141 +2355,159 @@ function openStats() {
     <table class="verdict" style="width:100%"><thead><tr><td></td><td>Closed</td><td>Best time</td></tr></thead><tbody>${TIER_ORDER.map(row).join('')}</tbody></table>`, 'verdict');
 }
 
-// ---- the guided first case. A coach card walks through TUTORIAL (src/46-tutorial.js) one move at a time:
-// read a statement, cross out, circle a match, watch the plan, use the last open square, accuse.
-// While it runs, only the square the coach points at can be marked.
-const COACH = { on: false, step: 0, timer: null };
+// ---- the warm-up: the first case (TUTORIAL, src/46-tutorial.js), taught in the case rather than on top of it.
+// Three rules with pictures sit above it. The player marks any square they like: a mark the statements read so far
+// prove lands in ink with a one-line reason; anything else stays in pencil with a gentle note and does nothing to
+// the rest of the notebook. Nothing is locked, and nothing covers the notebook: the notes sit in the statement
+// strip on a phone and above the notebook on a wide screen.
+const WARM = { alive: null, note: '', toldFaint: false, toldReady: false };
 
-function tutSteps() {
-  const ctx = G.puzzle.ctx;
-  const S = (i) => `<b>${esc(ctx.suspects[i].short)}</b>`, W = (i) => `the <b>${esc(ctx.weapons[i].name)}</b>`, R = (i) => `the <b>${esc(ctx.rooms[i].name)}</b>`;
-  return [
-    { say: `${esc(ctx.world.victim.name)} is dead, and one of three guests did it. Your job is to name <b>who</b>, <b>with what</b>, and <b>where</b>.</p><p>Everything in the case file is true. Let's solve this one together; it takes about two minutes.`,
-      button: 'Start the lesson', skip: 'Skip, I know how to play' },
-    { stmt: 0, tab: 'sw', cell: ['sw', 0, 1, 1],
-      say: `<b>Statement 1</b>: ${S(0)} never touched ${W(1)}.</p><p>In the notebook, find ${S(0)}'s row and the ${esc(ctx.weapons[1].name)} column. Tap that square <b>once</b> to cross it out.` },
-    { stmt: 1, tab: 'sr', cell: ['sr', 2, 0, 2],
-      say: `<b>Statement 2</b> puts ${S(2)} in ${R(0)}. That's a match.</p><p>That goes in the notebook's room columns. Tap ${S(2)}'s ${esc(ctx.rooms[0].name)} square <b>twice</b>: once to cross, again to circle.` },
-    { plan: true, button: 'Next',
-      say: `See the faint crosses? Each person was in one room and each room held one person, so the notebook crossed out the rest of that row and column for you.</p><p>${S(2)} is now pinned on the floor plan, too.` },
-    { stmt: 2, tab: 'sr', cell: ['sr', 1, 2, 1],
-      say: `<b>Statement 3</b>: ${S(1)} was nowhere near ${R(2)}. Cross it out.` },
-    { tab: 'sr', cell: ['sr', 1, 1, 2],
-      say: `Look along ${S(1)}'s row. Only one room is still open.</p><p>When a row has one square left, that's the answer. Circle it.` },
-    { tab: 'sr', cell: ['sr', 0, 2, 2],
-      say: `${S(0)} has one room left too. Circle it.` },
-    { stmt: 3, tab: 'sw', cell: ['sw', 2, 0, 2],
-      say: `<b>Statement 4</b>: ${S(2)} was carrying something heavy and blunt.</p><p>The notebook groups the weapons by kind, and only ${W(0)} is under <i>Blunt</i>. Circle ${S(2)} and the ${esc(ctx.weapons[0].name)}.` },
-    { tab: 'sw', cell: ['sw', 0, 2, 2],
-      say: `${S(0)} never touched ${W(1)} (statement 1), and ${W(0)} is taken. Circle the only weapon left for ${S(0)}.` },
-    { tab: 'sw', cell: ['sw', 1, 1, 2],
-      say: `And ${S(1)} gets the weapon that's left. Circle it.` },
-    { plan: true, button: 'Next',
-      say: `Now look at the floor plan. ${S(1)} had ${W(1)} and was in ${R(1)}, so the plan has put ${W(1)} in ${R(1)} for you, in fainter ink.</p><p>Each room lists the weapons that could have been in it. Some statements are about those.` },
-    { stmt: 4, plan: true, accuse: true,
-      say: `<b>Statement 5</b>: the body was found on the ground floor.</p><p>On the floor plan, ${R(1)} is the only ground-floor room in this case. So who is the killer, and with what? Press <b>Name the killer</b> when you know.` },
-  ];
+// the three rules, each with its picture. Shown above the warm-up and in "How to play".
+function rulesHTML() {
+  const sq = (v, k) => `<span class="rsq">${penMark(v, 'rule' + k, 26)}</span>`;
+  return `<ol class="rules3">
+    <li><span class="pic" aria-hidden="true"><span class="rlab">Pell</span>${sq(2, 1)}${sq(1, 2)}${sq(1, 3)}</span>
+      <span><b>Each person had one weapon and was in one room.</b><span class="more"> No two shared, so one circle rules out the rest of its row.</span></span></li>
+    <li><span class="pic" aria-hidden="true"><span class="rq">&ldquo;Pell never touched the Port.&rdquo;</span>${sq(1, 4)}</span>
+      <span><b>Every statement is true.</b><span class="more"> Each one lets you rule something out, or in.</span></span></li>
+    <li><span class="pic joined" aria-hidden="true">${sq(2, 5)}${sq(2, 6)}${sq(2, 7)}<span class="rlab3"><i>who</i><i>what</i><i>where</i></span></span>
+      <span><b>The killer</b> held the murder weapon in the room where the body was found.</span></li></ol>`;
 }
 
-function startTutorial() {
+// what each statement asks of you, said once, under the statement in hand
+const WARM_TRY = [
+  'Try it: find Pell’s row and the Port column. What does this rule out?',
+  'Try it: this one is a match. Tap a square twice to circle it.',
+  'Try it: cross it out, then look along Crisp’s row.',
+  'Try it: the notebook groups the weapons by kind.',
+  'Try it: the plan shows each room’s floor. Whose room is on the ground floor? Mark them under “Did it?”',
+];
+
+function startWarmup() {
   closeModal();
   newGame(TUTORIAL, 'tutorial');
   G.opts = { cross: true, chain: false };
+  Object.assign(WARM, { alive: null, note: '', toldFaint: false, toldReady: false });
   renderCase();
-  COACH.on = true; COACH.step = 0;
-  document.body.classList.add('coached');
-  showStep();
+  setWarmNote('');
 }
 
-function endCoach() {
-  COACH.on = false; clearTimeout(COACH.timer);
-  const c = document.getElementById('coach'); if (c) c.remove();
-  document.body.classList.remove('coached');
-  document.querySelectorAll('.coach-target').forEach((x) => x.classList.remove('coach-target'));
+// every arrangement still possible after statements 1..k+1 (three guests: 6 x 6 x 3 = 108 to start with)
+function warmAlive() {
+  if (WARM.alive) return WARM.alive;
+  const P = G.puzzle, n = P.n, { perms, inv } = permutations(n);
+  let all = [];
+  for (let a = 0; a < perms.length; a++) for (let b = 0; b < perms.length; b++) for (let m = 0; m < n; m++) all.push({ pw: perms[a], pwi: inv[a], pr: perms[b], pri: inv[b], m });
+  WARM.alive = P.clues.map((c) => (all = all.filter((x) => clueHolds(c, x, x.pwi, x.pri))));
+  return WARM.alive;
 }
-
-function showStep() {
-  const steps = tutSteps(), st = steps[COACH.step];
-  if (!st) return;
-  document.querySelectorAll('.coach-target').forEach((x) => x.classList.remove('coach-target'));
-  if (st.tab && G.tab !== st.tab) setTab(st.tab);
-  if (st.stmt !== undefined && G.cur !== st.stmt) selectStatement(st.stmt);
-  let c = document.getElementById('coach');
-  if (!c) { c = document.createElement('aside'); c.id = 'coach'; c.className = 'coach paper'; c.setAttribute('aria-label', 'Tutorial'); document.body.appendChild(c); }
-  const buttons = (st.button ? `<button class="btn red" data-act="coach-next">${st.button}</button>` : '') + (st.skip ? `<button class="btn ghost" data-act="coach-skip">${st.skip}</button>` : '');
-  c.innerHTML = `<div class="coach-top"><span>${COACH.step ? `Step ${COACH.step} of ${steps.length - 1}` : 'Welcome to Inquest'}</span>${st.skip ? '' : '<button data-act="coach-skip">Skip tutorial</button>'}</div>
-    <div role="status" aria-live="polite"><p>${st.say}</p></div><p class="warn" id="coach-warn"></p>${buttons ? `<div class="actions">${buttons}</div>` : ''}`;
-  if (st.stmt !== undefined) { const li = document.querySelector(`.stmt[data-i="${st.stmt}"]`); if (li) li.classList.add('coach-target'); }
-  const smooth = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-  let target = null;
-  if (st.cell) {
-    target = visibleCell(st.cell[0], st.cell[1], st.cell[2]);
-    if (target) target.classList.add('coach-target');
+function fact(x, b, i, j) {
+  if (b === 'sw') return x.pw[i] === j;
+  if (b === 'sr') return x.pr[i] === j;
+  if (b === 'wr') return x.pr[x.pwi[i]] === j;
+  return x.m === i; // k: did it
+}
+// the first statement after which the notebook must say this (or -1)
+function provenAt(b, i, j, yes) {
+  return warmAlive().findIndex((alive) => alive.every((x) => fact(x, b, i, j) === yes));
+}
+const warmUpto = () => Math.max(G.cur, ...G.struck);
+// judge one of the player's marks against the statements read so far
+function warmJudge(b, i, j, v) {
+  const upto = warmUpto(), k = provenAt(b, i, j, v === 2);
+  if (k >= 0 && k <= upto) return { ok: true, k };
+  const no = provenAt(b, i, j, v !== 2);
+  return { ok: false, against: no >= 0 && no <= upto ? no : -1 };
+}
+// keys of the marks that stay in pencil: they are drawn, but the notebook draws nothing from them
+function warmPencil() {
+  const out = new Set(), n = G.puzzle.n;
+  for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    const v = G.marks[b][i][j];
+    if (v && !warmJudge(b, i, j, v).ok) out.add(b + i + '-' + j);
   }
-  if (st.plan) {
-    const pl = document.getElementById('plan');
-    if (pl) { pl.classList.remove('flash'); void pl.offsetWidth; pl.classList.add('flash'); target = target || pl; }
+  for (let i = 0; i < n; i++) if (G.marks.k[i] && !warmJudge('k', i, 0, G.marks.k[i]).ok) out.add('k' + i + '-0');
+  return out;
+}
+// does the notebook point to one killer, with their weapon and room circled?
+function warmReady(d) {
+  const yes = (v) => v === 2 || v === 4, no = (v) => v === 1 || v === 3;
+  let s = d.k.findIndex(yes);
+  if (s < 0 && d.k.filter(no).length === d.k.length - 1) s = d.k.findIndex((v) => !no(v));
+  return s >= 0 && d.sw[s].some(yes) && d.sr[s].some(yes);
+}
+
+// the one-line reason for a mark that is right
+function warmReason(b, i, j, v, k) {
+  const ctx = G.puzzle.ctx, S = (x) => esc(ctx.suspects[x].short), W = (x) => 'the ' + esc(ctx.weapons[x].name), R = (x) => 'the ' + esc(ctx.rooms[x].name);
+  const yes = v === 2, key = `${b}${i}-${j}-${v}`;
+  const said = {
+    'sw0-1-1': `Statement 1 says ${S(0)} never touched ${W(1)}, so that pair is out.`,
+    'sr2-0-2': `Statement 2 puts ${S(2)} in ${R(0)}. A circle means a match.`,
+    'sr1-2-1': `Statement 3: ${S(1)} was nowhere near ${R(2)}.`,
+    'sr1-1-2': `${S(1)}’s row has one room left, ${R(1)}. When a row has one square left, that’s the answer.`,
+    'sr0-2-2': `${S(0)} has one room left too: ${R(2)}.`,
+    'sw2-0-2': `Statement 4: ${S(2)}’s weapon was blunt, and ${W(0)} is the only blunt one.`,
+    'sw2-1-1': `Statement 4: ${S(2)}’s weapon was blunt, and ${W(1)} isn’t.`,
+    'sw2-2-1': `Statement 4: ${S(2)}’s weapon was blunt, and ${W(2)} isn’t.`,
+    'sw0-2-2': `${S(0)} never touched ${W(1)}, and ${W(0)} is ${S(2)}’s. ${cap(W(2))} is all that’s left.`,
+    'sw1-1-2': `${S(1)} gets the weapon that’s left: ${W(1)}.`,
+    'k1-0-2': `The body was on the ground floor (statement 5), and ${R(1)} is the only room there. ${S(1)} did it.`,
+  };
+  if (said[key]) return said[key];
+  const what = b === 'sw' ? `${S(i)} ${yes ? 'had' : 'didn’t have'} ${W(j)}`
+    : b === 'sr' ? `${S(i)} ${yes ? 'was' : 'wasn’t'} in ${R(j)}`
+      : b === 'wr' ? `${W(i)} ${yes ? 'was' : 'wasn’t'} in ${R(j)}`
+        : `${S(i)} ${yes ? 'did it' : 'didn’t do it'}`;
+  return `Right: ${what}. That follows from statement ${k + 1}${k ? ' and the ones before it' : ''}.`;
+}
+
+function setWarmNote(html) {
+  WARM.note = html;
+  document.querySelectorAll('.wnote').forEach((e) => { e.innerHTML = html; });
+}
+
+// after each mark: say why it is right, or why it stays in pencil
+function warmAfter(b, i, j, v) {
+  if (!v) { setWarmNote('Cleared.'); return; }
+  const r = warmJudge(b, i, j, v);
+  let note;
+  if (r.ok) {
+    note = warmReason(b, i, j, v, r.k);
+    if (r.k === G.cur && !G.struck.includes(G.cur)) { G.struck = G.struck.concat(G.cur); renderStatements(); applyFocus(); }
+  } else if (r.against >= 0) note = `Statement ${r.against + 1} says otherwise, so this stays in pencil. Tap it again to change it.`;
+  else note = 'Nothing so far proves that, so it stays in pencil. Mark only what a statement tells you.';
+  if (r.ok && v === 2 && !WARM.toldFaint) {
+    WARM.toldFaint = true;
+    note += ' <span class="aside">The faint crosses are the notebook’s own: one weapon and one room each, so a circle rules out the rest of its row and column.</span>';
   }
-  if (st.accuse) document.querySelector('.bar .accuse').classList.add('coach-target');
-  if (target && target.scrollIntoView) target.scrollIntoView({ block: 'center', behavior: smooth });
-  const first = c.querySelector('.actions .btn');
-  if (first) first.focus({ preventScroll: true });
-  else if (target && target.classList.contains('cell')) target.focus({ preventScroll: true });
+  if (!WARM.toldReady && warmReady(stripPencil())) {
+    WARM.toldReady = true;
+    note += ' <span class="aside">The notebook has its answer. Press <b>Name the killer</b>.</span>';
+  }
+  setWarmNote(note);
+}
+// the notebook as it stands without the pencil marks
+function stripPencil() {
+  const pencil = warmPencil(), m = JSON.parse(JSON.stringify(G.marks));
+  pencil.forEach((key) => { const [, b, i, j] = key.match(/^(sw|sr|wr|k)(\d+)-(\d+)$/); if (b === 'k') m.k[i] = 0; else m[b][i][j] = 0; });
+  return derive(m, G.puzzle.n, G.opts);
+}
+// "Name the killer" wakes up once the notebook gives an answer
+function warmAccuseState() {
+  const btn = document.querySelector('.bar .accuse');
+  if (btn) btn.setAttribute('aria-disabled', String(!warmReady(stripPencil())));
 }
 
-// the square the coach means, wherever it is showing right now
-function visibleCell(b, i, j) {
-  return [...document.querySelectorAll(`.cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`)].find((x) => x.getClientRects().length) || document.querySelector(`.cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`);
-}
-// after part of the page is redrawn (a tab, the room sheet), point at the square again
-function coachHighlight() {
-  const st = tutSteps()[COACH.step];
-  if (!st || !st.cell) return;
-  const t = visibleCell(st.cell[0], st.cell[1], st.cell[2]);
-  if (t) t.classList.add('coach-target');
-  else coachWarn(`The square you need is under ${st.cell[0] === 'sw' ? 'Weapons' : 'Rooms'}.`);
-}
-
-function coachWarn(msg) {
-  const w = document.getElementById('coach-warn');
-  if (w) w.textContent = msg;
-}
-
-function coachAllows(b, i, j) {
-  if (!COACH.on) return true;
-  const st = tutSteps()[COACH.step];
-  if (st && st.cell && st.cell[0] === b && st.cell[1] === i && st.cell[2] === j) return true;
-  coachWarn(st && st.cell ? 'For now, use the square with the red outline.' : st && st.accuse ? 'Your notebook is done. Press Name the killer.' : 'Press the button below to carry on.');
-  return false;
-}
-
-function coachCheck() {
-  if (!COACH.on) return;
-  const st = tutSteps()[COACH.step];
-  if (!st || !st.cell) return;
-  const [b, i, j, want] = st.cell, v = G.marks[b][i][j];
-  if (v === want) { coachWarn(''); clearTimeout(COACH.timer); COACH.timer = setTimeout(coachNext, 550); return; }
-  if (want === 2 && v === 1) coachWarn('That is a cross. Tap the same square once more to circle it.');
-  else if (want === 1 && v === 2) coachWarn('That is a circle, which means a match. Tap again to clear it, then once more to cross it out.');
-  else coachWarn(want === 2 ? 'Tap it twice: once to cross, again to circle.' : 'Tap it once to cross it out.');
-}
-
-function coachNext() {
-  if (!COACH.on) return;
-  COACH.step++;
-  showStep();
-}
-
-function finishTutorial() {
+function finishWarmup() {
   LS.set('inq1:tutorial', 1);
-  endCoach();
   const ctx = G.puzzle.ctx, s = G.puzzle.solution;
-  openModal(`<div class="verdict"><h2>You've got it</h2>
+  openModal(`<div class="verdict"><h2>That’s the whole game</h2>
     <p class="closed">Case closed.</p>
     <p class="tale">It was <b>${esc(ctx.suspects[s.killer].name)}</b>, in the <b>${esc(ctx.rooms[s.room].name)}</b>, with the <b>${esc(ctx.weapons[s.weapon].name)}</b>.</p>
-    <p>That's the whole game. Real cases have more suspects and trickier statements, but every one is solved the same way: read a statement, cross out what it rules out, circle what it proves, then accuse.</p>
-    <p class="soft">If you get stuck, the <b>Hint</b> button points you to the next step, and tells you if a square in your notebook doesn't add up.</p>
-    <div class="actions"><button class="btn red" data-act="open-daily" data-tier="constable">Start your first real case</button><button class="btn ghost" data-act="home">Back to the cases</button></div></div>`);
+    <p>Five true statements, and the notebook did the rest. Real cases have more guests and trickier statements, but every one is solved the same way.</p>
+    <p class="soft">Stuck later on? <b>Hint</b> points to the next step, and tells you if a mark doesn’t add up.</p>
+    <div class="actions"><button class="btn" data-act="open-daily" data-tier="constable">Play a first real case</button><button class="btn ghost" data-act="home">Back to the cases</button></div></div>`);
   const cs = document.getElementById('closed-stamp');
   if (cs) cs.textContent = 'Case closed.';
 }
@@ -2399,7 +2516,7 @@ function finishTutorial() {
 // first visit: go straight into the guided case (it opens with a welcome and a way to skip)
 function homeOrLesson() {
   renderHome();
-  if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();
+  if (!tutorialDone() && !Object.keys(loadStats().solved).length) startWarmup();
 }
 
 document.addEventListener('click', (e) => {
@@ -2410,9 +2527,10 @@ document.addEventListener('click', (e) => {
     else if (act === 'home') { closeModal(); homeOrLesson(); }
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
-    else if (act === 'tutorial') startTutorial();
-    else if (act === 'coach-next') coachNext();
-    else if (act === 'coach-skip') { LS.set('inq1:tutorial', 1); endCoach(); homeOrLesson(); }
+    else if (act === 'tutorial') startWarmup();
+    else if (act === 'warm-skip') { LS.set('inq1:tutorial', 1); renderHome(); }
+    else if (act === 'undo') undo();
+    else if (act === 'clear') clearAll();
     else if (act === 'stats') openStats();
     else if (act === 'random') {
       closeModal();
@@ -2420,7 +2538,11 @@ document.addEventListener('click', (e) => {
       pickRandom(t);
     }
     else if (act === 'close') closeModal();
-    else if (act === 'accuse') { closeModal(); openAccuse(); }
+    else if (act === 'accuse') {
+      closeModal();
+      if (a.getAttribute('aria-disabled') === 'true') setWarmNote('Not yet. Once the notebook points to one person, with their weapon and room circled, this button wakes up.');
+      else openAccuse();
+    }
     else if (act === 'submit-accuse') submitAccuse();
     else if (act === 'hint') openHint();
     else if (act === 'hint-more') hintMore();
@@ -2464,6 +2586,7 @@ function openRandomChoice(tier) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && VIEW === 'case' && G && !document.getElementById('scrim')) { e.preventDefault(); undo(); }
   const room = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.room[data-room]');
   if (room) { e.preventDefault(); openRoomSheet(+room.dataset.room); }
 });

@@ -33,7 +33,11 @@ function statementHTML(c, i, ctx) {
   const used = G.struck.includes(i), on = i === G.cur;
   return `<li class="stmt${used ? ' used' : ''}${on ? ' on' : ''}" data-i="${i}">${on ? penBrace() : ''}
     <button type="button" class="use" data-act="use" data-i="${i}" aria-pressed="${used}" aria-label="Statement ${i + 1}, ${used ? 'used' : 'not used yet'}">${used ? penTick('t' + i) : `<span>${i + 1}</span>`}</button>
-    <button type="button" class="say" data-act="pick-stmt" data-i="${i}" aria-current="${on}"><span class="txt">${text}</span><span class="who">${who}</span></button></li>`;
+    <button type="button" class="say" data-act="pick-stmt" data-i="${i}" aria-current="${on}"><span class="txt">${text}</span><span class="who">${who}</span>${on ? tryLine(i, 'span') : ''}</button></li>`;
+}
+// the warm-up says what each statement asks of you
+function tryLine(i, tag) {
+  return G.mode === 'tutorial' && WARM_TRY[i] ? `<${tag} class="try">${WARM_TRY[i]}</${tag}>` : '';
 }
 
 function renderCase() {
@@ -41,7 +45,7 @@ function renderCase() {
   const P = G.puzzle, ctx = P.ctx, w = ctx.world, n = P.n, tut = G.mode === 'tutorial';
   const unit = w.layoutKind === 'line' ? 'carriage' : 'room';
   const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const when = tut ? 'The lesson' : G.mode === 'daily' ? `${dateStr}, case ${dayNumber()}` : 'An older case';
+  const when = tut ? 'The warm-up' : G.mode === 'daily' ? `${dateStr}, case ${dayNumber()}` : 'An older case';
   const mk = (v, k) => `<span class="mini">${penMark(v, k, 18)}</span>`;
   app().innerHTML = `
     <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to the cases">Inquest</button>
@@ -52,7 +56,9 @@ function renderCase() {
       <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${P.rating} of 5">${stars(P.rating)}</span></p>
       <h1>${esc(P.title)}</h1>
       <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
-      <details class="story"${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
+      ${tut ? `<div class="warm-head"><p class="warm-lede"><span class="scene-txt">${w.scene.map(esc).join(' ')} </span>Three guests, and three rules:</p>${rulesHTML()}
+        <p class="warm-skip"><button type="button" class="link" data-act="warm-skip">Skip the warm-up</button></p></div>` : ''}
+      <details class="story"${tut ? ' hidden' : ''}${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
         <div class="story-body">
           <p class="scene">${w.scene.map(esc).join(' ')} ${cap(NUM_WORD[n])} guests, ${NUM_WORD[n]} ${unit}s, ${NUM_WORD[n]} weapons. One of them did it.</p>
           <p class="rules"><b>Each guest</b> had one weapon and was in one ${unit}; no two shared. <b>Every statement is true.</b> <b>The killer</b> held the murder weapon in the ${unit} where the body was found.</p>
@@ -68,10 +74,12 @@ function renderCase() {
         <div class="notebook" id="nb" data-tab="${G.tab}">
           <div class="nb-head"><p class="label">Notebook</p>
             <p class="howmark">Tap once to rule out ${mk(1, 'leg-x')}, twice for a match ${mk(2, 'leg-o')}. Faint marks follow from yours.</p></div>
+          ${tut ? `<p class="wnote wide" aria-live="polite">${WARM.note}</p>` : ''}
           <div class="tabs" role="tablist" aria-label="Notebook columns">
-            <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons</button>
-            <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s</button>
+            <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
+            <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
           </div>
+          <div class="nbtools"><button type="button" class="quiet" data-act="undo" disabled>Undo</button><button type="button" class="quiet" data-act="clear">Clear all</button></div>
           <div class="tablewrap"><table class="grid" id="grid"></table></div>
         </div>
         <div class="plan" id="plan"></div>
@@ -81,6 +89,7 @@ function renderCase() {
   buildGrid();
   buildPlan();
   paintAll();
+  autoTab();
   applyFocus();
   fitGrid();
   if (document.fonts) document.fonts.ready.then(fitGrid);
@@ -97,15 +106,17 @@ function renderStatements() {
       <button type="button" class="quiet" data-act="all-stmts" aria-label="All statements">All</button>
       <button type="button" class="arrow" data-act="stmt-step" data-d="-1" aria-label="Previous statement">&lsaquo;</button>
       <button type="button" class="arrow" data-act="stmt-step" data-d="1" aria-label="Next statement">&rsaquo;</button></div>
-    <p class="txt${used ? ' used' : ''}" data-i="${i}">${text}</p>
+    <p class="txt${used ? ' used' : ''}" data-i="${i}">${text}</p>${tryLine(i, 'p')}
     <div class="foot"><span class="who">${who}</span>
-      <button type="button" class="usebtn" data-act="use" data-i="${i}" aria-pressed="${used}">${used ? `${penTick('s' + i)}Used` : 'Done with this one'}</button></div>`;
+      <button type="button" class="usebtn" data-act="use" data-i="${i}" aria-pressed="${used}">${used ? `${penTick('s' + i)}Used` : 'Done with this one'}</button></div>${G.mode === 'tutorial' ? `<p class="wnote" aria-live="polite">${WARM.note}</p>` : ''}`;
 }
 
 function selectStatement(i) {
   G.cur = i;
   renderStatements();
+  autoTab();
   applyFocus();
+  if (G.mode === 'tutorial') paintAll(); // a pencil mark may be proven now
 }
 function stepStatement(d) {
   const len = G.puzzle.clues.length;
@@ -121,6 +132,7 @@ function toggleUsed(i) {
     for (let k = 1; k < len; k++) { const j = (i + k) % len; if (!G.struck.includes(j)) { G.cur = j; break; } }
   }
   renderStatements();
+  autoTab();
   applyFocus();
 }
 function openAllStatements() {
@@ -147,4 +159,14 @@ function applyFocus() {
   rs.forEach((r) => { lit(`[data-col="r${r}"]`); lit(`[data-row="r${r}"]`); lit(`[data-room="${r}"]`); });
   if (f.floor !== null) lit(`[data-floor="${f.floor}"]`);
   if (f.k) lit('[data-col="k"]');
+  // on a phone only half the notebook shows: a dot on the other tab when the statement is about it too
+  const touches = { sw: ws.length > 0, sr: rs.length > 0 };
+  document.querySelectorAll('[data-act="nbtab"]').forEach((b) => b.classList.toggle('has-cue', b.dataset.tab !== G.tab && touches[b.dataset.tab]));
+}
+// a statement only about weapons (or only about rooms) turns the phone notebook to that half by itself
+function autoTab() {
+  if (!NARROW.matches) return;
+  const f = clueFocus(G.puzzle.clues[G.cur]);
+  const w = f.w.length > 0 || !!f.kind, r = f.r.length > 0 || f.floor !== null;
+  if (w !== r) setTab(w ? 'sw' : 'sr');
 }

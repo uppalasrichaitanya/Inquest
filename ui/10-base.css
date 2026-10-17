@@ -32,6 +32,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 html, body { margin: 0; }
+button, .cell { -webkit-tap-highlight-color: transparent; }
 body {
   background: var(--paper); color: var(--ink);
   font: 400 18px/1.5 var(--serif); font-optical-sizing: auto;

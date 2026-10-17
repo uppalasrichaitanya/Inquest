@@ -131,5 +131,4 @@ function openRoomSheet(r) {
   openModal(`<h2>${esc(room.name)}</h2><p class="soft">Which weapon was in this ${unit}? Tap once to rule one out, twice for the one that was.</p>
     <ul class="wr-list">${rows}</ul><div class="actions"><button type="button" class="btn" data-act="close">Done</button></div>`, 'roomsheet');
   paintAll();
-  if (COACH.on) coachHighlight();
 }

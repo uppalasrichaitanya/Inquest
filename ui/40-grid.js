@@ -68,6 +68,7 @@ function setTab(tab) {
   const nb = document.getElementById('nb');
   if (nb) nb.dataset.tab = tab;
   document.querySelectorAll('[data-act="nbtab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  applyFocus();
   fitGrid();
 }
 
@@ -76,25 +77,65 @@ const markOf = (d, b, i, j) => (b === 'k' ? d.k[i] : d[b][i][j]);
 const MARK_WORD = ['open', 'ruled out', 'a match', 'ruled out, follows from your marks', 'a match, follows from your marks'];
 function paintAll() {
   if (!G) return;
-  const d = derive(G.marks, G.puzzle.n, G.opts);
+  // in the warm-up, a mark the statements don't prove yet stays in pencil: drawn, but nothing follows from it
+  const pencil = G.mode === 'tutorial' ? warmPencil() : null;
+  const d = pencil && pencil.size ? stripPencil() : derive(G.marks, G.puzzle.n, G.opts);
   document.querySelectorAll('.cell').forEach((el) => {
-    const v = markOf(d, el.dataset.b, +el.dataset.i, +el.dataset.j);
-    if (+el.dataset.v === v) return;
+    const b = el.dataset.b, i = +el.dataset.i, j = +el.dataset.j, p = !!pencil && pencil.has(b + i + '-' + j);
+    const v = p ? userMark(b, i, j) : markOf(d, b, i, j);
+    if (+el.dataset.v === v && (el.dataset.p === '1') === p) return;
     el.dataset.v = v;
+    el.dataset.p = p ? '1' : '0';
+    el.classList.toggle('pencil', p);
     const key = el.dataset.b + el.dataset.i + '-' + el.dataset.j;
     if (el.dataset.cs) el.querySelector('.mk').innerHTML = penMark(v, key, +el.dataset.cs).replace('<svg class="pen"', `<svg width="${el.dataset.cs}" height="${el.dataset.cs}"`);
     else el.innerHTML = penMark(v, key, 46);
-    el.setAttribute('aria-label', `${el.dataset.label}: ${MARK_WORD[v]}`);
+    el.setAttribute('aria-label', `${el.dataset.label}: ${MARK_WORD[v]}${p ? ', in pencil' : ''}`);
   });
   paintPins(d);
+  const u = document.querySelector('[data-act="undo"]');
+  if (u) u.disabled = !G.undo.some((s) => s.length);
+  if (G.mode === 'tutorial') warmAccuseState();
 }
 function userMark(b, i, j) { return b === 'k' ? G.marks.k[i] : G.marks[b][i][j]; }
+// every change can be taken back. One step of Undo is one tap, one drag along a row, or one Clear all.
+let undoStep = null; // the step being recorded while a drag is under way
+function writeMark(b, i, j, v) { if (b === 'k') G.marks.k[i] = v; else G.marks[b][i][j] = v; }
 function setMark(b, i, j, v) {
-  if (G.mode === 'tutorial' && !coachAllows(b, i, j)) return;
-  if (b === 'k') G.marks.k[i] = v; else G.marks[b][i][j] = v;
+  const prev = userMark(b, i, j);
+  if (prev === v) return;
+  (undoStep || newUndoStep()).push([b, i, j, prev]);
+  writeMark(b, i, j, v);
   persist();
   paintAll();
-  if (G.mode === 'tutorial') coachCheck();
+  if (G.mode === 'tutorial') warmAfter(b, i, j, v);
+}
+function newUndoStep() {
+  const s = [];
+  G.undo.push(s);
+  if (G.undo.length > 300) G.undo.shift();
+  return s;
+}
+function undo() {
+  while (G.undo.length && !G.undo[G.undo.length - 1].length) G.undo.pop();
+  const s = G.undo.pop();
+  if (!s || G.solved) return;
+  for (let k = s.length - 1; k >= 0; k--) writeMark(...s[k]);
+  persist();
+  paintAll();
+  if (G.mode === 'tutorial') setWarmNote(s.length > 1 ? 'Those marks are back.' : 'Undone.');
+}
+function clearAll() {
+  if (G.solved) return;
+  const s = [], n = G.puzzle.n;
+  for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (G.marks[b][i][j]) s.push([b, i, j, G.marks[b][i][j]]);
+  for (let i = 0; i < n; i++) if (G.marks.k[i]) s.push(['k', i, 0, G.marks.k[i]]);
+  if (!s.length) return;
+  s.forEach(([b, i, j]) => writeMark(b, i, j, 0));
+  G.undo.push(s);
+  persist();
+  paintAll();
+  toast('Notebook cleared. Undo brings it back.');
 }
 const cellInfo = (el) => ({ b: el.dataset.b, i: +el.dataset.i, j: +el.dataset.j });
 const cycle = (el) => { const { b, i, j } = cellInfo(el); setMark(b, i, j, (userMark(b, i, j) + 1) % 3); };
@@ -111,6 +152,7 @@ function wireGrid() {
       e.preventDefault();
       const { b, i, j } = cellInfo(c), next = (userMark(b, i, j) + 1) % 3;
       drag = { v: next, b };
+      undoStep = newUndoStep();
       setMark(b, i, j, next);
       if (c.focus) c.focus({ preventScroll: true });
     } else lastTouch = { c, x: e.clientX, y: e.clientY };
@@ -123,6 +165,7 @@ function wireGrid() {
   });
   document.addEventListener('pointerup', (e) => {
     drag = null;
+    undoStep = null;
     if (e.pointerType === 'mouse' || !lastTouch || !G || G.solved) { lastTouch = null; return; }
     const c = e.target.closest('.cell');
     if (c && c === lastTouch.c && Math.abs(e.clientX - lastTouch.x) < 8 && Math.abs(e.clientY - lastTouch.y) < 8) cycle(c);

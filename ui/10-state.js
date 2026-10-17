@@ -131,6 +131,7 @@ function newGame(spec, mode) {
     cur: Math.max(0, puzzle.clues.findIndex((c, i) => !struck.includes(i))), // the statement in hand
     wrView: LS.get('inq1:wrview', 'plan'), // which weapon was where: on the floor plan, or as a table
     pick: { killer: null, weapon: null, room: null },
+    undo: [], // steps of [b, i, j, mark before], for Undo (this visit only)
     csp: null,
   };
 }

@@ -104,21 +104,39 @@
 /* the phone strip: one statement, pinned above the notebook */
 .strip { display: none; }
 
-/* the guided lesson */
-.coach { position: fixed; z-index: 45; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(420px, calc(100vw - 32px)); padding: 16px 18px 18px; background: var(--paper); color: var(--ink); border: 1px solid var(--ink); border-radius: 2px; box-shadow: 0 18px 50px rgba(0, 0, 0, .22); }
-.coach .coach-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-style: italic; color: var(--muted); font-size: 15px; }
-.coach .coach-top button { background: none; border: 0; padding: 4px 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; font-size: 15px; }
-.coach p { margin: 8px 0 0; font-size: 17px; line-height: 1.45; }
-.coach .warn { color: var(--pen); font-style: italic; }
-.coach .warn:empty { display: none; }
-.coach .actions { margin-top: 12px; }
-body:has(.scrim) .coach { display: none; }
-body.coached { padding-bottom: 280px; }
-.coach-target { outline: 3px solid var(--pen) !important; outline-offset: -2px; }
-.plan-svg .coach-target rect { stroke: var(--pen); stroke-width: 2.5; }
-.stmt.coach-target { outline-offset: 2px; }
-.plan.flash { animation: flash 1.2s ease 2; }
-@keyframes flash { 50% { background: var(--wash); } }
+/* the warm-up: three rules with pictures, a "try it" line, and notes that sit in the page, never over it */
+.warm-head { margin-top: 14px; }
+.warm-lede { margin: 0 0 10px; max-width: 40em; font-size: 18px; }
+.rules3 { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 36px; }
+.rules3 li { display: grid; grid-template-rows: 44px auto; gap: 8px; font-size: 16px; line-height: 1.4; color: var(--muted); }
+.rules3 li b { color: var(--ink); font-weight: 600; }
+.rules3 .pic { display: flex; align-items: center; gap: 0; }
+.rsq { position: relative; display: inline-block; width: 30px; height: 30px; border: 1px solid var(--rule); margin-left: -1px; flex: none; }
+.rsq .pen { inset: 2px; width: 26px; height: 26px; }
+.rlab { font-size: 15px; color: var(--ink); margin-right: 10px; }
+.rq { font-size: 15px; font-style: italic; color: var(--ink); margin-right: 12px; line-height: 1.2; max-width: 13em; }
+.rules3 .joined { position: relative; gap: 16px; align-items: flex-start; padding-top: 2px; }
+.rules3 .joined .rsq { margin: 0; }
+.rules3 .joined::before { content: ''; position: absolute; left: 15px; top: 17px; width: 92px; height: 0; border-top: 1.5px solid var(--pen); }
+.rules3 .joined .rsq { background: var(--paper); }
+.rlab3 { position: absolute; left: 0; top: 33px; display: flex; gap: 0; font-size: 12px; color: var(--muted); }
+.rlab3 i { width: 46px; text-align: center; margin-left: -8px; white-space: nowrap; }
+.warm-skip { margin: 12px 0 0; font-size: 15px; }
+.warm-skip .link { color: var(--muted); }
+.sheetbox .rules3 { grid-template-columns: minmax(0, 1fr); margin: 14px 0; }
+.try { display: block; margin-top: 6px; font-size: 15px; font-style: italic; color: var(--muted); }
+.wnote { margin: 8px 0 0; padding: 8px 12px; border-left: 2px solid var(--pen); background: var(--wash); font-size: 16px; line-height: 1.45; }
+.wnote:empty { display: none; }
+.wnote .aside { display: block; margin-top: 4px; color: var(--muted); font-size: 15px; }
+.strip .wnote { display: none; }
+.grid .cell.pencil .pen path, .plan-svg .cell.pencil .pen path, .wr-list .cell.pencil .pen path { stroke: var(--muted); stroke-dasharray: 2.5 3; }
+.bar .accuse[aria-disabled='true'] { background: none; color: var(--muted); border: 1px solid var(--rule); }
+.nbtools { display: flex; justify-content: flex-end; gap: 18px; margin: 10px 0 -4px; }
+.nbtools .quiet { font-size: 15px; min-height: 32px; }
+.nbtools .quiet:disabled { color: var(--ghost); text-decoration-color: transparent; cursor: default; }
+.tabs .cue { display: none; }
+.tabs button.has-cue .cue { display: inline-block; width: 7px; height: 7px; margin-left: 7px; vertical-align: 2px; border-radius: 50%; background: var(--pen); }
+.tabs button:not(.has-cue) .cue-word { display: none; }
 
 @media (max-width: 1365px) {
   .story-body { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -152,6 +170,10 @@ body.coached { padding-bottom: 280px; }
   .notebook[data-tab='sw'] .rpart, .notebook[data-tab='sr'] .wpart { display: none; }
   .grid { --cell: 53px; }
   .plan { margin-top: 28px; }
+  .strip .wnote { display: block; }
+  .wnote.wide { display: none; }
+  .strip .try { margin: 4px 0 0; padding-left: 12px; }
+  .rules3 { gap: 10px 24px; }
 }
 
 /* ---- phone: a compressed header so the first screen shows the statement and the notebook; the button at the bottom */
@@ -173,6 +195,22 @@ body.coached { padding-bottom: 280px; }
   .grid .grps .grp span { font-size: 13px; }
   .plan-key { font-size: 14.5px; }
   .plan-key .tapnote { display: inline; }
+  .warm-lede { font-size: 16px; margin-bottom: 8px; }
+  .warm-head .scene-txt, .warm-head .more { display: none; }
+  .warm-head .rules3 li { align-items: center; }
+  .warm-skip { margin-top: 8px; }
+  .rules3 { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .rules3 li { grid-template-columns: 128px minmax(0, 1fr); grid-template-rows: auto; align-items: start; font-size: 14.5px; gap: 10px; }
+  .rules3 .rq { font-size: 12.5px; margin-right: 6px; }
+  .rules3 .rlab { font-size: 13px; margin-right: 6px; }
+  .rsq { width: 26px; height: 26px; }
+  .rsq .pen { width: 22px; height: 22px; }
+  .rules3 .joined { gap: 12px; padding-bottom: 16px; }
+  .rules3 .joined::before { left: 13px; top: 15px; width: 76px; }
+  .rlab3 { top: 29px; font-size: 10.5px; }
+  .rlab3 i { width: 38px; margin-left: -6px; }
+  .strip .wnote { font-size: 15px; padding: 6px 10px; margin-top: 6px; }
+  .nbtools { margin-top: 6px; }
 }
 @media (max-width: 380px) {
   .grid { --cell: 34px; }

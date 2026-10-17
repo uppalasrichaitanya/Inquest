@@ -8,7 +8,7 @@ A daily murder-mystery logic game. Read true statements, work the notebook, name
 - `src/` puzzle engine: settings, clue types, solvers, case generator
 - `ui/` stylesheets and interface code
 - `bank/` the 750 mined cases (constable, detective, inspector, mastermind)
-- `src/46-tutorial.js` the hand-made first case the guided tutorial walks through (`ui/60-tutorial.js`)
+- `src/46-tutorial.js` the hand-made first case, played as the warm-up (`ui/60-warmup.js`)
 - `dist/index.html` the finished single-file game, `dist/engine.js` the bundled engine
 
 ## Commands (Node 18+)
@@ -24,4 +24,4 @@ Case No. 1 is 15 October 2026. The daily case is picked from the bank by date.
 
 ## Notes for editing
 - Clue wording lives in `src/25-text.js`. Banked cases store a variant index, so keep the number of variants and their voice (`say` / `note`) per clue type unchanged when rewording.
-- First visit opens the tutorial automatically (remembered in `localStorage` as `inq1:tutorial`); it can be replayed from the home screen.
+- First visit opens the warm-up automatically (remembered in `localStorage` as `inq1:tutorial`); it can be replayed from the home screen and from How to play. `node test-ui.js` plays it from empty storage.

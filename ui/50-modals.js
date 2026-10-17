@@ -79,7 +79,7 @@ function submitAccuse() {
 }
 
 function solveCase() {
-  if (G.mode === 'tutorial') { G.solved = true; finishTutorial(); return; }
+  if (G.mode === 'tutorial') { G.solved = true; finishWarmup(); return; }
   const first = !G.solved && !(LS.get(G.key, {}) || {}).solved;
   G.solved = true; persist();
   if (first) {

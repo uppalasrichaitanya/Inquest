@@ -17,7 +17,6 @@ function folderState(spec) {
 
 function renderHome() {
   VIEW = 'home'; G = null;
-  endCoach();
   const st = loadStats();
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -33,7 +32,7 @@ function renderHome() {
   }).join('');
   const learn = tutorialDone()
     ? ''
-    : '<div class="cta"><button class="btn" data-act="tutorial">Learn to play</button><span class="soft">A three-suspect case, solved together in about two minutes.</span></div>';
+    : '<div class="cta"><button class="btn" data-act="tutorial">Learn to play</button><span class="soft">A three-guest warm-up. About a minute.</span></div>';
   app().innerHTML = `
     <div class="bar"><button class="mark" data-act="home">Inquest</button>
       <button class="quiet" data-act="how">How to play</button><button class="quiet" data-act="stats">Your record</button>${themeButton()}</div>
@@ -49,7 +48,7 @@ function renderHome() {
         <ol class="cases">${rows}</ol>
       </section>
       <div class="row">
-        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the lesson</button>' : ''}
+        ${tutorialDone() ? '<button class="link" data-act="tutorial">Replay the warm-up</button>' : ''}
         <button class="link" data-act="random">Play an older case</button>
         <span class="grow"></span>
         <span class="soft">Streak ${st.streak}, best ${st.bestStreak}, ${solved} closed</span>
@@ -60,7 +59,6 @@ function renderHome() {
 
 function openCase(spec, mode) {
   closeModal();
-  endCoach();
   newGame(spec, mode);
   renderCase();
 }
@@ -68,12 +66,9 @@ function openCase(spec, mode) {
 function howToHTML() {
   return `<h2>How to play</h2>
     <p>Someone has been murdered. Each guest was in a different room, holding a different weapon. Find <b>who</b> did it, <b>with what</b>, and <b>where</b>.</p>
-    <ol>
-      <li><b>Every statement is true.</b> Pick one up and work out what it rules in or out. The names it mentions light up in the notebook. Tick it off when you have used it.</li>
-      <li><b>Mark the notebook.</b> Tap a square once to rule it out, twice to circle a match, a third time to clear it. A circle rules out the rest of its row and column for you, in fainter ink, because each person had one weapon and was in one room.</li>
-      <li><b>Use the plan.</b> Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. On the train, carriages coupled together are next to each other. Each room lists the weapons that could have been in it.</li>
-      <li><b>Name the killer.</b> The killer held the murder weapon in the room where the body was found. A wrong guess goes on your record, and tells you which statement it breaks.</li>
-    </ol>
-    <p class="soft">Every case has exactly one answer and can be solved by logic alone. Stuck? The hint points you to the next step, and tells you if a mark doesn't add up.</p>
-    <div class="actions"><button class="btn" data-act="tutorial">Play the lesson</button><button class="btn ghost" data-act="close">Got it</button></div>`;
+    ${rulesHTML()}
+    <p><b>The notebook.</b> Tap a square once to rule it out, twice to circle a match, a third time to clear it. Faint marks follow from yours. <b>Undo</b> takes back the last tap.</p>
+    <p><b>The plan.</b> Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. On the train, carriages coupled together are next to each other.</p>
+    <p class="soft">Every case has exactly one answer and can be solved by logic alone. A wrong guess goes on your record, and tells you which statement it breaks.</p>
+    <div class="actions"><button class="btn" data-act="tutorial">Play the warm-up</button><button class="btn ghost" data-act="close">Got it</button></div>`;
 }

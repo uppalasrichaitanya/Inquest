@@ -2,7 +2,7 @@
 // first visit: go straight into the guided case (it opens with a welcome and a way to skip)
 function homeOrLesson() {
   renderHome();
-  if (!tutorialDone() && !Object.keys(loadStats().solved).length) startTutorial();
+  if (!tutorialDone() && !Object.keys(loadStats().solved).length) startWarmup();
 }
 
 document.addEventListener('click', (e) => {
@@ -13,9 +13,10 @@ document.addEventListener('click', (e) => {
     else if (act === 'home') { closeModal(); homeOrLesson(); }
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
-    else if (act === 'tutorial') startTutorial();
-    else if (act === 'coach-next') coachNext();
-    else if (act === 'coach-skip') { LS.set('inq1:tutorial', 1); endCoach(); homeOrLesson(); }
+    else if (act === 'tutorial') startWarmup();
+    else if (act === 'warm-skip') { LS.set('inq1:tutorial', 1); renderHome(); }
+    else if (act === 'undo') undo();
+    else if (act === 'clear') clearAll();
     else if (act === 'stats') openStats();
     else if (act === 'random') {
       closeModal();
@@ -23,7 +24,11 @@ document.addEventListener('click', (e) => {
       pickRandom(t);
     }
     else if (act === 'close') closeModal();
-    else if (act === 'accuse') { closeModal(); openAccuse(); }
+    else if (act === 'accuse') {
+      closeModal();
+      if (a.getAttribute('aria-disabled') === 'true') setWarmNote('Not yet. Once the notebook points to one person, with their weapon and room circled, this button wakes up.');
+      else openAccuse();
+    }
     else if (act === 'submit-accuse') submitAccuse();
     else if (act === 'hint') openHint();
     else if (act === 'hint-more') hintMore();
@@ -67,6 +72,7 @@ function openRandomChoice(tier) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && VIEW === 'case' && G && !document.getElementById('scrim')) { e.preventDefault(); undo(); }
   const room = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.room[data-room]');
   if (room) { e.preventDefault(); openRoomSheet(+room.dataset.room); }
 });
