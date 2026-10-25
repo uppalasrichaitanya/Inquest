@@ -15,24 +15,25 @@ function buildCtx(world, suspectPick, weaponPick, roomPick) {
   const maxY = Math.max(...world.rooms.map((r) => r.rect.y));
   const floor = rooms.map((r) => (world.floors ? maxY - r.rect.y : 0));
   const pos = rooms.map((r) => r.rect.x);
+  const suspects = suspectPick.map((i) => world.suspects[i]);
   return {
-    world, n,
-    suspects: suspectPick.map((i) => world.suspects[i]),
+    world, n, suspects,
     weapons: weaponPick.map((i) => world.weapons[i]),
     rooms, adj, floor, pos,
     types: weaponPick.map((i) => world.weapons[i].type),
+    traits: suspects.map((s) => s.traits),
     roomIdx: roomPick, suspectIdx: suspectPick, weaponIdx: weaponPick,
   };
 }
 
 // kind: W = weapons only, R = rooms only, X = both, M = murder (returns a bitmask of possible killers)
-// family: direct | neg | link | rel | murder -- used to tune difficulty
+// family: direct | neg | link | rel | murder | trait -- used to tune difficulty
 function C(type, kind, family, args, test) {
   return { type, kind, family, args, test };
 }
 
 function enumerateClues(ctx) {
-  const { n, adj, floor, pos, types, world } = ctx;
+  const { n, adj, floor, pos, types, traits, world } = ctx;
   const S = [...Array(n).keys()];
   const out = [];
   const typeSet = [...new Set(types)];
@@ -41,6 +42,12 @@ function enumerateClues(ctx) {
   const hasAhead = world.relations.includes('ahead');
   const FULL = (1 << n) - 1;
   const maskOf = (f) => { let m = 0; for (const s of S) if (f(s)) m |= 1 << s; return m; };
+  // trait values that split tonight's suspects (a trait everyone shares tells nobody anything)
+  const traitVals = [];
+  for (const k of TRAIT_KEYS) {
+    const vals = [...new Set(traits.map((t) => t[k]))];
+    if (vals.length > 1) for (const v of vals) traitVals.push([k, v]);
+  }
 
   for (const s of S) for (const w of S) {
     out.push(C('has', 'W', 'direct', { s, w }, (pw) => pw[s] === w));
@@ -82,6 +89,11 @@ function enumerateClues(ctx) {
     out.push(C('typeInRoom', 'X', 'link', { r, t }, (pw, pwi, pr, pri) => types[pw[pri[r]]] === t));
     out.push(C('notTypeInRoom', 'X', 'neg', { r, t }, (pw, pwi, pr, pri) => types[pw[pri[r]]] !== t));
   }
+  // ---- traits: a hair on the weapon, a footprint in the room. Read them off the suspects' cards.
+  for (const [k, v] of traitVals) {
+    for (const w of S) out.push(C('traitWeapon', 'W', 'trait', { w, k, v }, (pw, pwi) => traits[pwi[w]][k] === v));
+    for (const r of S) out.push(C('traitRoom', 'R', 'trait', { r, k, v }, (pw, pwi, pr, pri) => traits[pri[r]][k] === v));
+  }
 
   // ---- murder clues: each returns the set of suspects who could still be the killer
   for (const t of typeSet) {
@@ -108,7 +120,28 @@ function enumerateClues(ctx) {
     out.push(C('murderFloor', 'M', 'murder', { f }, (pw, pwi, pr) => maskOf((m) => floor[pr[m]] === f)));
     out.push(C('murderNotFloor', 'M', 'murder', { f }, (pw, pwi, pr) => maskOf((m) => floor[pr[m]] !== f)));
   }
+  for (const [k, v] of traitVals) out.push(C('murderTrait', 'M', 'murder', { k, v }, () => maskOf((m) => traits[m][k] === v)));
   return out;
+}
+
+// ---- testimony. Every suspect says one thing. The innocent tell the truth; the killer lies.
+// Only statements a person could sensibly make, and that the human solver can turn into one small constraint
+// (so it can also be negated), can be testimony. Everything else is evidence, which is always true.
+const TESTIMONY_TYPES = ['has', 'notHas', 'in', 'notIn', 'eitherHas', 'eitherIn', 'holdsType', 'notHoldsType', 'sameType', 'diffType',
+  'adjacent', 'notAdjacent', 'sameFloor', 'diffFloor', 'ahead', 'murderNotSuspect', 'murderType', 'murderNotType', 'murderNotWeapon',
+  'murderNotRoom', 'murderFloor', 'murderNotFloor', 'murderAdjRoom', 'murderNotAdjRoom', 'murderTrait'];
+
+// A statement by `sp`, as a murder clue: in each arrangement, the killers it allows are those for whom it is
+// consistent (the statement is true and sp is not the killer, or it is false and sp is).
+function testimony(c, sp, n) {
+  const FULL = (1 << n) - 1, me = 1 << sp, base = c.test, M = c.kind === 'M';
+  const test = (pw, pwi, pr, pri) => ((M ? base(pw, pwi, pr, pri) : base(pw, pwi, pr, pri) ? FULL : 0) ^ me) & FULL;
+  return { type: c.type, kind: 'M', baseKind: c.kind, family: c.family, args: c.args, speaker: sp, test, base: c };
+}
+// Is the statement itself true in this arrangement (ignoring who said it)?
+function statementTrue(c, truth, pwi, pri) {
+  const b = c.base || c, v = b.test(truth.pw, pwi, truth.pr, pri);
+  return b.kind === 'M' ? (v & (1 << truth.m)) !== 0 : v;
 }
 
 // Does the clue hold for the hidden truth {pw, pr, m}?

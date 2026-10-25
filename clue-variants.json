@@ -1,124 +1,150 @@
 {
- "adjacent": [
-  "say",
-  "note"
- ],
- "ahead": [
-  "say",
-  "note"
- ],
- "diffFloor": [
-  "say",
-  "note"
- ],
- "diffType": [
-  "say",
-  "note"
- ],
- "eitherHas": [
-  "say",
-  "note"
- ],
- "eitherIn": [
-  "say",
-  "note"
- ],
- "has": [
-  "say",
-  "note"
- ],
- "holdsType": [
-  "say",
-  "note"
- ],
- "in": [
-  "say",
-  "note"
- ],
- "murderAdjRoom": [
-  "note"
- ],
- "murderAheadOf": [
-  "note"
- ],
- "murderBehind": [
-  "note"
- ],
- "murderFarFrom": [
-  "note"
- ],
- "murderFloor": [
-  "note"
- ],
- "murderNextTo": [
-  "note"
- ],
- "murderNotAdjRoom": [
-  "note"
- ],
- "murderNotFloor": [
-  "note"
- ],
- "murderNotRoom": [
-  "note"
- ],
- "murderNotSuspect": [
-  "note"
- ],
- "murderNotType": [
-  "note"
- ],
- "murderNotWeapon": [
-  "note"
- ],
- "murderSameFloor": [
-  "note"
- ],
- "murderType": [
-  "note"
- ],
- "notAdjacent": [
-  "say",
-  "note"
- ],
- "notHas": [
-  "say",
-  "note"
- ],
- "notHoldsType": [
-  "say",
-  "note"
- ],
- "notIn": [
-  "say",
-  "note"
- ],
- "notTypeInRoom": [
-  "say",
-  "note"
- ],
- "sameFloor": [
-  "say",
-  "note"
- ],
- "sameType": [
-  "say",
-  "note"
- ],
- "typeInRoom": [
-  "say",
-  "note"
- ],
- "weaponIn": [
-  "say",
-  "note"
- ],
- "weaponNear": [
-  "say",
-  "note"
- ],
- "weaponNotIn": [
-  "say",
-  "note"
- ]
+ "adjacent": {
+  "note": 1,
+  "say": 2
+ },
+ "ahead": {
+  "note": 1,
+  "say": 2
+ },
+ "diffFloor": {
+  "note": 1,
+  "say": 2
+ },
+ "diffType": {
+  "note": 1,
+  "say": 2
+ },
+ "eitherHas": {
+  "note": 1,
+  "say": 2
+ },
+ "eitherIn": {
+  "note": 1,
+  "say": 2
+ },
+ "has": {
+  "note": 1,
+  "say": 2
+ },
+ "holdsType": {
+  "note": 1,
+  "say": 2
+ },
+ "in": {
+  "note": 1,
+  "say": 2
+ },
+ "murderAdjRoom": {
+  "note": 1,
+  "say": 2
+ },
+ "murderAheadOf": {
+  "note": 1,
+  "say": 0
+ },
+ "murderBehind": {
+  "note": 1,
+  "say": 0
+ },
+ "murderFarFrom": {
+  "note": 1,
+  "say": 0
+ },
+ "murderFloor": {
+  "note": 1,
+  "say": 2
+ },
+ "murderNextTo": {
+  "note": 1,
+  "say": 0
+ },
+ "murderNotAdjRoom": {
+  "note": 1,
+  "say": 2
+ },
+ "murderNotFloor": {
+  "note": 1,
+  "say": 2
+ },
+ "murderNotRoom": {
+  "note": 1,
+  "say": 2
+ },
+ "murderNotSuspect": {
+  "note": 1,
+  "say": 2
+ },
+ "murderNotType": {
+  "note": 1,
+  "say": 2
+ },
+ "murderNotWeapon": {
+  "note": 1,
+  "say": 2
+ },
+ "murderSameFloor": {
+  "note": 1,
+  "say": 0
+ },
+ "murderTrait": {
+  "note": 1,
+  "say": 2
+ },
+ "murderType": {
+  "note": 1,
+  "say": 2
+ },
+ "notAdjacent": {
+  "note": 1,
+  "say": 2
+ },
+ "notHas": {
+  "note": 1,
+  "say": 2
+ },
+ "notHoldsType": {
+  "note": 1,
+  "say": 2
+ },
+ "notIn": {
+  "note": 1,
+  "say": 2
+ },
+ "notTypeInRoom": {
+  "note": 1,
+  "say": 0
+ },
+ "sameFloor": {
+  "note": 1,
+  "say": 2
+ },
+ "sameType": {
+  "note": 1,
+  "say": 2
+ },
+ "traitRoom": {
+  "note": 1,
+  "say": 0
+ },
+ "traitWeapon": {
+  "note": 1,
+  "say": 0
+ },
+ "typeInRoom": {
+  "note": 1,
+  "say": 0
+ },
+ "weaponIn": {
+  "note": 1,
+  "say": 0
+ },
+ "weaponNear": {
+  "note": 1,
+  "say": 0
+ },
+ "weaponNotIn": {
+  "note": 1,
+  "say": 0
+ }
 }

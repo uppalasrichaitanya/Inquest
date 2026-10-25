@@ -1,11 +1,11 @@
 // ---- INQUEST: interface. State, storage and small helpers.
 const LAUNCH = Date.UTC(2026, 9, 15); // Case No. 1
 const TIER_ORDER = ['constable', 'detective', 'inspector', 'mastermind'];
-const TITLES_RANK = ['Lady', 'Dr.', 'Major', 'Miss', 'Reverend', 'Mrs.', 'Mr.', 'Count', 'Professor', 'Madame', 'Captain'];
+const STORE = 'inq2'; // the cases changed shape (a liar, a whole notebook): nothing saved by the first edition carries over
 
 const LS = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+  get(k, d) { try { const v = localStorage.getItem(STORE + ':' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(STORE + ':' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
 };
 
 function dayNumber(d) {
@@ -13,15 +13,15 @@ function dayNumber(d) {
   return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - LAUNCH) / 864e5) + 1;
 }
 // ---- the daily rhythm. Everyone gets the same case each day, and the week has a shape, like a crossword:
-// Monday four guests, Tuesday and Wednesday five, Thursday to Saturday six, Sunday the Mastermind.
+// Monday three suspects, Tuesday to Saturday four (Thursday on, with fewer gifts), Sunday the Mastermind with five.
 // Each kind of day takes the next case of its tier in bank order, so nothing repeats until a bank wraps round.
 const WEEK_TIER = ['mastermind', 'constable', 'detective', 'detective', 'inspector', 'inspector', 'inspector']; // by getDay(): Sunday first
 const TIER_LEVEL = { constable: 1, detective: 2, inspector: 3, mastermind: 4 };
 const DAY_FEEL = {
-  constable: 'The gentlest day: plain testimony, nothing to test.',
-  detective: 'Every statement earns its place.',
-  inspector: 'Fewer gifts. Expect to test a theory.',
-  mastermind: 'No direct testimony. Only what the evidence implies.',
+  constable: 'The gentlest day: three suspects, and a lie that shows.',
+  detective: 'Four suspects. Every statement earns its place.',
+  inspector: 'Four suspects, fewer gifts. Expect to test a theory.',
+  mastermind: 'Five suspects, and nothing given away.',
 };
 const DAY_GROUP = { constable: 'Mondays', detective: 'Tuesdays and Wednesdays', inspector: 'Thursdays to Saturdays', mastermind: 'Sundays' };
 const todayN = () => Math.max(1, dayNumber());
@@ -41,46 +41,34 @@ function dailyFor(n) {
 }
 const dayName = (n, opts) => dateOfDay(n).toLocaleDateString('en-GB', opts || { weekday: 'long', day: 'numeric', month: 'long' });
 // a gentle first case for someone new: the latest Monday not yet closed, or (before the first Monday) a practice
-// four-guest case taken from the far end of the bank, years away from being anyone's Monday
+// case taken from the far end of the Monday bank, years away from being anyone's Monday
 function gentleStart() {
   for (let n = todayN(); n >= 1; n--) if (weekdayOf(n) === 1 && !caseState(dailyFor(n).spec).solved) return { n };
   const list = BANK.constable;
   for (let i = list.length - 1; i >= 0; i--) if (!caseState(list[i]).solved) return { spec: list[i] };
   return { spec: list[list.length - 1] };
 }
+const caseKey = (spec) => `case:${spec.t}:${spec.s}`;
 const caseState = (spec) => LS.get(caseKey(spec), null) || {};
 // the streak lives only while yesterday's or today's case was closed on its day
 function liveStreak(st) { return st.lastDay >= todayN() - 1 ? st.streak : 0; }
-const caseKey = (spec) => `inq1:case:${spec.t}:${spec.s}`;
-const loadStats = () => LS.get('inq1:stats', { solved: {}, best: {}, streak: 0, bestStreak: 0, lastDay: 0 });
+const loadStats = () => LS.get('stats', { solved: {}, best: {}, streak: 0, bestStreak: 0, lastDay: 0 });
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtTime = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 const zeros = (n) => Array.from({ length: n }, () => new Array(n).fill(0));
-// difficulty as a row of printed dots: filled for each level of five
-const stars = (k, of = 5) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(k)}${'<i></i>'.repeat(of - k)}</span>`;
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+const NUM_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
 // how hard a kind of day is, as four dots: Monday one, Sunday four
-const dayDots = (tier) => stars(TIER_LEVEL[tier], 4);
-
-function initials(name) {
-  const w = name.split(' ').filter((x) => !TITLES_RANK.includes(x));
-  return (w[0][0] + w[w.length - 1][0]).toUpperCase();
-}
-// a suspect is marked by a small dot in their colour (the name always travels with it)
-const seal = (s) => `<span class="dot" style="--h:${s.hue}" aria-hidden="true"></span>`;
-
-// Weapon kinds, as printer's marks: a dagger, a weight, a loop, a drop, a pistol. Defined once, used by reference.
-const KIND_DEFS = `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="k-blade" viewBox="0 0 16 16"><path d="M8 1 10 9.5H6Z" fill="currentColor"/><path d="M4.5 10.5h7M8 11v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
-  <symbol id="k-blunt" viewBox="0 0 16 16"><circle cx="8" cy="8.5" r="5" fill="currentColor"/></symbol>
-  <symbol id="k-cord" viewBox="0 0 16 16"><path d="M2 10c2-6 5-6 6-2s4 4 6-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
-  <symbol id="k-poison" viewBox="0 0 16 16"><path d="M8 2.5c2.8 3.6 4.2 6 4.2 7.8a4.2 4.2 0 0 1-8.4 0C3.8 8.5 5.2 6.1 8 2.5z" fill="currentColor"/></symbol>
-  <symbol id="k-firearm" viewBox="0 0 16 16"><path d="M2 5.5h12v3H7.5l-1 4.5H4l1-4.5H2z" fill="currentColor"/></symbol>
-</svg>`;
-const glyph = (t) => `<svg class="kg" aria-hidden="true"><use href="#k-${t}"/></svg>`;
-// how the notebook names a kind: the words the statements use
-const KIND_WORD = { blade: 'Sharp', blunt: 'Blunt', cord: 'Cord', poison: 'Poison', firearm: 'Gun' };
+const dayDots = (tier) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(TIER_LEVEL[tier])}${'<i></i>'.repeat(4 - TIER_LEVEL[tier])}</span>`;
 const shortName = (x) => x.short || x.name;
+const unitOf = (ctx) => (ctx.world.layoutKind === 'line' ? 'carriage' : 'room');
+// the traits as the card prints them
+const traitChips = (s) => TRAIT_KEYS.map((k) => {
+  const v = s.traits[k];
+  if (k === 'hair') return `<li><i class="swatch" style="background:${HAIR_COLOUR[v]}"></i>${cap(v)} hair</li>`;
+  return `<li>${cap(TRAITS[k].values[v])}</li>`;
+}).join('');
 
 // ---- the pen: every mark is drawn by hand, slightly differently for each square, and the same way every time
 function penRng(key) {
@@ -92,10 +80,10 @@ function penRng(key) {
 function penMark(v, key, size) {
   if (!v) return '';
   const r = penRng(key), j = (a) => (r() - 0.5) * a, c = size / 2, faint = v >= 3;
-  const sw = (faint ? 1.6 : 2.3) * Math.max(0.55, Math.min(1, size / 40));
+  const sw = (faint ? 1.7 : 2.5) * Math.max(0.55, Math.min(1, size / 40));
   let d;
   if (v === 1 || v === 3) {
-    const p = size * 0.27, q = size - p, w = size / 46;
+    const p = size * 0.28, q = size - p, w = size / 46;
     d = `M${p + j(4 * w)} ${p + j(4 * w)} Q${c + j(5 * w)} ${c + j(5 * w)} ${q + j(4 * w)} ${q + j(3 * w)} M${q + j(4 * w)} ${p + j(4 * w)} Q${c + j(5 * w)} ${c + j(5 * w)} ${p + j(3 * w)} ${q + j(4 * w)}`;
   } else {
     const rad = size * 0.3, a0 = r() * 6.28, pts = [];
@@ -114,25 +102,23 @@ function penRing(key) {
     const a = a0 + (i / 25) * 6.28, rr = 19 * (1 + j(0.1) + (i > 25 ? 0.07 : 0));
     pts.push(`${(23 + Math.cos(a) * rr * 1.08).toFixed(1)} ${(23 + Math.sin(a) * rr).toFixed(1)}`);
   }
-  return `<svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><path d="M${pts.join(' L')}" pathLength="1" fill="none" stroke="var(--pen)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><path d="M${pts.join(' L')}" pathLength="1" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
-// a tick in the margin: this statement has been used
+// a tick: this piece of evidence has been used
 function penTick(key) {
   const r = penRng(key), j = (a) => (r() - 0.5) * a;
-  return `<svg class="tick" viewBox="0 0 22 20" aria-hidden="true"><path d="M3 ${11 + j(2)} Q7 ${15 + j(2)} 8.5 ${17 + j(1)} Q12 ${8 + j(3)} 19 ${3 + j(2)}" fill="none" stroke="var(--pen)" stroke-width="2.1" stroke-linecap="round"/></svg>`;
+  return `<svg class="tick" viewBox="0 0 22 20" aria-hidden="true"><path d="M3 ${11 + j(2)} Q7 ${15 + j(2)} 8.5 ${17 + j(1)} Q12 ${8 + j(3)} 19 ${3 + j(2)}" fill="none" stroke="var(--pen)" stroke-width="2.3" stroke-linecap="round"/></svg>`;
 }
-// a bracket in the margin: the statement in hand
-const penBrace = () => '<svg class="brace" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M10 2 Q3 3 3.5 12 L4 88 Q3.5 98 10.5 98" fill="none" stroke="var(--pen)" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
 
 // ---- light or dark: follows the device until the player picks one, then remembers it
 function applyTheme() {
-  const t = LS.get('inq1:theme', null);
+  const t = LS.get('theme', null);
   if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
 }
 const isDark = () => (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
-function toggleTheme() { LS.set('inq1:theme', isDark() ? 'light' : 'dark'); applyTheme(); refreshThemeButton(); }
+function toggleTheme() { LS.set('theme', isDark() ? 'light' : 'dark'); applyTheme(); refreshThemeButton(); }
 function themeButton() {
-  return `<button type="button" class="theme" data-act="theme" aria-label="${isDark() ? 'Switch to light pages' : 'Switch to dark pages'}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 3a7 7 0 0 1 0 14z" fill="currentColor"/></svg></button>`;
+  return `<button type="button" class="iconbtn" data-act="theme" aria-label="${isDark() ? 'Switch to light pages' : 'Switch to dark pages'}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 3a7 7 0 0 1 0 14z" fill="currentColor"/></svg></button>`;
 }
 function refreshThemeButton() { document.querySelectorAll('[data-act="theme"]').forEach((b) => b.setAttribute('aria-label', isDark() ? 'Switch to light pages' : 'Switch to dark pages')); }
 
@@ -155,21 +141,19 @@ function newGame(spec, mode, day) {
   const key = caseKey(spec);
   const saved = mode === 'tutorial' ? {} : LS.get(key, null) || {};
   const n = puzzle.n;
-  const marks = saved.marks || { sw: zeros(n), sr: zeros(n), wr: zeros(n) };
-  if (!marks.k) marks.k = new Array(n).fill(0); // the "Did it?" column (cases saved before it existed have none)
-  const struck = saved.struck || [];
+  const marks = saved.marks || { sw: zeros(n), sr: zeros(n), wr: zeros(n), k: new Array(n).fill(0) };
   G = {
     spec, puzzle, key, mode, marks,
     day: day || null, // the case number, for a day's case (today's is mode 'daily', an earlier one 'archive')
-    struck,
+    struck: saved.struck || [], // evidence ticked off
+    say: saved.say || new Array(n).fill(0), // each suspect's statement: 0 open, 1 believed, 2 a lie
     elapsed: saved.elapsed || 0,
     hints: saved.hints || 0,
     wrong: saved.wrong || 0,
     solved: !!saved.solved,
-    opts: saved.opts || { cross: true, chain: false },
-    tab: 'sw', // on a phone the notebook shows weapons (sw) or rooms (sr); wide screens show both
-    cur: Math.max(0, puzzle.clues.findIndex((c, i) => !struck.includes(i))), // the statement in hand
-    wrView: LS.get('inq1:wrview', 'plan'), // which weapon was where: on the floor plan, or as a table
+    tab: 'sw', // on a phone the notebook shows one block at a time: weapons (sw), rooms (sr) or weapon-and-room (wr)
+    pane: 'clues', // on a phone the case is in three panes: the clues, the notebook, the map
+    cur: 0, // the statement in hand
     pick: { killer: null, weapon: null, room: null },
     undo: [], // steps of [b, i, j, mark before], for Undo (this visit only)
     csp: null,
@@ -177,51 +161,45 @@ function newGame(spec, mode, day) {
 }
 function persist() {
   if (!G || G.mode === 'tutorial') return;
-  LS.set(G.key, { marks: G.marks, struck: G.struck, elapsed: G.elapsed, hints: G.hints, wrong: G.wrong, solved: G.solved, opts: G.opts });
+  LS.set(G.key, { marks: G.marks, struck: G.struck, say: G.say, elapsed: G.elapsed, hints: G.hints, wrong: G.wrong, solved: G.solved });
 }
 
-// Marks you made: 0 blank, 1 crossed out, 2 confirmed. The notebook can add faint auto marks (3, 4).
-// Always: a circle crosses out the rest of its row and column, and a person's weapon and room, once both are
-// circled, place that weapon in that room. With opts.chain, more follows between the blocks.
-function derive(marks, n, opts) {
-  const d = { sw: marks.sw.map((r) => r.slice()), sr: marks.sr.map((r) => r.slice()), wr: marks.wr.map((r) => r.slice()), k: (marks.k || new Array(n).fill(0)).slice() };
+// Marks you made: 0 blank, 1 crossed out, 2 confirmed. The notebook adds faint marks (3, 4) that follow:
+// a circle crosses out the rest of its row and column; two circles that share a person or a weapon give the
+// third square of the triangle (who, what, where); a statement marked as a lie circles its speaker under
+// "Did it?", and one marked as true crosses them out.
+function derive(marks, n, say) {
+  const d = { sw: marks.sw.map((r) => r.slice()), sr: marks.sr.map((r) => r.slice()), wr: marks.wr.map((r) => r.slice()), k: marks.k.slice() };
   const yes = (v) => v === 2 || v === 4, no = (v) => v === 1 || v === 3;
-  const B = ['sw', 'sr', 'wr'];
+  if (say) say.forEach((v, s) => { if (d.k[s] === 0 && v) d.k[s] = v === 2 ? 4 : 3; });
   let changed = true, guard = 0;
-  const killer = d.k.findIndex(yes);
-  if (killer >= 0) for (let i = 0; i < n; i++) if (i !== killer && d.k[i] === 0) d.k[i] = 3;
   while (changed && guard++ < 40) {
     changed = false;
-    for (let s = 0; s < n; s++) {
-      const w = d.sw[s].findIndex(yes), r = d.sr[s].findIndex(yes);
-      if (w >= 0 && r >= 0 && d.wr[w][r] === 0) { d.wr[w][r] = 4; changed = true; }
+    const set = (b, i, j, v) => { if (d[b][i][j] === 0) { d[b][i][j] = v; changed = true; } };
+    const killer = d.k.findIndex(yes);
+    if (killer >= 0) for (let i = 0; i < n; i++) if (i !== killer && d.k[i] === 0) { d.k[i] = 3; changed = true; }
+    if (killer < 0 && d.k.filter(no).length === n - 1) { const i = d.k.findIndex((v) => v === 0); if (i >= 0) { d.k[i] = 4; changed = true; } }
+    for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (yes(d[b][i][j])) {
+      for (let k = 0; k < n; k++) { if (k !== j) set(b, i, k, 3); if (k !== i) set(b, k, j, 3); }
     }
-    if (opts.cross || opts.chain) {
-      for (const b of B) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (yes(d[b][i][j])) {
-        for (let k = 0; k < n; k++) {
-          if (k !== j && d[b][i][k] === 0) { d[b][i][k] = 3; changed = true; }
-          if (k !== i && d[b][k][j] === 0) { d[b][k][j] = 3; changed = true; }
-        }
-      }
+    for (let s = 0; s < n; s++) for (let w = 0; w < n; w++) for (let r = 0; r < n; r++) {
+      const a = d.sw[s][w], b = d.sr[s][r], c = d.wr[w][r];
+      if (yes(a) && yes(b)) set('wr', w, r, 4);
+      if (yes(a) && yes(c)) set('sr', s, r, 4);
+      if (yes(b) && yes(c)) set('sw', s, w, 4);
+      if (yes(a) && no(b)) set('wr', w, r, 3);
+      if (yes(a) && no(c)) set('sr', s, r, 3);
+      if (yes(b) && no(a)) set('wr', w, r, 3);
+      if (yes(b) && no(c)) set('sw', s, w, 3);
+      if (yes(c) && no(a)) set('sr', s, r, 3);
+      if (yes(c) && no(b)) set('sw', s, w, 3);
     }
-    if (opts.chain) {
-      for (let s = 0; s < n; s++) for (let w = 0; w < n; w++) for (let r = 0; r < n; r++) {
-        const t = [['sw', s, w], ['sr', s, r], ['wr', w, r]];
-        const v = t.map(([b, i, j]) => d[b][i][j]);
-        const ys = v.filter(yes).length, ns = v.filter(no).length, zi = v.indexOf(0);
-        if (v.filter((x) => x === 0).length !== 1) continue;
-        const [b, i, j] = t[zi];
-        if (ys === 2) { d[b][i][j] = 4; changed = true; }
-        else if (ys === 1 && ns === 1) { d[b][i][j] = 3; changed = true; }
-      }
-      for (const b of B) {
-        for (let i = 0; i < n; i++) {
-          const row = d[b][i], z = row.map((v, j) => (v === 0 ? j : -1)).filter((j) => j >= 0);
-          if (z.length === 1 && row.filter(no).length === n - 1 && !row.some(yes)) { row[z[0]] = 4; changed = true; }
-          const col = d[b].map((r) => r[i]), zc = col.map((v, j) => (v === 0 ? j : -1)).filter((j) => j >= 0);
-          if (zc.length === 1 && col.filter(no).length === n - 1 && !col.some(yes)) { d[b][zc[0]][i] = 4; changed = true; }
-        }
-      }
+    // a row or column with one open square left and no circle: that square is the one
+    for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) {
+      const row = d[b][i];
+      if (!row.some(yes) && row.filter((v) => v === 0).length === 1) set(b, i, row.indexOf(0), 4);
+      const col = d[b].map((r) => r[i]);
+      if (!col.some(yes) && col.filter((v) => v === 0).length === 1) set(b, col.indexOf(0), i, 4);
     }
   }
   return d;

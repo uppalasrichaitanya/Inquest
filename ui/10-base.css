@@ -1,31 +1,49 @@
-/* Casebook: a printed page. Everything printed is ink on paper and keeps still; the only colour that moves is
-   the vermilion pen, and it is used only for what the player does (marks, ticks, the statement in hand).
-   One typeface, Newsreader, in its optical sizes. Labels are italic, as a book would set them. */
+/* Inquest, second edition: a green-and-cream crime paperback. A deep green band carries the name and the case;
+   cream cards carry the suspects, the evidence and the notebook. Red is the pen (your marks) and the accusation;
+   gold is the statement in hand and the solved answer. Fraunces for anything said aloud, Instrument Sans for the rest. */
 :root {
-  --paper: #F1F2EE;
-  --ink: #1D2430;
-  --muted: #5D6571;
-  --rule: #CDD1CB;
-  --wash: #E3E6E0;
-  --ghost: #B4B9B3;
-  --pen: #CF3F28;
-  --pen-faint: rgba(207, 63, 40, .34);
-  --scrim: rgba(29, 36, 48, .42);
-  --serif: 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --gutter: 40px;
+  --bg: #EDE5D5;
+  --card: #FBF8F1;
+  --card-2: #F4EEE2;
+  --ink: #1D1B17;
+  --muted: #6A6358;
+  --rule: #DCD2C0;
+  --wash: #EFE6D3;
+  --green: #1D5641;
+  --green-2: #16473A;
+  --on-green: #F4EEDF;
+  --on-green-muted: #B9CDBF;
+  --red: #BF3527;
+  --pen: #C23526;
+  --pen-faint: rgba(194, 53, 38, .36);
+  --gold: #D99A1E;
+  --gold-wash: #F7E5B9;
+  --shadow: 0 1px 0 rgba(60, 45, 20, .06), 0 8px 24px -14px rgba(60, 45, 20, .35);
+  --scrim: rgba(18, 28, 23, .5);
+  --face-l: 82%;
+  --fl-carpet: #E7D3C3; --fl-rug: #E3D7C2; --fl-tile: #F2EDE4; --fl-wood: #E2CBA6; --fl-green: #D7E3CB; --fl-leaf: #B8CCA6; --fl-stone: #D8D4CC; --fl-mark: rgba(70, 50, 30, .13);
+  --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --sans: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+  --gutter: 32px;
+  --radius: 14px;
   color-scheme: light;
 }
-/* Night: a redrawn page, not a dimmed one. The pen lightens so it still reads as the warm thing on the page. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --paper: #15181D; --ink: #E5E2D9; --muted: #9AA0A8; --rule: #343841; --wash: #23272E; --ghost: #4A4F58;
-    --pen: #F0694E; --pen-faint: rgba(240, 105, 78, .38); --scrim: rgba(0, 0, 0, .6);
+    --bg: #0E1512; --card: #172420; --card-2: #1B2A25; --ink: #ECE5D6; --muted: #9DA79F; --rule: #2C3B35; --wash: #20302A;
+    --green: #143B2E; --green-2: #0F3026; --on-green: #F1EBDD; --on-green-muted: #9DB8A9;
+    --red: #E2563F; --pen: #F06A50; --pen-faint: rgba(240, 106, 80, .4); --gold: #E9B44C; --gold-wash: #3A3220;
+    --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 26px -14px rgba(0, 0, 0, .8); --scrim: rgba(0, 0, 0, .62); --face-l: 64%;
+    --fl-carpet: #3B2F2B; --fl-rug: #36302A; --fl-tile: #2E3230; --fl-wood: #3A3125; --fl-green: #263428; --fl-leaf: #33462E; --fl-stone: #2E2F2D; --fl-mark: rgba(255, 240, 220, .08);
     color-scheme: dark;
   }
 }
 :root[data-theme='dark'] {
-  --paper: #15181D; --ink: #E5E2D9; --muted: #9AA0A8; --rule: #343841; --wash: #23272E; --ghost: #4A4F58;
-  --pen: #F0694E; --pen-faint: rgba(240, 105, 78, .38); --scrim: rgba(0, 0, 0, .6);
+  --bg: #0E1512; --card: #172420; --card-2: #1B2A25; --ink: #ECE5D6; --muted: #9DA79F; --rule: #2C3B35; --wash: #20302A;
+  --green: #143B2E; --green-2: #0F3026; --on-green: #F1EBDD; --on-green-muted: #9DB8A9;
+  --red: #E2563F; --pen: #F06A50; --pen-faint: rgba(240, 106, 80, .4); --gold: #E9B44C; --gold-wash: #3A3220;
+  --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 26px -14px rgba(0, 0, 0, .8); --scrim: rgba(0, 0, 0, .62); --face-l: 64%;
+  --fl-carpet: #3B2F2B; --fl-rug: #36302A; --fl-tile: #2E3230; --fl-wood: #3A3125; --fl-green: #263428; --fl-leaf: #33462E; --fl-stone: #2E2F2D; --fl-mark: rgba(255, 240, 220, .08);
   color-scheme: dark;
 }
 
@@ -34,51 +52,64 @@ html { -webkit-text-size-adjust: 100%; }
 html, body { margin: 0; }
 button, .cell { -webkit-tap-highlight-color: transparent; }
 body {
-  background: var(--paper); color: var(--ink);
-  font: 400 18px/1.5 var(--serif); font-optical-sizing: auto;
-  font-variant-numeric: oldstyle-nums proportional-nums;
+  background: var(--bg); color: var(--ink);
+  font: 400 16px/1.5 var(--sans);
   padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
   min-height: 100vh;
 }
-#app { max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter) 64px; }
 button { font: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.label { margin: 0; font-style: italic; font-weight: 400; color: var(--muted); font-size: 16px; }
-.soft { color: var(--muted); font-size: 15.5px; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 var(--gutter); }
+.soft { color: var(--muted); font-size: 14.5px; }
+.kicker { margin: 0; font: 600 12.5px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 
-/* the top line of every screen: the name, and a few quiet tools */
-.bar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 6px 18px; padding: calc(14px + env(safe-area-inset-top, 0px)) 0 12px; background: var(--paper); }
-.bar .mark { margin-right: auto; background: none; border: 0; padding: 4px 0; font-size: 24px; font-weight: 600; font-variation-settings: 'opsz' 72; letter-spacing: .005em; color: var(--ink); }
-.quiet, .tool { background: none; border: 0; padding: 6px 2px; color: var(--muted); font-size: 17px; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
-.quiet:hover, .tool:hover { color: var(--ink); text-decoration-color: currentColor; }
-.theme { width: 36px; height: 36px; padding: 0; border: 1px solid var(--rule); border-radius: 50%; background: none; display: inline-grid; place-items: center; color: var(--muted); }
-.theme:hover { color: var(--ink); border-color: var(--ink); }
-.theme svg { width: 18px; height: 18px; }
+/* ---- the band: the name, and a few tools. Every screen opens on it. */
+.band { background: var(--green); color: var(--on-green); }
+.bar { position: sticky; top: 0; z-index: 30; background: var(--green); color: var(--on-green); padding-top: env(safe-area-inset-top, 0px); }
+.bar .wrap { display: flex; align-items: center; gap: 8px 14px; min-height: 60px; }
+.wordmark { margin-right: auto; display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 0; color: var(--on-green); font: 700 21px/1 var(--serif); letter-spacing: .16em; text-transform: uppercase; font-variation-settings: 'opsz' 40, 'SOFT' 50; }
+.wordmark .seal { width: 26px; height: 26px; flex: none; }
+.navlink { white-space: nowrap; background: none; border: 0; padding: 8px 4px; color: var(--on-green-muted); font: 500 15px/1 var(--sans); }
+.navlink:hover { color: var(--on-green); }
+.iconbtn { width: 38px; height: 38px; padding: 0; border: 1px solid rgba(255, 255, 255, .22); border-radius: 50%; background: none; display: inline-grid; place-items: center; color: var(--on-green); }
+.iconbtn:hover { border-color: var(--on-green); }
+.iconbtn svg { width: 18px; height: 18px; }
 
-/* buttons: ink is the only fill; the pen never fills a button */
-.btn { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); border-radius: 2px; padding: 11px 22px 12px; font-size: 18px; font-weight: 500; line-height: 1.2; }
-.btn:hover { opacity: .88; }
-.btn.ghost { background: none; color: var(--ink); border-color: var(--rule); }
-.btn.ghost:hover { border-color: var(--ink); opacity: 1; }
-.btn[disabled] { opacity: .35; cursor: not-allowed; }
-.link { background: none; border: 0; padding: 4px 0; color: var(--ink); font-size: 17px; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+/* ---- buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--green); color: var(--on-green); border: 0; border-radius: 999px; padding: 12px 22px; font: 600 16px/1.1 var(--sans); letter-spacing: .01em; box-shadow: 0 2px 0 rgba(0, 0, 0, .12); }
+.btn:hover { filter: brightness(1.08); }
+.btn.red { background: var(--red); color: #FFF8F0; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--rule); }
+.btn.ghost:hover { box-shadow: inset 0 0 0 1.5px var(--ink); filter: none; }
+.btn.big { padding: 15px 30px; font-size: 18px; }
+.btn[disabled], .btn[aria-disabled='true'] { opacity: .45; cursor: not-allowed; }
+.band .btn.ghost { color: var(--on-green); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .3); }
+.link { background: none; border: 0; padding: 4px 0; color: inherit; font: inherit; text-decoration: underline; text-decoration-color: var(--rule); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
 .link:hover { text-decoration-color: currentColor; }
 
-/* a suspect's colour: a small printed dot, nothing more */
-.dot { --h: 20; display: inline-block; flex: none; width: .5em; height: .5em; border-radius: 50%; background: hsl(var(--h) 34% 52%); vertical-align: .08em; margin-right: .45em; }
-/* weapon kinds: printer's marks, drawn from the symbols in KIND_DEFS */
+/* ---- a suspect's face, in a disc of their colour */
+.face { --h: 20; --fs: 48px; display: inline-grid; flex: none; width: var(--fs); height: var(--fs); border-radius: 50%; overflow: hidden; background: hsl(var(--h) 42% var(--face-l)); box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, .06); }
+.face svg { width: 100%; height: 100%; display: block; }
+.wi { width: 1.25em; height: 1.25em; flex: none; vertical-align: -.25em; }
 .kg { width: 1em; height: 1em; flex: none; vertical-align: -.12em; color: var(--muted); }
-/* the pen */
+.evi { width: 22px; height: 22px; flex: none; color: var(--green); }
 .pen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.level { display: inline-flex; gap: 4px; vertical-align: .05em; }
+.level i { width: 8px; height: 8px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; opacity: .8; }
+.level i.on { background: currentColor; opacity: 1; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -.05em; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2); }
 
-.toast { position: fixed; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 2px; max-width: min(520px, calc(100vw - 32px)); font-size: 16px; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70; background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 999px; max-width: min(520px, calc(100vw - 32px)); font-size: 15px; box-shadow: var(--shadow); }
 
 @media (max-width: 760px) {
   :root { --gutter: 16px; }
-  body { font-size: 17px; }
-  .bar { gap: 4px 14px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
-  .bar .mark { font-size: 21px; }
-  .quiet, .tool { font-size: 16px; }
+  .bar .wrap { min-height: 54px; gap: 4px 6px; }
+  .wordmark { font-size: 18px; letter-spacing: .12em; }
+  .wordmark .seal { width: 22px; height: 22px; }
+  .navlink { font-size: 14px; padding: 8px 3px; }
+  .iconbtn { width: 34px; height: 34px; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }

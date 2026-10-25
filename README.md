@@ -1,6 +1,8 @@
 # Inquest
 
-A daily murder mystery. A few true statements, one notebook, exactly one answer.
+A daily murder mystery. Every suspect makes a statement, and only the killer lies.
+
+Each case has a victim, an occasion and a handful of suspects, each with a portrait, three traits (height, hand, hair) and one statement. The evidence is always true; so is every statement except the killer's. Find the lie, and you have the killer. The notebook is a classic logic grid that can be filled in completely, and the map shows people and weapons as you place them. The verdict gives the motive and the lie that gave the killer away.
 
 The whole game is one file, `dist/index.html`, with no server and no accounts. It needs the internet only for its font (Google Fonts). Case No. 1 is 15 October 2026, and everyone gets the same case each day, on their own calendar.
 
@@ -35,15 +37,16 @@ A shared link shows "Inquest" and the one-line pitch above. To build a local cop
 
 ## Development
 
-Folders: `src/` the puzzle engine, `ui/` the interface, `bank/` the 750 checked cases, `playtest/` screenshots and the playtest script.
+Folders: `src/` the puzzle engine, `ui/` the interface, `bank/` the 800 checked cases (200 per tier), `playtest/` screenshots and the playtest script.
 
 - `npm install` installs jsdom (UI test) and playwright-core (screenshots)
-- `node test-engine.js 30` every case has exactly one answer and no redundant clue; also re-checks every banked case, titles and wording
-- `node test-variants.js` clue types keep their variants and voices; `--wording` re-records `clue-wording.txt` after rewording (review its diff)
+- `node test-engine.js 30` every case has exactly one whole solution (every weapon, room and the killer), one statement per suspect that is false only for the killer, a lie that shows (taken at their word, the statements clash with the evidence) and no spare evidence; also re-checks every banked case, titles and wording
+- `node test-variants.js` clue types keep their number of evidence and testimony wordings; `--wording` re-records `clue-wording.txt` after rewording (review its diff)
 - `node test-ui.js` plays the game in a simulated browser on a fixed test date (Tuesday 3 November 2026); `INQ_TZ=Area/City node test-ui.js` runs it in another time zone. The shipped page always uses the real date
 - `node shots.js` screenshots the page at 1366px and 390px, light and dark, into `playtest/latest/`, using the installed Edge or Chrome
 - `node mine.js <tier> <count> <startIndex> <out.json>` mines more cases; after adding them to `bank/`, run `node retitle.js` so each gets its own title
 
 Notes for editing:
-- Clue wording lives in `src/25-text.js`. Banked cases store a variant index, so keep each clue type's number of variants and their voice (`say` / `note`) unchanged.
-- The week rises like a crossword: Monday four guests, Tuesday and Wednesday five, Thursday to Saturday six, Sunday the Mastermind (`dailyFor` in `ui/10-state.js`). Only today's case, closed on its day, counts towards the streak.
+- Clue wording lives in `src/25-text.js`. Banked cases store a variant index, so keep each clue type's number of wordings unchanged (one for evidence, two for testimony). Testimony is spoken in the first person when a suspect talks about themselves.
+- Suspects, their traits, looks and motives, and each setting's victims and occasions live in `src/10-worlds-manor.js` and `src/11-worlds-train.js` (the manor, the train and the liner). Portraits and weapon icons are drawn in `ui/12-art.js`.
+- The week rises like a crossword: Monday three suspects, Tuesday and Wednesday four, Thursday to Saturday four with fewer gifts, Sunday the Mastermind with five (`dailyFor` in `ui/10-state.js`). Only today's case, closed on its day, counts towards the streak.

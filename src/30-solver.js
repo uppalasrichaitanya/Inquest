@@ -1,6 +1,7 @@
 // Exhaustive logic solver. Weapon-only and room-only clues are applied to the permutation lists
-// first, so the expensive cross product only runs over what survives. The answer is the triple
-// (killer, weapon, room); a puzzle is fair only if exactly one triple survives.
+// first, so the expensive cross product only runs over what survives. A world is a whole story: every
+// suspect's weapon and room, and the killer. A puzzle is fair only if exactly one world survives, so the
+// whole notebook can be filled in, not just the answer. `answers` lists the distinct (killer, weapon, room).
 function solveCount(ctx, clues, limit) {
   const { n } = ctx;
   const { perms, inv } = permutations(n);
@@ -24,7 +25,7 @@ function solveCount(ctx, clues, limit) {
   }
 
   const seen = new Uint8Array(n * n * n);
-  const answers = [];
+  const answers = [], worlds = [];
   const lim = limit === undefined ? Infinity : limit;
   for (let ia = 0; ia < LA.length; ia++) {
     const pw = perms[LA[ia]], pwi = inv[LA[ia]];
@@ -40,16 +41,14 @@ function solveCount(ctx, clues, limit) {
       if (!mask) continue;
       for (let m = 0; m < n; m++) {
         if (!(mask & (1 << m))) continue;
+        worlds.push({ pw, pr, m });
         const key = (m * n + pw[m]) * n + pr[m];
-        if (!seen[key]) {
-          seen[key] = 1;
-          answers.push({ killer: m, weapon: pw[m], room: pr[m] });
-          if (answers.length > lim) return { count: answers.length, answers, capped: true };
-        }
+        if (!seen[key]) { seen[key] = 1; answers.push({ killer: m, weapon: pw[m], room: pr[m] }); }
+        if (worlds.length > lim) return { count: worlds.length, worlds, answers, capped: true };
       }
     }
   }
-  return { count: answers.length, answers, capped: false };
+  return { count: worlds.length, worlds, answers, capped: false };
 }
 
 // Every full arrangement that fits the clues (used for hints and for checking player grids).
