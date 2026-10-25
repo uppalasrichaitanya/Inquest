@@ -43,18 +43,9 @@ function narrow(ctx, src, clue, dst) {
   return dst;
 }
 
-// How many distinct (killer, weapon, room) answers survive?
-function countSurvivingAnswers(ctx, set) {
-  const n = ctx.n, { perms } = permutations(n);
-  const seen = new Uint8Array(n * n * n);
+// How many whole worlds (weapons, rooms and killer) survive?
+function countSurvivingWorlds(ctx, set) {
   let count = 0;
-  for (let i = 0; i < set.size; i++) {
-    const pw = perms[set.A[i]], pr = perms[set.B[i]], mask = set.M[i];
-    for (let m = 0; m < n; m++) {
-      if (!(mask & (1 << m))) continue;
-      const key = (m * n + pw[m]) * n + pr[m];
-      if (!seen[key]) { seen[key] = 1; count++; }
-    }
-  }
+  for (let i = 0; i < set.size; i++) count += popcount(set.M[i]);
   return count;
 }

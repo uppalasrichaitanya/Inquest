@@ -5,7 +5,7 @@ const fs = require('fs');
 const E = require('./dist/engine.js');
 const tiers = ['constable', 'detective', 'inspector', 'mastermind'];
 const used = new Set([E.TUTORIAL.ti]);
-const next = { manor: 0, train: 0 };
+const next = Object.fromEntries(Object.keys(E.WORLDS).map((w) => [w, 0]));
 let changed = 0;
 for (const t of tiers) {
   const file = `${__dirname}/bank/${t}.json`, bank = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -19,4 +19,4 @@ for (const t of tiers) {
   }
   fs.writeFileSync(file, JSON.stringify(bank));
 }
-console.log(`${used.size - 1} titles, ${changed} changed; left unused: manor ${E.titlePool('manor').length - next.manor}, train ${E.titlePool('train').length - next.train}`);
+console.log(`${used.size - 1} titles, ${changed} changed; left unused: ${Object.keys(next).map((w) => `${w} ${E.titlePool(w).length - next[w]}`).join(', ')}`);

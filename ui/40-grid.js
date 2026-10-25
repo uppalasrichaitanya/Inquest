@@ -1,7 +1,9 @@
-// ---- the notebook: one table. A row per person; their weapon (grouped by kind, in the words the statements use),
-// their room (grouped by floor, or front to back on the train), and "Did it?". Which weapon was in which room
-// lives on the floor plan (45-plan.js), or in a table under it for those who prefer one.
+// ---- the notebook: the classic logic grid, as an L. A row per person: their weapon (grouped by kind, in the words
+// the statements use), their room (grouped by floor, or front to back on the train), and "Did it?". Under the
+// weapons, a row per room: which weapon was there. Fill in every square and the whole story is told.
+// On a phone it shows one block at a time (who-what, who-where, what-where), chosen with the tabs.
 const KIND_ORDER = ['blade', 'blunt', 'poison', 'cord', 'firearm'];
+const KIND_WORD = { blade: 'Sharp', blunt: 'Blunt', cord: 'Cord', poison: 'Poison', firearm: 'Gun' };
 const isLine = (ctx) => ctx.world.layoutKind === 'line';
 function weaponOrder(ctx) {
   return [...Array(ctx.n).keys()].sort((a, b) => KIND_ORDER.indexOf(ctx.types[a]) - KIND_ORDER.indexOf(ctx.types[b]) || a - b);
@@ -15,39 +17,47 @@ function groupsOf(order, keyOf) {
   order.forEach((x) => { const k = keyOf(x); if (!g.length || g[g.length - 1].key !== k) g.push({ key: k, items: [] }); g[g.length - 1].items.push(x); });
   return g;
 }
-// "in the cellar" -> "Cellar"; long single words get a place to break in a narrow column
-const floorLabel = (ctx, f) => cap(ctx.world.floors[f].replace(/^(in|on) the /, '')).replace('Upstairs', 'Up&shy;stairs');
+// "in the cellar" -> "Cellar"
+const floorLabel = (ctx, f) => cap(ctx.world.floors[f].replace(/^(in|on) the /, ''));
 
 // one square: a button that holds a pen mark. data-r / data-c place it for the arrow keys.
-function cellHTML(grid, b, i, j, label, r, c, tdCls, col) {
-  return `<td class="sq ${tdCls}" data-col="${col}"><button type="button" class="cell" data-grid="${grid}" data-r="${r}" data-c="${c}" data-b="${b}" data-i="${i}" data-j="${j}" data-v="-1" data-label="${esc(label)}" tabindex="${r === 0 && c === 0 ? 0 : -1}"></button></td>`;
+function cellHTML(b, i, j, label, r, c, tdCls, col) {
+  return `<td class="sq ${tdCls}" data-col="${col}"><button type="button" class="cell" data-grid="grid" data-r="${r}" data-c="${c}" data-b="${b}" data-i="${i}" data-j="${j}" data-v="-1" data-label="${esc(label)}" tabindex="${r === 0 && c === 0 ? 0 : -1}"></button></td>`;
 }
 
 function buildGrid() {
   const ctx = G.puzzle.ctx, el = document.getElementById('grid');
   if (!el) return;
-  const WO = weaponOrder(ctx), RO = roomOrder(ctx), line = isLine(ctx);
+  const WO = weaponOrder(ctx), RO = roomOrder(ctx), line = isLine(ctx), n = ctx.n;
   const wg = groupsOf(WO, (w) => ctx.types[w]), rg = groupsOf(RO, (r) => (line ? 'line' : ctx.floor[r]));
   const grp = (g, cls, attr, label) => `<th scope="colgroup" colspan="${g.items.length}" class="grp ${cls}" ${attr}><span>${label}</span></th>`;
   let h = '<thead><tr class="grps"><td class="corner"></td>';
-  h += wg.map((g) => grp(g, 'wpart', `data-kind="${g.key}"`, KIND_WORD[g.key])).join('') + '<td class="gap wpart"></td>';
-  h += rg.map((g) => grp(g, 'rpart', line ? '' : `data-floor="${g.key}"`, line ? 'From the engine back' : floorLabel(ctx, g.key))).join('');
+  h += wg.map((g) => grp(g, 'wpart', `data-kind="${g.key}"`, KIND_WORD[g.key])).join('') + '<td class="gap"></td>';
+  h += rg.map((g) => grp(g, 'rpart', line ? '' : `data-floor="${g.key}"`, line ? 'Engine end first' : floorLabel(ctx, g.key))).join('');
   h += '<td class="gap rpart"></td><td class="kpart"></td></tr><tr class="names"><td class="corner"><span class="sr">Suspect</span></td>';
-  h += WO.map((w) => `<th scope="col" class="c wpart" data-col="w${w}" title="${esc(ctx.weapons[w].name)}">${glyph(ctx.types[w])}<span>${shortName(ctx.weapons[w])}</span></th>`).join('') + '<td class="gap wpart"></td>';
+  h += WO.map((w) => `<th scope="col" class="c wpart" data-col="w${w}" title="${esc(ctx.weapons[w].name)}">${weaponIcon(ctx.weapons[w])}<span>${shortName(ctx.weapons[w])}</span></th>`).join('') + '<td class="gap"></td>';
   h += RO.map((r) => `<th scope="col" class="c rpart" data-col="r${r}" title="${esc(ctx.rooms[r].name)}"><span>${shortName(ctx.rooms[r])}</span></th>`).join('');
   h += '<td class="gap rpart"></td><th scope="col" class="c kpart" data-col="k"><span>Did it?</span></th></tr></thead><tbody>';
   ctx.suspects.forEach((S, s) => {
     let c = 0;
-    h += `<tr><th scope="row" data-row="s${s}"><span class="dot" style="--h:${S.hue}"></span><span class="who">${esc(S.short)}</span></th>`;
-    h += WO.map((w) => cellHTML('grid', 'sw', s, w, `${S.short} with the ${ctx.weapons[w].name}`, s, c++, 'wpart', `w${w}`)).join('') + '<td class="gap wpart"></td>';
-    h += RO.map((r) => cellHTML('grid', 'sr', s, r, `${S.short} in the ${ctx.rooms[r].name}`, s, c++, 'rpart', `r${r}`)).join('') + '<td class="gap rpart"></td>';
-    h += cellHTML('grid', 'k', s, 0, `${S.short} did it`, s, c++, 'kpart', 'k') + '</tr>';
+    h += `<tr class="srow"><th scope="row" data-row="s${s}">${face(S, 26)}<span class="who">${esc(S.short)}</span></th>`;
+    h += WO.map((w) => cellHTML('sw', s, w, `${S.short} with the ${ctx.weapons[w].name}`, s, c++, 'wpart', `w${w}`)).join('') + '<td class="gap"></td>';
+    h += RO.map((r) => cellHTML('sr', s, r, `${S.short} in the ${ctx.rooms[r].name}`, s, c++, 'rpart', `r${r}`)).join('') + '<td class="gap rpart"></td>';
+    h += cellHTML('k', s, 0, `${S.short} did it`, s, c++, 'kpart', 'k') + '</tr>';
+  });
+  // what was where: a row per room under the weapons
+  h += `<tr class="rsep"><td colspan="${2 * n + 4}"><span>${line ? 'Which weapon was in which carriage' : 'Which weapon was in which room'}</span></td></tr>`;
+  RO.forEach((r, k) => {
+    let c = 0;
+    h += `<tr class="rrow"><th scope="row" data-row="r${r}"><span class="who">${esc(ctx.rooms[r].name)}</span></th>`;
+    h += WO.map((w) => cellHTML('wr', w, r, `The ${ctx.weapons[w].name} in the ${ctx.rooms[r].name}`, n + 1 + k, c++, 'wpart', `w${w}`)).join('');
+    h += `<td class="gap"></td><td class="void rpart" colspan="${n + 2}"></td></tr>`;
   });
   el.innerHTML = h + '</tbody>';
 }
 
-// six suspects make thirteen columns. Shrink the squares until the notebook fits its column (never below
-// 30px, still a fair tap), and if that is not enough, set the labels smaller.
+// Shrink the squares until the notebook fits its column (never below 30px, still a fair tap),
+// and if that is not enough, set the labels smaller.
 function fitGrid() {
   const g = document.getElementById('grid');
   if (!g || !g.parentElement.clientWidth) return;
@@ -79,7 +89,7 @@ function paintAll() {
   if (!G) return;
   // in the warm-up, a mark the statements don't prove yet stays in pencil: drawn, but nothing follows from it
   const pencil = G.mode === 'tutorial' ? warmPencil() : null;
-  const d = pencil && pencil.size ? stripPencil() : derive(G.marks, G.puzzle.n, G.opts);
+  const d = pencil && pencil.size ? stripPencil() : derive(G.marks, G.puzzle.n, G.say);
   document.querySelectorAll('.cell').forEach((el) => {
     const b = el.dataset.b, i = +el.dataset.i, j = +el.dataset.j, p = !!pencil && pencil.has(b + i + '-' + j);
     const v = p ? userMark(b, i, j) : markOf(d, b, i, j);
@@ -88,11 +98,10 @@ function paintAll() {
     el.dataset.p = p ? '1' : '0';
     el.classList.toggle('pencil', p);
     const key = el.dataset.b + el.dataset.i + '-' + el.dataset.j;
-    if (el.dataset.cs) el.querySelector('.mk').innerHTML = penMark(v, key, +el.dataset.cs).replace('<svg class="pen"', `<svg width="${el.dataset.cs}" height="${el.dataset.cs}"`);
-    else el.innerHTML = penMark(v, key, 46);
+    el.innerHTML = penMark(v, key, 46);
     el.setAttribute('aria-label', `${el.dataset.label}: ${MARK_WORD[v]}${p ? ', in pencil' : ''}`);
   });
-  paintPins(d);
+  paintMap(d);
   paintAnswer();
   const u = document.querySelector('[data-act="undo"]');
   if (u) u.disabled = !G.undo.some((s) => s.length);
@@ -100,7 +109,7 @@ function paintAll() {
 }
 // once the case is closed, the killer's three squares are ringed in ink: did it, the weapon, the room
 function paintAnswer() {
-  const s = G.puzzle.solution, want = G.solved && G.mode !== 'tutorial' ? [['k', s.killer, 0], ['sw', s.killer, s.weapon], ['sr', s.killer, s.room]] : [];
+  const s = G.puzzle.solution, want = G.solved && G.mode !== 'tutorial' ? [['k', s.killer, 0], ['sw', s.killer, s.weapon], ['sr', s.killer, s.room], ['wr', s.weapon, s.room]] : [];
   document.querySelectorAll('#grid .cell.answer').forEach((el) => { el.classList.remove('answer'); const r = el.parentNode.querySelector('.ring'); if (r) r.remove(); });
   for (const [b, i, j] of want) {
     const el = document.querySelector(`#grid .cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`);
@@ -110,10 +119,10 @@ function paintAnswer() {
     el.setAttribute('aria-label', el.getAttribute('aria-label') + ', the answer');
   }
 }
-function userMark(b, i, j) { return b === 'k' ? G.marks.k[i] : G.marks[b][i][j]; }
+function userMark(b, i, j) { return b === 'k' ? G.marks.k[i] : b === 'say' ? G.say[i] : G.marks[b][i][j]; }
 // every change can be taken back. One step of Undo is one tap, one drag along a row, or one Clear all.
 let undoStep = null; // the step being recorded while a drag is under way
-function writeMark(b, i, j, v) { if (b === 'k') G.marks.k[i] = v; else G.marks[b][i][j] = v; }
+function writeMark(b, i, j, v) { if (b === 'k') G.marks.k[i] = v; else if (b === 'say') G.say[i] = v; else G.marks[b][i][j] = v; }
 function setMark(b, i, j, v) {
   const prev = userMark(b, i, j);
   if (prev === v) return;
@@ -135,6 +144,7 @@ function undo() {
   if (!s || G.solved) return;
   for (let k = s.length - 1; k >= 0; k--) writeMark(...s[k]);
   persist();
+  if (s.some((x) => x[0] === 'say')) renderClues();
   paintAll();
   if (G.mode === 'tutorial') setWarmNote(s.length > 1 ? 'Those marks are back.' : 'Undone.');
 }
@@ -143,10 +153,12 @@ function clearAll() {
   const s = [], n = G.puzzle.n;
   for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (G.marks[b][i][j]) s.push([b, i, j, G.marks[b][i][j]]);
   for (let i = 0; i < n; i++) if (G.marks.k[i]) s.push(['k', i, 0, G.marks.k[i]]);
+  for (let i = 0; i < n; i++) if (G.say[i]) s.push(['say', i, 0, G.say[i]]);
   if (!s.length) return;
   s.forEach(([b, i, j]) => writeMark(b, i, j, 0));
   G.undo.push(s);
   persist();
+  renderClues();
   paintAll();
   toast('Notebook cleared. Undo brings it back.');
 }

@@ -29,12 +29,17 @@ const TITLE_PLACE = {
   manor: {
     tails: ['at Blackwood', 'at the Manor', 'in the Shires', 'at Michaelmas', 'in the Fog', 'Under the Eaves', 'Behind the Gate', 'in the Rain',
       'Before the Storm', 'After the Storm', 'on the Moor', 'Down the Long Drive', 'in the Small Hours', 'Past the Lodge'],
-    owners: ['Sir Aldous', 'Blackwood Manor', 'the Blackwoods', 'the Old House'],
+    owners: ['Blackwood Manor', 'the Blackwoods', 'the Old House'],
   },
   train: {
     tails: ['on the Meridian', 'Aboard the Express', 'in the Mountains', 'at the Border', 'Through the Pass', 'Before Vienna', 'East of Zurich',
       'Beyond the Viaduct', 'in the Tunnel', 'at Full Speed', 'Past the Frontier', 'at the Eleventh Hour', 'Between Stations', 'Above the Valley'],
-    owners: ['Lucian Marlowe', 'the Meridian', 'the Express', 'the High Pass'],
+    owners: ['the Meridian', 'the Express', 'the High Pass'],
+  },
+  liner: {
+    tails: ['Aboard the Aurelia', 'at Sea', 'in Mid-Atlantic', 'off Nantucket', 'in the Fog', 'on the High Seas', 'Before New York',
+      'After Southampton', 'in the Gulf Stream', 'Under the Stars', 'on the Third Night', 'in Calm Waters', 'at Eight Bells', 'Out of Sight of Land'],
+    owners: ['the Aurelia', 'the Atlantic', 'the Crossing'],
   },
 };
 // words that would point at a method, a room or a suspect even though no name uses them
@@ -47,7 +52,9 @@ const TITLE_HINTS = `poison poisoned bitter laced drink draught cup toast port w
   secrets major army regiment debt debts money owed art painting portrait canvas niece flight wings aviator opera aria song
   singer encore count crown exile professor relic tomb crate ink diary diamond jewel jewels gem heiress fortune surgeon
   scalpel naval sea ship captain admiral anchor tide widow mourning black veil fire flame ember candle candlelight light
-  lantern signal lamp ice frost frozen thaw cold chill snow night midnight hat crest trophy curtain drapes`.split(/\s+/).filter(Boolean);
+  lantern signal lamp ice frost frozen thaw cold chill snow night midnight hat crest trophy curtain drapes
+  harpoon whale whaling fish sextant oak gin fizz almond almonds flare deck decks bridge lido pool saloon engine hold cargo purser
+  nurse cabaret broadway tennis wimbledon band hypnotist novelist`.split(/\s+/).filter(Boolean);
 const TITLE_STOP = new Set('the a an of in on at to by and his her one from for with than it is its who never without were was'.split(' '));
 
 const titleWords = (s) => String(s).replace(/&shy;/g, '').toLowerCase().split(/[^a-z]+/).filter((w) => w && !TITLE_STOP.has(w));

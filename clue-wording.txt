@@ -1,174 +1,425 @@
 adjacent
-  manor 0 say  Lady Vane and Dr. Pell were in rooms next to each other, a door or a stair apart. I could hear them both.
-  manor 0 say  Lady Vane and Dr. Pell were in rooms next to each other, a doorway or a flight of stairs apart. I could hear them both.   (every second such clue in a case)
-  manor 1 note Lady Vane's room was next to Dr. Pell's, joined by a door or a stair.
-  manor 1 note Lady Vane's room was next to Dr. Pell's, joined by a doorway or a flight of stairs.   (every second such clue in a case)
-  train 0 say  Mme Valcourt and Count Orlov were in carriages next to each other, coupled together. I could hear them both.
-  train 1 note Mme Valcourt's carriage was next to Count Orlov's, joined by a coupling.
+  manor 0 note      Lady Vane's room was next to Dr. Pell's, joined by a door or a stair.
+  manor 0 note      Lady Vane's room was next to Dr. Pell's, joined by a doorway or a flight of stairs.   (every second such clue in a case)
+  manor 0 say       Lady Vane and Dr. Pell were in rooms next to each other, a door or a stair apart.
+  manor 0 say       Lady Vane and Dr. Pell were in rooms next to each other, a doorway or a flight of stairs apart.   (every second such clue in a case)
+  manor 1 say       Lady Vane's room was next to Dr. Pell's, a door or a stair away.
+  manor 1 say       Lady Vane's room was next to Dr. Pell's, a doorway or a flight of stairs away.   (every second such clue in a case)
+  manor 0 say self  Dr. Pell and I were in rooms next to each other, a door or a stair apart.
+  manor 0 say self  Dr. Pell and I were in rooms next to each other, a doorway or a flight of stairs apart.   (every second such clue in a case)
+  manor 1 say self  My room was next to Dr. Pell's, a door or a stair away.
+  manor 1 say self  My room was next to Dr. Pell's, a doorway or a flight of stairs away.   (every second such clue in a case)
+  train 0 note      Mme Valcourt's carriage was coupled to Count Orlov's.
+  train 0 say       Mme Valcourt and Count Orlov were in carriages next to each other, coupled together.
+  train 1 say       Mme Valcourt's carriage was coupled to Count Orlov's.
+  train 0 say self  Count Orlov and I were in carriages next to each other, coupled together.
+  train 1 say self  My carriage was coupled to Count Orlov's.
+  liner 0 note      Miss Moreau's room was next to Sir Reginald's, joined by a door or a stair.
+  liner 0 note      Miss Moreau's room was next to Sir Reginald's, joined by a doorway or a flight of stairs.   (every second such clue in a case)
+  liner 0 say       Miss Moreau and Sir Reginald were in rooms next to each other, a door or a stair apart.
+  liner 0 say       Miss Moreau and Sir Reginald were in rooms next to each other, a doorway or a flight of stairs apart.   (every second such clue in a case)
+  liner 1 say       Miss Moreau's room was next to Sir Reginald's, a door or a stair away.
+  liner 1 say       Miss Moreau's room was next to Sir Reginald's, a doorway or a flight of stairs away.   (every second such clue in a case)
+  liner 0 say self  Sir Reginald and I were in rooms next to each other, a door or a stair apart.
+  liner 0 say self  Sir Reginald and I were in rooms next to each other, a doorway or a flight of stairs apart.   (every second such clue in a case)
+  liner 1 say self  My room was next to Sir Reginald's, a door or a stair away.
+  liner 1 say self  My room was next to Sir Reginald's, a doorway or a flight of stairs away.   (every second such clue in a case)
 
 ahead
-  train 0 say  I walked the train from the engine back, and passed Mme Valcourt before Count Orlov.
-  train 1 note Mme Valcourt's carriage was nearer the engine than Count Orlov's.
+  train 0 note      Mme Valcourt's carriage was nearer the engine than Count Orlov's.
+  train 0 say       Mme Valcourt's carriage was nearer the engine than Count Orlov's.
+  train 1 say       Walking back from the engine, you'd pass Mme Valcourt before Count Orlov.
+  train 0 say self  My carriage was nearer the engine than Count Orlov's.
+  train 1 say self  Walking back from the engine, you'd pass me before Count Orlov.
 
 diffFloor
-  manor 0 say  Lady Vane was on one floor and Dr. Pell on another. I'm sure of that.
-  manor 1 note Lady Vane and Dr. Pell were on different floors.
+  manor 0 note      Lady Vane and Dr. Pell were on different floors.
+  manor 0 say       Lady Vane and Dr. Pell were on different floors.
+  manor 1 say       Lady Vane was on one floor and Dr. Pell on another.
+  manor 0 say self  Dr. Pell and I were on different floors.
+  manor 1 say self  I was on one floor and Dr. Pell on another.
+  liner 0 note      Miss Moreau and Sir Reginald were on different floors.
+  liner 0 say       Miss Moreau and Sir Reginald were on different floors.
+  liner 1 say       Miss Moreau was on one floor and Sir Reginald on another.
+  liner 0 say self  Sir Reginald and I were on different floors.
+  liner 1 say self  I was on one floor and Sir Reginald on another.
 
 diffType
-  manor 0 say  Lady Vane and Dr. Pell were carrying different kinds of weapon.
-  manor 1 note Lady Vane's weapon and Dr. Pell's were of different kinds.
-  train 0 say  Mme Valcourt and Count Orlov were carrying different kinds of weapon.
-  train 1 note Mme Valcourt's weapon and Count Orlov's were of different kinds.
+  manor 0 note      Lady Vane's weapon and Dr. Pell's were of different kinds.
+  manor 0 say       Lady Vane and Dr. Pell carried different kinds of weapon.
+  manor 1 say       Lady Vane's weapon was a different kind from Dr. Pell's.
+  manor 0 say self  Dr. Pell and I carried different kinds of weapon.
+  manor 1 say self  My weapon was a different kind from Dr. Pell's.
+  train 0 note      Mme Valcourt's weapon and Count Orlov's were of different kinds.
+  train 0 say       Mme Valcourt and Count Orlov carried different kinds of weapon.
+  train 1 say       Mme Valcourt's weapon was a different kind from Count Orlov's.
+  train 0 say self  Count Orlov and I carried different kinds of weapon.
+  train 1 say self  My weapon was a different kind from Count Orlov's.
+  liner 0 note      Miss Moreau's weapon and Sir Reginald's were of different kinds.
+  liner 0 say       Miss Moreau and Sir Reginald carried different kinds of weapon.
+  liner 1 say       Miss Moreau's weapon was a different kind from Sir Reginald's.
+  liner 0 say self  Sir Reginald and I carried different kinds of weapon.
+  liner 1 say self  My weapon was a different kind from Sir Reginald's.
 
 eitherHas
-  manor 0 say  Either Lady Vane or Dr. Pell had the Moroccan Dagger. I couldn't tell you which.
-  manor 1 note The Moroccan Dagger was held by Lady Vane or by Dr. Pell.
-  train 0 say  Either Mme Valcourt or Count Orlov had the Jewelled Hat Pin. I couldn't tell you which.
-  train 1 note The Jewelled Hat Pin was held by Mme Valcourt or by Count Orlov.
+  manor 0 note      Only Lady Vane or Dr. Pell could have had the Moroccan Dagger.
+  manor 0 say       Either Lady Vane or Dr. Pell had the Moroccan Dagger.
+  manor 1 say       The Moroccan Dagger was with Lady Vane or Dr. Pell. One of the two.
+  manor 0 say self  Either Dr. Pell or I had the Moroccan Dagger.
+  manor 1 say self  The Moroccan Dagger was with Dr. Pell or me. One of the two.
+  train 0 note      Only Mme Valcourt or Count Orlov could have had the Jewelled Hat Pin.
+  train 0 say       Either Mme Valcourt or Count Orlov had the Jewelled Hat Pin.
+  train 1 say       The Jewelled Hat Pin was with Mme Valcourt or Count Orlov. One of the two.
+  train 0 say self  Either Count Orlov or I had the Jewelled Hat Pin.
+  train 1 say self  The Jewelled Hat Pin was with Count Orlov or me. One of the two.
+  liner 0 note      Only Miss Moreau or Sir Reginald could have had the Whaling Harpoon.
+  liner 0 say       Either Miss Moreau or Sir Reginald had the Whaling Harpoon.
+  liner 1 say       The Whaling Harpoon was with Miss Moreau or Sir Reginald. One of the two.
+  liner 0 say self  Either Sir Reginald or I had the Whaling Harpoon.
+  liner 1 say self  The Whaling Harpoon was with Sir Reginald or me. One of the two.
 
 eitherIn
-  manor 0 say  Someone was in the Master Bedroom: Lady Vane or Dr. Pell. It was too dark to see which.
-  manor 1 note Whoever was in the Master Bedroom, it was Lady Vane or Dr. Pell.
-  train 0 say  Someone was in the Mail Car: Mme Valcourt or Count Orlov. It was too dark to see which.
-  train 1 note Whoever was in the Mail Car, it was Mme Valcourt or Count Orlov.
+  manor 0 note      Whoever was in the Master Bedroom, it was Lady Vane or Dr. Pell.
+  manor 0 say       Either Lady Vane or Dr. Pell was in the Master Bedroom.
+  manor 1 say       Someone was in the Master Bedroom: Lady Vane or Dr. Pell. It was too dark to see which.
+  manor 0 say self  Either Dr. Pell or I was in the Master Bedroom.
+  manor 1 say self  Someone was in the Master Bedroom: Dr. Pell or me. I won’t say which.
+  train 0 note      Whoever was in the Mail Car, it was Mme Valcourt or Count Orlov.
+  train 0 say       Either Mme Valcourt or Count Orlov was in the Mail Car.
+  train 1 say       Someone was in the Mail Car: Mme Valcourt or Count Orlov. It was too dark to see which.
+  train 0 say self  Either Count Orlov or I was in the Mail Car.
+  train 1 say self  Someone was in the Mail Car: Count Orlov or me. I won’t say which.
+  liner 0 note      Whoever was in the Wheelhouse, it was Miss Moreau or Sir Reginald.
+  liner 0 say       Either Miss Moreau or Sir Reginald was in the Wheelhouse.
+  liner 1 say       Someone was in the Wheelhouse: Miss Moreau or Sir Reginald. It was too dark to see which.
+  liner 0 say self  Either Sir Reginald or I was in the Wheelhouse.
+  liner 1 say self  Someone was in the Wheelhouse: Sir Reginald or me. I won’t say which.
 
 has
-  manor 0 say  I saw Lady Vane with the Moroccan Dagger in hand. I'm certain of it.
-  manor 1 note Lady Vane had the Moroccan Dagger. The prints leave no doubt.
-  train 0 say  I saw Mme Valcourt with the Jewelled Hat Pin in hand. I'm certain of it.
-  train 1 note Mme Valcourt had the Jewelled Hat Pin. The prints leave no doubt.
+  manor 0 note      Lady Vane had the Moroccan Dagger. The prints leave no doubt.
+  manor 0 say       Lady Vane had the Moroccan Dagger. I saw it plainly.
+  manor 1 say       I saw Lady Vane with the Moroccan Dagger in hand.
+  manor 0 say self  I had the Moroccan Dagger. I won't pretend otherwise.
+  manor 1 say self  The Moroccan Dagger was mine to hold all evening.
+  train 0 note      Mme Valcourt had the Jewelled Hat Pin. The prints leave no doubt.
+  train 0 say       Mme Valcourt had the Jewelled Hat Pin. I saw it plainly.
+  train 1 say       I saw Mme Valcourt with the Jewelled Hat Pin in hand.
+  train 0 say self  I had the Jewelled Hat Pin. I won't pretend otherwise.
+  train 1 say self  The Jewelled Hat Pin was mine to hold all evening.
+  liner 0 note      Miss Moreau had the Whaling Harpoon. The prints leave no doubt.
+  liner 0 say       Miss Moreau had the Whaling Harpoon. I saw it plainly.
+  liner 1 say       I saw Miss Moreau with the Whaling Harpoon in hand.
+  liner 0 say self  I had the Whaling Harpoon. I won't pretend otherwise.
+  liner 1 say self  The Whaling Harpoon was mine to hold all evening.
 
 holdsType
-  manor 0 say  Lady Vane was carrying something sharp. I noticed it straight away.
-  manor 1 note Lady Vane's weapon was something sharp.
-  train 0 say  Mme Valcourt was carrying something sharp. I noticed it straight away.
-  train 1 note Mme Valcourt's weapon was something sharp.
+  manor 0 note      Lady Vane's weapon was something sharp.
+  manor 0 say       Lady Vane was carrying something sharp.
+  manor 1 say       Lady Vane had something sharp. I noticed it straight away.
+  manor 0 say self  I'll admit I had something sharp.
+  manor 1 say self  Yes, I had something sharp on me.
+  train 0 note      Mme Valcourt's weapon was something sharp.
+  train 0 say       Mme Valcourt was carrying something sharp.
+  train 1 say       Mme Valcourt had something sharp. I noticed it straight away.
+  train 0 say self  I'll admit I had something sharp.
+  train 1 say self  Yes, I had something sharp on me.
+  liner 0 note      Miss Moreau's weapon was something sharp.
+  liner 0 say       Miss Moreau was carrying something sharp.
+  liner 1 say       Miss Moreau had something sharp. I noticed it straight away.
+  liner 0 say self  I'll admit I had something sharp.
+  liner 1 say self  Yes, I had something sharp on me.
 
 in
-  manor 0 say  Lady Vane was in the Master Bedroom when the clock struck. I'd know that voice through any door.
-  manor 1 note A witness puts Lady Vane in the Master Bedroom at the time of the murder.
-  train 0 say  Mme Valcourt was in the Mail Car when the clock struck. I'd know that voice through any door.
-  train 1 note A witness puts Mme Valcourt in the Mail Car at the time of the murder.
+  manor 0 note      Muddy footprints put Lady Vane in the Master Bedroom.
+  manor 0 say       Lady Vane was in the Master Bedroom. I'd know that voice anywhere.
+  manor 1 say       I saw Lady Vane in the Master Bedroom.
+  manor 0 say self  I was in the Master Bedroom the whole time.
+  manor 1 say self  I never left the Master Bedroom.
+  train 0 note      Muddy footprints put Mme Valcourt in the Mail Car.
+  train 0 say       Mme Valcourt was in the Mail Car. I'd know that voice anywhere.
+  train 1 say       I saw Mme Valcourt in the Mail Car.
+  train 0 say self  I was in the Mail Car the whole time.
+  train 1 say self  I never left the Mail Car.
+  liner 0 note      Muddy footprints put Miss Moreau in the Wheelhouse.
+  liner 0 say       Miss Moreau was in the Wheelhouse. I'd know that voice anywhere.
+  liner 1 say       I saw Miss Moreau in the Wheelhouse.
+  liner 0 say self  I was in the Wheelhouse the whole time.
+  liner 1 say self  I never left the Wheelhouse.
 
 murderAdjRoom
-  manor 0 note The body was found a door or a stair away from the Master Bedroom, not in the Master Bedroom itself.
-  manor 0 note The body was found a doorway or a flight of stairs away from the Master Bedroom, not in the Master Bedroom itself.   (every second such clue in a case)
-  train 0 note The body was found in a carriage coupled to the Mail Car, not in the Mail Car itself.
+  manor 0 note      The body was found a door or a stair away from the Master Bedroom, not in the Master Bedroom itself.
+  manor 0 note      The body was found a doorway or a flight of stairs away from the Master Bedroom, not in the Master Bedroom itself.   (every second such clue in a case)
+  manor 0 say       The body was a door or a stair away from the Master Bedroom, not in it.
+  manor 0 say       The body was a doorway or a flight of stairs away from the Master Bedroom, not in it.   (every second such clue in a case)
+  manor 1 say       It happened next to the Master Bedroom, a door or a stair away. Not in it.
+  manor 1 say       It happened next to the Master Bedroom, a doorway or a flight of stairs away. Not in it.   (every second such clue in a case)
+  train 0 note      The body was found in a carriage coupled to the Mail Car, not in the Mail Car itself.
+  train 0 say       The body was in a carriage coupled to the Mail Car, not in it.
+  train 1 say       It happened right next to the Mail Car. Not in it, next to it.
+  liner 0 note      The body was found a door or a stair away from the Wheelhouse, not in the Wheelhouse itself.
+  liner 0 note      The body was found a doorway or a flight of stairs away from the Wheelhouse, not in the Wheelhouse itself.   (every second such clue in a case)
+  liner 0 say       The body was a door or a stair away from the Wheelhouse, not in it.
+  liner 0 say       The body was a doorway or a flight of stairs away from the Wheelhouse, not in it.   (every second such clue in a case)
+  liner 1 say       It happened next to the Wheelhouse, a door or a stair away. Not in it.
+  liner 1 say       It happened next to the Wheelhouse, a doorway or a flight of stairs away. Not in it.   (every second such clue in a case)
 
 murderAheadOf
-  train 0 note The killer's carriage was nearer the engine than Mme Valcourt's.
+  train 0 note      The killer's carriage was nearer the engine than Mme Valcourt's.
 
 murderBehind
-  train 0 note The killer's carriage was further from the engine than Mme Valcourt's.
+  train 0 note      The killer's carriage was further from the engine than Mme Valcourt's.
 
 murderFarFrom
-  manor 0 note It wasn't Lady Vane, nor anyone a door or a stair from Lady Vane's room.
-  manor 0 note It wasn't Lady Vane, nor anyone a doorway or a flight of stairs from Lady Vane's room.   (every second such clue in a case)
-  train 0 note It wasn't Mme Valcourt, nor anyone in a carriage coupled to Mme Valcourt's.
+  manor 0 note      It wasn't Lady Vane, nor anyone a door or a stair from Lady Vane's room.
+  manor 0 note      It wasn't Lady Vane, nor anyone a doorway or a flight of stairs from Lady Vane's room.   (every second such clue in a case)
+  train 0 note      It wasn't Mme Valcourt, nor anyone in a carriage coupled to Mme Valcourt's.
+  liner 0 note      It wasn't Miss Moreau, nor anyone a door or a stair from Miss Moreau's room.
+  liner 0 note      It wasn't Miss Moreau, nor anyone a doorway or a flight of stairs from Miss Moreau's room.   (every second such clue in a case)
 
 murderFloor
-  manor 0 note The body was found upstairs.
+  manor 0 note      The body was found upstairs.
+  manor 0 say       The body was found upstairs.
+  manor 1 say       It happened upstairs. I heard it.
+  liner 0 note      The body was found on the sun deck.
+  liner 0 say       The body was found on the sun deck.
+  liner 1 say       It happened on the sun deck. I heard it.
 
 murderNextTo
-  manor 0 note The killer was in a room next to Lady Vane's, a door or a stair away.
-  manor 0 note The killer was in a room next to Lady Vane's, a doorway or a flight of stairs away.   (every second such clue in a case)
-  train 0 note The killer was in a carriage next to Mme Valcourt's, coupled to it.
+  manor 0 note      The killer was in a room next to Lady Vane's, a door or a stair away.
+  manor 0 note      The killer was in a room next to Lady Vane's, a doorway or a flight of stairs away.   (every second such clue in a case)
+  train 0 note      The killer was in a carriage next to Mme Valcourt's, coupled to it.
+  liner 0 note      The killer was in a room next to Miss Moreau's, a door or a stair away.
+  liner 0 note      The killer was in a room next to Miss Moreau's, a doorway or a flight of stairs away.   (every second such clue in a case)
 
 murderNotAdjRoom
-  manor 0 note The body was not in the Master Bedroom, nor anywhere a door or a stair away.
-  manor 0 note The body was not in the Master Bedroom, nor anywhere a doorway or a flight of stairs away.   (every second such clue in a case)
-  train 0 note The body was not in the Mail Car, nor in a carriage coupled to it.
+  manor 0 note      The body was not in the Master Bedroom, nor anywhere a door or a stair away.
+  manor 0 note      The body was not in the Master Bedroom, nor anywhere a doorway or a flight of stairs away.   (every second such clue in a case)
+  manor 0 say       The body wasn't in the Master Bedroom, nor anywhere a door or a stair away.
+  manor 0 say       The body wasn't in the Master Bedroom, nor anywhere a doorway or a flight of stairs away.   (every second such clue in a case)
+  manor 1 say       It didn't happen in the Master Bedroom, or anywhere next to it.
+  train 0 note      The body was not in the Mail Car, nor in a carriage coupled to it.
+  train 0 say       The body wasn't in the Mail Car, nor in a carriage coupled to it.
+  train 1 say       It didn't happen in the Mail Car, or anywhere next to it.
+  liner 0 note      The body was not in the Wheelhouse, nor anywhere a door or a stair away.
+  liner 0 note      The body was not in the Wheelhouse, nor anywhere a doorway or a flight of stairs away.   (every second such clue in a case)
+  liner 0 say       The body wasn't in the Wheelhouse, nor anywhere a door or a stair away.
+  liner 0 say       The body wasn't in the Wheelhouse, nor anywhere a doorway or a flight of stairs away.   (every second such clue in a case)
+  liner 1 say       It didn't happen in the Wheelhouse, or anywhere next to it.
 
 murderNotFloor
-  manor 0 note The body was not found upstairs.
+  manor 0 note      The body was not found upstairs.
+  manor 0 say       The body wasn't found upstairs.
+  manor 1 say       Whatever happened, it didn't happen upstairs.
+  liner 0 note      The body was not found on the sun deck.
+  liner 0 say       The body wasn't found on the sun deck.
+  liner 1 say       Whatever happened, it didn't happen on the sun deck.
 
 murderNotRoom
-  manor 0 note The body was not found in the Master Bedroom.
-  train 0 note The body was not found in the Mail Car.
+  manor 0 note      The body was not found in the Master Bedroom.
+  manor 0 say       The body wasn't in the Master Bedroom.
+  manor 1 say       Nobody died in the Master Bedroom. I'd have known.
+  train 0 note      The body was not found in the Mail Car.
+  train 0 say       The body wasn't in the Mail Car.
+  train 1 say       Nobody died in the Mail Car. I'd have known.
+  liner 0 note      The body was not found in the Wheelhouse.
+  liner 0 say       The body wasn't in the Wheelhouse.
+  liner 1 say       Nobody died in the Wheelhouse. I'd have known.
 
 murderNotSuspect
-  manor 0 note Lady Vane has an alibi that holds. Not the killer.
-  train 0 note Mme Valcourt has an alibi that holds. Not the killer.
+  manor 0 note      Lady Vane has an alibi that holds. Not the killer.
+  manor 0 say       It wasn't Lady Vane. I'd stake my life on it.
+  manor 1 say       Lady Vane didn't do it. I'm certain.
+  train 0 note      Mme Valcourt has an alibi that holds. Not the killer.
+  train 0 say       It wasn't Mme Valcourt. I'd stake my life on it.
+  train 1 say       Mme Valcourt didn't do it. I'm certain.
+  liner 0 note      Miss Moreau has an alibi that holds. Not the killer.
+  liner 0 say       It wasn't Miss Moreau. I'd stake my life on it.
+  liner 1 say       Miss Moreau didn't do it. I'm certain.
 
 murderNotType
-  manor 0 note The coroner rules out a blade.
-  train 0 note The coroner rules out a blade.
+  manor 0 note      The coroner rules out a blade.
+  manor 0 say       The killer didn't use anything sharp.
+  manor 1 say       Whatever the weapon was, it wasn't a blade.
+  train 0 note      The coroner rules out a blade.
+  train 0 say       The killer didn't use anything sharp.
+  train 1 say       Whatever the weapon was, it wasn't a blade.
+  liner 0 note      The coroner rules out a blade.
+  liner 0 say       The killer didn't use anything sharp.
+  liner 1 say       Whatever the weapon was, it wasn't a blade.
 
 murderNotWeapon
-  manor 0 note The Moroccan Dagger is clean. It is not the murder weapon.
-  train 0 note The Jewelled Hat Pin is clean. It is not the murder weapon.
+  manor 0 note      The Moroccan Dagger is clean. It is not the murder weapon.
+  manor 0 say       The Moroccan Dagger wasn't the murder weapon.
+  manor 1 say       Forget the Moroccan Dagger. It's clean.
+  train 0 note      The Jewelled Hat Pin is clean. It is not the murder weapon.
+  train 0 say       The Jewelled Hat Pin wasn't the murder weapon.
+  train 1 say       Forget the Jewelled Hat Pin. It's clean.
+  liner 0 note      The Whaling Harpoon is clean. It is not the murder weapon.
+  liner 0 say       The Whaling Harpoon wasn't the murder weapon.
+  liner 1 say       Forget the Whaling Harpoon. It's clean.
 
 murderSameFloor
-  manor 0 note The killer was on the same floor as Lady Vane, but it wasn't Lady Vane.
+  manor 0 note      The killer was on the same floor as Lady Vane, but it wasn't Lady Vane.
+  liner 0 note      The killer was on the same floor as Miss Moreau, but it wasn't Miss Moreau.
+
+murderTrait
+  manor 0 note      A witness saw a tall figure hurry from the scene. The killer is tall.
+  manor 0 say       The killer was tall. I caught a glimpse.
+  manor 1 say       Whoever did it was tall. I'd swear to that.
+  train 0 note      A witness saw a tall figure hurry from the scene. The killer is tall.
+  train 0 say       The killer was tall. I caught a glimpse.
+  train 1 say       Whoever did it was tall. I'd swear to that.
+  liner 0 note      A witness saw a tall figure hurry from the scene. The killer is tall.
+  liner 0 say       The killer was tall. I caught a glimpse.
+  liner 1 say       Whoever did it was tall. I'd swear to that.
 
 murderType
-  manor 0 note The coroner found a clean, deep cut. The killer used something sharp.
-  train 0 note The coroner found a clean, deep cut. The killer used something sharp.
+  manor 0 note      The coroner found a clean, deep cut. The killer used something sharp.
+  manor 0 say       The killer used something sharp. I saw the wound.
+  manor 1 say       It was done with a blade. Anyone could see that.
+  train 0 note      The coroner found a clean, deep cut. The killer used something sharp.
+  train 0 say       The killer used something sharp. I saw the wound.
+  train 1 say       It was done with a blade. Anyone could see that.
+  liner 0 note      The coroner found a clean, deep cut. The killer used something sharp.
+  liner 0 say       The killer used something sharp. I saw the wound.
+  liner 1 say       It was done with a blade. Anyone could see that.
 
 notAdjacent
-  manor 0 say  Lady Vane and Dr. Pell weren't in rooms next to each other. You would need more than one door or stair to get from one to the other.
-  manor 0 say  Lady Vane and Dr. Pell weren't in rooms next to each other. You would need more than one doorway or flight of stairs to get from one to the other.   (every second such clue in a case)
-  manor 1 note No single door or stair joined Lady Vane's room to Dr. Pell's.
-  manor 1 note No single doorway or flight of stairs joined Lady Vane's room to Dr. Pell's.   (every second such clue in a case)
-  train 0 say  Mme Valcourt and Count Orlov weren't in carriages next to each other. There was at least one carriage between them, sealed or not.
-  train 1 note Mme Valcourt's carriage and Count Orlov's were not coupled together.
+  manor 0 note      No single door or stair joined Lady Vane's room to Dr. Pell's.
+  manor 0 note      No single doorway or flight of stairs joined Lady Vane's room to Dr. Pell's.   (every second such clue in a case)
+  manor 0 say       Lady Vane and Dr. Pell weren't in rooms next to each other.
+  manor 1 say       No single door or stair joined Lady Vane's room to Dr. Pell's.
+  manor 1 say       No single doorway or flight of stairs joined Lady Vane's room to Dr. Pell's.   (every second such clue in a case)
+  manor 0 say self  Dr. Pell and I weren't in rooms next to each other.
+  manor 1 say self  No single door or stair joined my room to Dr. Pell's.
+  manor 1 say self  No single doorway or flight of stairs joined my room to Dr. Pell's.   (every second such clue in a case)
+  train 0 note      Mme Valcourt's carriage and Count Orlov's were not coupled together.
+  train 0 say       Mme Valcourt and Count Orlov weren't in carriages next to each other.
+  train 1 say       Mme Valcourt's carriage and Count Orlov's were not coupled together.
+  train 0 say self  Count Orlov and I weren't in carriages next to each other.
+  train 1 say self  My carriage and Count Orlov's were not coupled together.
+  liner 0 note      No single door or stair joined Miss Moreau's room to Sir Reginald's.
+  liner 0 note      No single doorway or flight of stairs joined Miss Moreau's room to Sir Reginald's.   (every second such clue in a case)
+  liner 0 say       Miss Moreau and Sir Reginald weren't in rooms next to each other.
+  liner 1 say       No single door or stair joined Miss Moreau's room to Sir Reginald's.
+  liner 1 say       No single doorway or flight of stairs joined Miss Moreau's room to Sir Reginald's.   (every second such clue in a case)
+  liner 0 say self  Sir Reginald and I weren't in rooms next to each other.
+  liner 1 say self  No single door or stair joined my room to Sir Reginald's.
+  liner 1 say self  No single doorway or flight of stairs joined my room to Sir Reginald's.   (every second such clue in a case)
 
 notHas
-  manor 0 say  Lady Vane never touched the Moroccan Dagger. I'd swear to it.
-  manor 1 note Whoever had the Moroccan Dagger, it was not Lady Vane.
-  train 0 say  Mme Valcourt never touched the Jewelled Hat Pin. I'd swear to it.
-  train 1 note Whoever had the Jewelled Hat Pin, it was not Mme Valcourt.
+  manor 0 note      Whoever had the Moroccan Dagger, it was not Lady Vane. The prints don't match.
+  manor 0 say       Lady Vane never touched the Moroccan Dagger.
+  manor 1 say       Whoever had the Moroccan Dagger, it wasn't Lady Vane.
+  manor 0 say self  I never touched the Moroccan Dagger.
+  manor 1 say self  Whoever had the Moroccan Dagger, it wasn't me.
+  train 0 note      Whoever had the Jewelled Hat Pin, it was not Mme Valcourt. The prints don't match.
+  train 0 say       Mme Valcourt never touched the Jewelled Hat Pin.
+  train 1 say       Whoever had the Jewelled Hat Pin, it wasn't Mme Valcourt.
+  train 0 say self  I never touched the Jewelled Hat Pin.
+  train 1 say self  Whoever had the Jewelled Hat Pin, it wasn't me.
+  liner 0 note      Whoever had the Whaling Harpoon, it was not Miss Moreau. The prints don't match.
+  liner 0 say       Miss Moreau never touched the Whaling Harpoon.
+  liner 1 say       Whoever had the Whaling Harpoon, it wasn't Miss Moreau.
+  liner 0 say self  I never touched the Whaling Harpoon.
+  liner 1 say self  Whoever had the Whaling Harpoon, it wasn't me.
 
 notHoldsType
-  manor 0 say  Lady Vane wasn't carrying anything sharp. I checked.
-  manor 1 note Whatever Lady Vane was carrying, it wasn't a blade.
-  train 0 say  Mme Valcourt wasn't carrying anything sharp. I checked.
-  train 1 note Whatever Mme Valcourt was carrying, it wasn't a blade.
+  manor 0 note      Whatever Lady Vane carried, it wasn't a blade.
+  manor 0 say       Lady Vane wasn't carrying anything sharp.
+  manor 1 say       Lady Vane didn't have anything sharp. I checked.
+  manor 0 say self  I didn't have anything sharp. Search me.
+  manor 1 say self  I wasn't carrying anything sharp.
+  train 0 note      Whatever Mme Valcourt carried, it wasn't a blade.
+  train 0 say       Mme Valcourt wasn't carrying anything sharp.
+  train 1 say       Mme Valcourt didn't have anything sharp. I checked.
+  train 0 say self  I didn't have anything sharp. Search me.
+  train 1 say self  I wasn't carrying anything sharp.
+  liner 0 note      Whatever Miss Moreau carried, it wasn't a blade.
+  liner 0 say       Miss Moreau wasn't carrying anything sharp.
+  liner 1 say       Miss Moreau didn't have anything sharp. I checked.
+  liner 0 say self  I didn't have anything sharp. Search me.
+  liner 1 say self  I wasn't carrying anything sharp.
 
 notIn
-  manor 0 say  Lady Vane never set foot in the Master Bedroom. I'd have seen.
-  manor 1 note Lady Vane was not in the Master Bedroom.
-  train 0 say  Mme Valcourt never set foot in the Mail Car. I'd have seen.
-  train 1 note Mme Valcourt was not in the Mail Car.
+  manor 0 note      Lady Vane was not in the Master Bedroom: not one footprint.
+  manor 0 say       Lady Vane was not in the Master Bedroom.
+  manor 1 say       Lady Vane never set foot in the Master Bedroom.
+  manor 0 say self  I never set foot in the Master Bedroom.
+  manor 1 say self  I wasn't in the Master Bedroom, whatever you've heard.
+  train 0 note      Mme Valcourt was not in the Mail Car: not one footprint.
+  train 0 say       Mme Valcourt was not in the Mail Car.
+  train 1 say       Mme Valcourt never set foot in the Mail Car.
+  train 0 say self  I never set foot in the Mail Car.
+  train 1 say self  I wasn't in the Mail Car, whatever you've heard.
+  liner 0 note      Miss Moreau was not in the Wheelhouse: not one footprint.
+  liner 0 say       Miss Moreau was not in the Wheelhouse.
+  liner 1 say       Miss Moreau never set foot in the Wheelhouse.
+  liner 0 say self  I never set foot in the Wheelhouse.
+  liner 1 say self  I wasn't in the Wheelhouse, whatever you've heard.
 
 notTypeInRoom
-  manor 0 say  Whoever was in the Master Bedroom didn't have anything sharp. I'd have noticed.
-  manor 1 note The person in the Master Bedroom wasn't carrying a blade.
-  train 0 say  Whoever was in the Mail Car didn't have anything sharp. I'd have noticed.
-  train 1 note The person in the Mail Car wasn't carrying a blade.
+  manor 0 note      The person in the Master Bedroom wasn't carrying a blade.
+  train 0 note      The person in the Mail Car wasn't carrying a blade.
+  liner 0 note      The person in the Wheelhouse wasn't carrying a blade.
 
 sameFloor
-  manor 0 say  Lady Vane and Dr. Pell were on the same floor. I heard the boards creak under both of them.
-  manor 1 note Lady Vane's room and Dr. Pell's were on one floor.
+  manor 0 note      Lady Vane's room and Dr. Pell's were on one floor.
+  manor 0 say       Lady Vane and Dr. Pell were on the same floor.
+  manor 1 say       Lady Vane's room and Dr. Pell's were on one floor.
+  manor 0 say self  Dr. Pell and I were on the same floor.
+  manor 1 say self  My room and Dr. Pell's were on one floor.
+  liner 0 note      Miss Moreau's room and Sir Reginald's were on one floor.
+  liner 0 say       Miss Moreau and Sir Reginald were on the same floor.
+  liner 1 say       Miss Moreau's room and Sir Reginald's were on one floor.
+  liner 0 say self  Sir Reginald and I were on the same floor.
+  liner 1 say self  My room and Sir Reginald's were on one floor.
 
 sameType
-  manor 0 say  Lady Vane and Dr. Pell were carrying the same kind of weapon. I thought that was odd.
-  manor 1 note Lady Vane's weapon was the same kind as Dr. Pell's.
-  train 0 say  Mme Valcourt and Count Orlov were carrying the same kind of weapon. I thought that was odd.
-  train 1 note Mme Valcourt's weapon was the same kind as Count Orlov's.
+  manor 0 note      Lady Vane's weapon was the same kind as Dr. Pell's.
+  manor 0 say       Lady Vane and Dr. Pell carried the same kind of weapon.
+  manor 1 say       Lady Vane's weapon was the same kind as Dr. Pell's.
+  manor 0 say self  Dr. Pell and I carried the same kind of weapon.
+  manor 1 say self  My weapon was the same kind as Dr. Pell's.
+  train 0 note      Mme Valcourt's weapon was the same kind as Count Orlov's.
+  train 0 say       Mme Valcourt and Count Orlov carried the same kind of weapon.
+  train 1 say       Mme Valcourt's weapon was the same kind as Count Orlov's.
+  train 0 say self  Count Orlov and I carried the same kind of weapon.
+  train 1 say self  My weapon was the same kind as Count Orlov's.
+  liner 0 note      Miss Moreau's weapon was the same kind as Sir Reginald's.
+  liner 0 say       Miss Moreau and Sir Reginald carried the same kind of weapon.
+  liner 1 say       Miss Moreau's weapon was the same kind as Sir Reginald's.
+  liner 0 say self  Sir Reginald and I carried the same kind of weapon.
+  liner 1 say self  My weapon was the same kind as Sir Reginald's.
+
+traitRoom
+  manor 0 note      The footprints in the Master Bedroom are long. Whoever was there is tall.
+  train 0 note      The footprints in the Mail Car are long. Whoever was there is tall.
+  liner 0 note      The footprints in the Wheelhouse are long. Whoever was there is tall.
+
+traitWeapon
+  manor 0 note      A witness saw a tall figure with the Moroccan Dagger. Whoever had it is tall.
+  train 0 note      A witness saw a tall figure with the Jewelled Hat Pin. Whoever had it is tall.
+  liner 0 note      A witness saw a tall figure with the Whaling Harpoon. Whoever had it is tall.
 
 typeInRoom
-  manor 0 say  Whoever was in the Master Bedroom had something sharp. I saw it myself.
-  manor 1 note The person in the Master Bedroom was carrying something sharp.
-  train 0 say  Whoever was in the Mail Car had something sharp. I saw it myself.
-  train 1 note The person in the Mail Car was carrying something sharp.
+  manor 0 note      The person in the Master Bedroom was carrying something sharp.
+  train 0 note      The person in the Mail Car was carrying something sharp.
+  liner 0 note      The person in the Wheelhouse was carrying something sharp.
 
 weaponIn
-  manor 0 say  The Moroccan Dagger was in the Master Bedroom. I saw it in someone's hand.
-  manor 1 note Whoever was in the Master Bedroom was holding the Moroccan Dagger.
-  train 0 say  The Jewelled Hat Pin was in the Mail Car. I saw it in someone's hand.
-  train 1 note Whoever was in the Mail Car was holding the Jewelled Hat Pin.
+  manor 0 note      Whoever was in the Master Bedroom was holding the Moroccan Dagger.
+  train 0 note      Whoever was in the Mail Car was holding the Jewelled Hat Pin.
+  liner 0 note      Whoever was in the Wheelhouse was holding the Whaling Harpoon.
 
 weaponNear
-  manor 0 say  I saw the Moroccan Dagger one door or one stair from the Master Bedroom. Not in it.
-  manor 0 say  I saw the Moroccan Dagger one doorway or one flight of stairs from the Master Bedroom. Not in it.   (every second such clue in a case)
-  manor 1 note The Moroccan Dagger was in a room next to the Master Bedroom (a door or a stair away), not in the Master Bedroom itself.
-  manor 1 note The Moroccan Dagger was in a room next to the Master Bedroom (a doorway or a flight of stairs away), not in the Master Bedroom itself.   (every second such clue in a case)
-  train 0 say  I saw the Jewelled Hat Pin in a carriage coupled to the Mail Car. Not in it.
-  train 1 note The Jewelled Hat Pin was in a carriage next to the Mail Car (coupled to it), not in the Mail Car itself.
+  manor 0 note      The Moroccan Dagger was in a room next to the Master Bedroom (a door or a stair away), not in the Master Bedroom itself.
+  manor 0 note      The Moroccan Dagger was in a room next to the Master Bedroom (a doorway or a flight of stairs away), not in the Master Bedroom itself.   (every second such clue in a case)
+  train 0 note      The Jewelled Hat Pin was in a carriage next to the Mail Car (coupled to it), not in the Mail Car itself.
+  liner 0 note      The Whaling Harpoon was in a room next to the Wheelhouse (a door or a stair away), not in the Wheelhouse itself.
+  liner 0 note      The Whaling Harpoon was in a room next to the Wheelhouse (a doorway or a flight of stairs away), not in the Wheelhouse itself.   (every second such clue in a case)
 
 weaponNotIn
-  manor 0 say  The Moroccan Dagger was never in the Master Bedroom.
-  manor 1 note Whoever was in the Master Bedroom, they weren't holding the Moroccan Dagger.
-  train 0 say  The Jewelled Hat Pin was never in the Mail Car.
-  train 1 note Whoever was in the Mail Car, they weren't holding the Jewelled Hat Pin.
+  manor 0 note      Whoever was in the Master Bedroom, they weren't holding the Moroccan Dagger.
+  train 0 note      Whoever was in the Mail Car, they weren't holding the Jewelled Hat Pin.
+  liner 0 note      Whoever was in the Wheelhouse, they weren't holding the Whaling Harpoon.

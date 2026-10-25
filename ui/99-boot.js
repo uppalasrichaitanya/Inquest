@@ -12,22 +12,22 @@ document.addEventListener('click', (e) => {
     if (act === 'open-day') openDay(+a.dataset.n);
     else if (act === 'gentle') openGentle();
     else if (act === 'archive') { closeModal(); ARCH.weeks = 6; renderArchive(); window.scrollTo(0, 0); }
-    else if (act === 'archfilter') { LS.set('inq1:archfilter', a.dataset.f); ARCH.weeks = 6; renderArchive(); }
+    else if (act === 'archfilter') { LS.set('archfilter', a.dataset.f); ARCH.weeks = 6; renderArchive(); }
     else if (act === 'archmore') { ARCH.weeks += 6; renderArchive(); }
     else if (act === 'home') { closeModal(); homeOrLesson(); }
     else if (act === 'how') openModal(howToHTML());
     else if (act === 'theme') toggleTheme();
     else if (act === 'tutorial') startWarmup();
     else if (act === 'warm-fold') foldRules(true);
-    else if (act === 'warm-skip') { LS.set('inq1:tutorial', 1); renderHome(); }
+    else if (act === 'warm-skip') { LS.set('tutorial', 1); renderHome(); }
     else if (act === 'undo') undo();
     else if (act === 'clear') clearAll();
     else if (act === 'stats') openStats();
     else if (act === 'close') closeModal();
     else if (act === 'accuse') {
       closeModal();
-      if (a.getAttribute('aria-disabled') === 'true') setWarmNote('Not yet. Once the notebook points to one person, with their weapon and room circled, this button wakes up.');
-      else if (G.solved && G.mode !== 'tutorial') openVerdict(); // a closed case: the button reopens the finish
+      if (a.getAttribute('aria-disabled') === 'true') { setPane('notebook'); setWarmNote('Not yet. Once the notebook points to one person, with their weapon and room circled, this button wakes up.'); }
+      else if (G.solved && G.mode !== 'tutorial') openVerdict(); // a closed case: the button reopens the verdict
       else openAccuse();
     }
     else if (act === 'submit-accuse') submitAccuse();
@@ -37,14 +37,10 @@ document.addEventListener('click', (e) => {
     // the case screen
     else if (act === 'pick-stmt') { closeModal(); selectStatement(i); }
     else if (act === 'use') toggleUsed(i);
+    else if (act === 'say') setSay(+a.dataset.s, +a.dataset.v);
     else if (act === 'stmt-step') stepStatement(+a.dataset.d);
-    else if (act === 'all-stmts') openAllStatements();
     else if (act === 'nbtab') setTab(a.dataset.tab);
-    else if (act === 'wrview') {
-      G.wrView = G.wrView === 'table' ? 'plan' : 'table';
-      LS.set('inq1:wrview', G.wrView);
-      buildPlan(); paintAll(); applyFocus();
-    }
+    else if (act === 'pane') setPane(a.dataset.pane);
     return;
   }
   const pk = e.target.closest('[data-pick]');
@@ -55,17 +51,12 @@ document.addEventListener('click', (e) => {
     updateSaid();
     return;
   }
-  // a room on the plan opens its weapons at full size (a chip itself is marked where it is, on wide screens)
-  const room = e.target.closest('.room[data-room]');
-  if (room && !e.target.closest('.cell') && G) { openRoomSheet(+room.dataset.room); return; }
   if (e.target.id === 'scrim') closeModal();
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && VIEW === 'case' && G && !document.getElementById('scrim')) { e.preventDefault(); undo(); }
-  const room = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.room[data-room]');
-  if (room) { e.preventDefault(); openRoomSheet(+room.dataset.room); }
 });
 
 setInterval(() => {
@@ -74,13 +65,13 @@ setInterval(() => {
   if (G.elapsed % 5 === 0) persist();
 }, 1000);
 document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
-// crossing the phone width redraws the plan for its new size
+// crossing the phone width redraws the map for its new size
 const onPhone = () => { if (VIEW === 'case' && G) { buildPlan(); paintAll(); applyFocus(); } };
 if (PHONE.addEventListener) PHONE.addEventListener('change', onPhone); else if (PHONE.addListener) PHONE.addListener(onPhone);
 let rz = null;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (VIEW === 'case') fitGrid(); }, 100); });
 
 applyTheme();
-document.body.insertAdjacentHTML('afterbegin', KIND_DEFS);
+document.body.insertAdjacentHTML('afterbegin', KIND_DEFS + PATTERN_DEFS);
 wireGrid();
 homeOrLesson();

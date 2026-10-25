@@ -1,89 +1,128 @@
-// ---- the case screen: the story, the statements, the notebook (40-grid.js) and the floor plan (45-plan.js).
-// One statement is always "in hand": its names are lit in the notebook and on the plan. On a phone it sits in a
-// strip pinned above the notebook, so the statement and the squares it talks about are on screen together.
-const NARROW = matchMedia('(max-width: 1179px)'); // one statement at a time, in the strip
-const PHONE = matchMedia('(max-width: 760px)'); // the small plan, worked through the room sheet
-const NUM_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
-const cap = (s) => s[0].toUpperCase() + s.slice(1);
+// ---- the case screen: the story, the suspects (each with a statement), the evidence, the notebook (40-grid.js)
+// and the map (45-plan.js). One statement is always "in hand": what it talks about is lit in the notebook and on
+// the map. Wide screens show everything at once; narrower ones split the case into three panes (clues, notebook,
+// map) with a dock at the bottom, and the statement in hand rides along above the notebook.
+const WIDE = matchMedia('(min-width: 1100px)');
+const PHONE = matchMedia('(max-width: 760px)');
+const SEAL = '<svg class="seal" viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="8.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 20L27 27" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="13.5" cy="13.5" r="3.2" fill="#D9452F"/></svg>';
 
+const isSay = (c) => c.speaker !== null && c.speaker !== undefined;
+// evidence is numbered in the order it is listed; testimony goes by who said it
+function evidenceNo(i) { return G.puzzle.clues.slice(0, i + 1).filter((c) => !isSay(c)).length; }
+function clueLabel(i) {
+  const c = G.puzzle.clues[i];
+  return isSay(c) ? `${G.puzzle.ctx.suspects[c.speaker].short}’s statement` : `evidence ${evidenceNo(i)}`;
+}
 function noteLabel(c) {
-  if (c.type === 'murderType' || c.type === 'murderNotType') return 'Coroner';
-  if (c.type === 'murderNotWeapon') return 'Forensics';
-  if (c.type === 'murderNotSuspect') return 'Inspector Mallory';
-  if (c.type.startsWith('murder')) return 'Police report';
-  return 'Case notes';
+  if (c.type === 'murderType' || c.type === 'murderNotType') return ['body', 'The coroner'];
+  if (c.type === 'murderTrait') return [c.args.k === 'hair' ? 'hair' : 'body', 'On the body'];
+  if (c.type === 'murderNotWeapon') return ['lens', 'Forensics'];
+  if (c.type === 'murderNotSuspect') return ['file', 'An alibi'];
+  if (c.type.startsWith('murder')) return ['body', 'Police report'];
+  if (c.type === 'traitWeapon' || c.type === 'traitRoom') return [c.args.k === 'hair' ? 'hair' : c.args.k === 'height' ? 'print' : 'lens', 'Forensics'];
+  if (c.type === 'in' || c.type === 'notIn') return ['print', 'Footprints'];
+  if (c.type === 'has' || c.type === 'notHas') return ['lens', 'Fingerprints'];
+  return ['file', 'Case notes'];
 }
 
-// what a statement talks about: people, weapons, rooms, a kind of weapon, a floor, the killer
+// what a statement talks about: people, weapons, rooms, a kind of weapon, a floor, a trait, the killer
 function clueFocus(c) {
-  const a = c.args, f = { s: [], w: [], r: [], kind: a.t || null, floor: a.f === undefined ? null : a.f, k: c.kind === 'M' };
+  const a = c.args, ctx = G.puzzle.ctx;
+  const f = { s: [], w: [], r: [], kind: a.t || null, floor: a.f === undefined ? null : a.f, k: c.type.startsWith('murder') };
   for (const k of ['s', 'a', 'b']) if (a[k] !== undefined) f.s.push(a[k]);
   if (a.w !== undefined) f.w.push(a.w);
   if (a.r !== undefined) f.r.push(a.r);
+  if (a.k && a.v) ctx.traits.forEach((t, s) => { if (t[a.k] === a.v && !f.s.includes(s)) f.s.push(s); });
+  if (isSay(c) && !f.s.includes(c.speaker) && ['has', 'notHas', 'in', 'notIn', 'holdsType', 'notHoldsType'].includes(c.type)) f.s.push(c.speaker);
   return f;
 }
 
-function stmtParts(c, ctx) {
-  const say = c.voice === 'say', body = tokens(c.text, ctx);
-  return { text: say ? `&ldquo;${body}&rdquo;` : body, who: say ? esc(ctx.suspects[c.speaker].name) : esc(noteLabel(c)) };
+function suspectHTML(s, i, ctx) {
+  const ci = G.puzzle.clues.findIndex((c) => c.speaker === i), c = G.puzzle.clues[ci];
+  const say = G.say[i], on = ci === G.cur;
+  const tut = G.mode === 'tutorial';
+  return `<article class="suspect${on ? ' on' : ''}${say === 2 ? ' lie' : say === 1 ? ' true' : ''}" data-s="${i}" style="--h:${s.hue}">
+    <header>${face(s, 64)}<div><h3>${esc(s.name)}</h3><p class="role">${esc(cap(s.role))}</p></div></header>
+    <ul class="traits" aria-label="${esc(s.short)}: ${TRAIT_KEYS.map((k) => TRAITS[k].values[s.traits[k]]).join(', ')}">${traitChips(s)}</ul>
+    <button type="button" class="quote" data-act="pick-stmt" data-i="${ci}" aria-current="${on}"><span class="txt">${tokens(c.text, ctx)}</span></button>
+    <div class="saytools" role="group" aria-label="${esc(s.short)}’s statement is">
+      <button type="button" data-act="say" data-s="${i}" data-v="1" aria-pressed="${say === 1}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>True</button>
+      <button type="button" data-act="say" data-s="${i}" data-v="2" aria-pressed="${say === 2}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>A lie</button>
+    </div>
+    ${say === 2 ? '<span class="stamp" aria-hidden="true">Liar</span>' : ''}
+    ${tut && on ? tryLine(ci) : ''}
+  </article>`;
 }
 
-function statementHTML(c, i, ctx) {
-  const { text, who } = stmtParts(c, ctx);
-  const used = G.struck.includes(i), on = i === G.cur;
-  return `<li class="stmt${used ? ' used' : ''}${on ? ' on' : ''}" data-i="${i}">${on ? penBrace() : ''}
-    <button type="button" class="use" data-act="use" data-i="${i}" aria-pressed="${used}" aria-label="Statement ${i + 1}, ${used ? 'used' : 'not used yet'}">${used ? penTick('t' + i) : `<span>${i + 1}</span>`}</button>
-    <button type="button" class="say" data-act="pick-stmt" data-i="${i}" aria-current="${on}"><span class="txt">${text}</span><span class="who">${who}</span>${on ? tryLine(i, 'span') : ''}</button></li>`;
+function evidenceHTML(c, i, ctx) {
+  const used = G.struck.includes(i), on = i === G.cur, [icon, label] = noteLabel(c), k = evidenceNo(i);
+  return `<li class="ev${used ? ' used' : ''}${on ? ' on' : ''}" data-i="${i}">
+    <button type="button" class="use" data-act="use" data-i="${i}" aria-pressed="${used}" aria-label="Evidence ${k}, ${used ? 'used' : 'not used yet'}">${used ? penTick('t' + i) : `<span>${k}</span>`}</button>
+    <button type="button" class="evtext" data-act="pick-stmt" data-i="${i}" aria-current="${on}"><span class="evhead">${evIcon(icon)}${label}</span><span class="txt">${tokens(c.text, ctx)}</span>${G.mode === 'tutorial' && on ? tryLine(i) : ''}</button></li>`;
 }
 // the warm-up says what each statement asks of you
-function tryLine(i, tag) {
-  return G.mode === 'tutorial' && WARM_TRY[i] ? `<${tag} class="try">${WARM_TRY[i]}</${tag}>` : '';
+function tryLine(i) {
+  return G.mode === 'tutorial' && WARM_TRY[i] ? `<span class="try">${WARM_TRY[i]}</span>` : '';
+}
+
+function caseHeadHTML() {
+  const P = G.puzzle, ctx = P.ctx, w = ctx.world, tut = G.mode === 'tutorial', story = caseStory(w, P.story);
+  const when = tut ? 'The warm-up' : G.day ? `${esc(dayName(G.day))} · No. ${G.day}${G.mode === 'daily' ? '' : ' · a past case'}` : 'A practice case';
+  return `<header class="case-head band"><div class="wrap">
+      <p class="kicker">${when}<span class="sep"></span><span aria-label="Difficulty ${TIER_LEVEL[P.tier]} of 4">${dayDots(P.tier)}</span><span class="sep"></span>${esc(w.name)}, ${w.year}</p>
+      <h1>${esc(P.title)}</h1>
+      <p class="closed" id="closed-stamp">${G.solved ? 'Case closed' : ''}</p>
+      ${tut ? warmHeadHTML() : ''}
+      <div class="story">
+        <p class="scene">${esc(story.occasion)} ${esc(story.found)}</p>
+        <p class="victim"><span class="kicker">The victim</span> ${esc(story.victim.name)}, ${esc(story.victim.desc)}.</p>
+      </div>
+      <p class="rule"><b>${cap(NUM_WORD[P.n])} ${w.guests}, ${NUM_WORD[P.n]} weapons, ${NUM_WORD[P.n]} ${unitOf(ctx)}s.</b> Each had one weapon and was in one ${unitOf(ctx)}. The evidence is true. Everyone tells the truth, <em>except the killer</em>.</p>
+    </div></header>`;
 }
 
 function renderCase() {
   VIEW = 'case';
-  const P = G.puzzle, ctx = P.ctx, w = ctx.world, n = P.n, tut = G.mode === 'tutorial';
-  const unit = w.layoutKind === 'line' ? 'carriage' : 'room';
-  const when = tut ? 'The warm-up' : G.day ? `${esc(dayName(G.day))}, No. ${G.day}${G.mode === 'daily' ? '' : ' <span class="soft">(past case)</span>'}` : 'A practice case';
+  const P = G.puzzle, ctx = P.ctx, tut = G.mode === 'tutorial';
   const mk = (v, k) => `<span class="mini">${penMark(v, k, 18)}</span>`;
+  const dock = (p, label, icon) => `<button type="button" data-act="pane" data-pane="${p}" aria-pressed="${G.pane === p}">${icon}<span>${label}</span></button>`;
   app().innerHTML = `
-    <div class="bar"><button class="mark" data-act="home" aria-label="Inquest: back to the cases">Inquest</button>
-      ${tut ? '' : '<button class="quiet" data-act="hint">Hint</button>'}
-      <button class="quiet" data-act="how">How to play</button>${themeButton()}
-      <button class="btn accuse" data-act="accuse">${G.solved && !tut ? 'See the finish' : 'Name the killer'}</button></div>
-    <header class="case-head">
-      <p class="date">${when}<span class="sep"></span><span aria-label="Difficulty ${TIER_LEVEL[P.tier]} of 4">${dayDots(P.tier)}</span></p>
-      <h1>${esc(P.title)}</h1>
-      <p class="closed" id="closed-stamp">${G.solved ? 'Case closed.' : ''}</p>
-      ${tut ? warmHeadHTML() : ''}
-      <details class="story"${tut ? ' hidden' : ''}${NARROW.matches ? '' : ' open'}><summary>The story and the rules</summary>
-        <div class="story-body">
-          <p class="scene">${w.scene.map(esc).join(' ')} ${cap(NUM_WORD[n])} guests, ${NUM_WORD[n]} ${unit}s, ${NUM_WORD[n]} weapons. One of them did it.</p>
-          <p class="rules"><b>Each guest</b> had one weapon and was in one ${unit}; no two shared. <b>Every statement is true.</b> <b>The killer</b> held the murder weapon in the ${unit} where the body was found.</p>
-        </div></details>
-    </header>
-    <main class="case" id="case">
-      <section class="stmts-col" aria-labelledby="stmts-label">
-        <p class="label" id="stmts-label">Statements</p>
-        <ol class="stmts" id="stmts"></ol>
+    <div class="bar case-bar"><div class="wrap"><button class="wordmark" data-act="home" aria-label="Inquest: back to the cases">${SEAL}Inquest</button>
+      ${tut ? '' : '<button class="navlink" data-act="hint">Hint</button>'}
+      <button class="navlink" data-act="how">How to play</button>${themeButton()}
+      <button class="btn red accuse" data-act="accuse">${G.solved && !tut ? 'The verdict' : 'Accuse'}</button></div></div>
+    ${caseHeadHTML()}
+    <main class="case wrap" id="case" data-pane="${G.pane}">
+      <section class="col-clues pane" data-for="clues" aria-label="The clues">
+        <div class="sec-head"><h2>The suspects</h2><p class="soft">One of them is lying.</p></div>
+        <div class="suspects" id="suspects"></div>
+        <div class="sec-head"><h2>The evidence</h2><p class="soft">All of it is true.</p></div>
+        <ol class="evidence" id="evidence"></ol>
+        <div class="sec-head"><h2>The weapons</h2></div>
+        <ul class="weapons">${ctx.weapons.map((w, i) => `<li data-w="${i}">${weaponIcon(w)}<span><b>${esc(w.name)}</b><span class="soft">${esc(KIND_WORD[w.type])} · ${esc(w.note)}</span></span></li>`).join('')}</ul>
       </section>
-      <section class="nb-col" aria-label="Notebook">
+      <section class="col-work">
         <div class="strip" id="strip"></div>
-        <div class="notebook${tut ? ' warm' : ''}" id="nb" data-tab="${G.tab}">
-          <div class="nb-head"><p class="label">Notebook</p>
-            <p class="howmark">Tap once to rule out ${mk(1, 'leg-x')}, twice for a match ${mk(2, 'leg-o')}. Faint marks follow from yours.</p></div>
-          ${tut ? `<p class="wnote wide" aria-live="polite">${WARM.note}</p>` : ''}
-          <div class="nb-bar"><div class="tabs" role="tablist" aria-label="Notebook columns">
-            <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Weapons<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
-            <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">${cap(unit)}s<span class="cue" aria-hidden="true"></span><span class="sr cue-word">, in this statement</span></button>
+        <section class="notebook card pane" data-for="notebook" id="nb" data-tab="${G.tab}" aria-label="Notebook">
+          <div class="nb-head"><h2>Notebook</h2>
+            <p class="howmark">Tap once ${mk(1, 'leg-x')} to rule out, twice ${mk(2, 'leg-o')} for a match.</p></div>
+          ${tut ? `<p class="wnote" aria-live="polite">${WARM.note}</p>` : ''}
+          <div class="nb-bar"><div class="tabs" role="tablist" aria-label="Notebook blocks">
+            <button type="button" role="tab" data-act="nbtab" data-tab="sw" aria-selected="${G.tab === 'sw'}">Who · What</button>
+            <button type="button" role="tab" data-act="nbtab" data-tab="sr" aria-selected="${G.tab === 'sr'}">Who · Where</button>
+            <button type="button" role="tab" data-act="nbtab" data-tab="wr" aria-selected="${G.tab === 'wr'}">What · Where</button>
           </div>
-          <div class="nbtools"><button type="button" class="quiet" data-act="undo" disabled>Undo</button><button type="button" class="quiet" data-act="clear">Clear all</button></div></div>
+          <div class="nbtools"><button type="button" class="link" data-act="undo" disabled>Undo</button><button type="button" class="link" data-act="clear">Clear all</button></div></div>
           <div class="tablewrap"><table class="grid" id="grid"></table></div>
-        </div>
-        <div class="plan" id="plan"></div>
+        </section>
+        <section class="map card pane" data-for="map" id="plan" aria-label="Map"></section>
       </section>
-    </main>`;
-  renderStatements();
+    </main>
+    <nav class="dock" aria-label="Case">${dock('clues', 'Clues', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10l4 4v12H5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 11h8M8 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>')}
+      ${dock('notebook', 'Notebook', '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16" stroke="currentColor" stroke-width="1.4"/></svg>')}
+      ${dock('map', 'Map', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.4"/></svg>')}</nav>`;
+  document.body.dataset.pane = G.pane;
+  renderClues();
   buildGrid();
   buildPlan();
   paintAll();
@@ -94,53 +133,60 @@ function renderCase() {
   window.scrollTo(0, 0);
 }
 
-function renderStatements() {
-  const P = G.puzzle, list = document.getElementById('stmts');
-  if (list) list.innerHTML = P.clues.map((c, i) => statementHTML(c, i, P.ctx)).join('');
+function renderClues() {
+  const P = G.puzzle, ctx = P.ctx;
+  const sus = document.getElementById('suspects');
+  if (sus) sus.innerHTML = ctx.suspects.map((s, i) => suspectHTML(s, i, ctx)).join('');
+  const ev = document.getElementById('evidence');
+  if (ev) ev.innerHTML = P.clues.map((c, i) => (isSay(c) ? '' : evidenceHTML(c, i, ctx))).join('');
+  renderStrip();
+}
+// the statement in hand, above the notebook (narrow screens)
+function renderStrip() {
   const strip = document.getElementById('strip');
   if (!strip) return;
-  const i = G.cur, c = P.clues[i], used = G.struck.includes(i), { text, who } = stmtParts(c, P.ctx);
-  strip.innerHTML = `<div class="nav"><span class="count">Statement ${i + 1} of ${P.clues.length}</span>
-      <button type="button" class="quiet" data-act="all-stmts" aria-label="All statements">All</button>
+  const P = G.puzzle, ctx = P.ctx, i = G.cur, c = P.clues[i], say = isSay(c);
+  const who = say ? `${face(ctx.suspects[c.speaker], 30)}<span><b>${esc(ctx.suspects[c.speaker].short)}</b> says</span>` : `${evIcon(noteLabel(c)[0])}<span><b>Evidence ${evidenceNo(i)}</b> · ${noteLabel(c)[1]}</span>`;
+  strip.innerHTML = `<div class="nav"><span class="who">${who}</span>
       <button type="button" class="arrow" data-act="stmt-step" data-d="-1" aria-label="Previous statement">&lsaquo;</button>
       <button type="button" class="arrow" data-act="stmt-step" data-d="1" aria-label="Next statement">&rsaquo;</button></div>
-    <p class="txt${used ? ' used' : ''}" data-i="${i}">${text}</p>${tryLine(i, 'p')}
-    <div class="foot"><span class="who">${who}</span>
-      <button type="button" class="usebtn" data-act="use" data-i="${i}" aria-pressed="${used}">${used ? `${penTick('s' + i)}Used` : 'Done with this one'}</button></div>${G.mode === 'tutorial' ? `<p class="wnote" aria-live="polite">${WARM.note}</p>` : ''}`;
+    <p class="txt${say ? ' said' : ''}">${tokens(c.text, ctx)}</p>${G.mode === 'tutorial' ? `<p class="wnote" aria-live="polite">${WARM.note}</p>` : ''}`;
 }
 
 function selectStatement(i) {
   G.cur = i;
-  renderStatements();
+  renderClues();
   autoTab();
   applyFocus();
-  if (G.mode === 'tutorial') paintAll(); // a pencil mark may be proven now
 }
 function stepStatement(d) {
   const len = G.puzzle.clues.length;
   selectStatement((G.cur + d + len) % len);
 }
-// tick a statement off (or back on). On a phone, ticking the one in hand moves on to the next one still unused.
 function toggleUsed(i) {
   const on = !G.struck.includes(i);
   G.struck = on ? G.struck.concat(i) : G.struck.filter((x) => x !== i);
   persist();
-  if (on && i === G.cur && NARROW.matches) {
-    const len = G.puzzle.clues.length;
-    for (let k = 1; k < len; k++) { const j = (i + k) % len; if (!G.struck.includes(j)) { G.cur = j; break; } }
-  }
-  renderStatements();
-  autoTab();
+  renderClues();
   applyFocus();
 }
-function openAllStatements() {
-  const P = G.puzzle;
-  const rows = P.clues.map((c, i) => {
-    const { text, who } = stmtParts(c, P.ctx), used = G.struck.includes(i);
-    return `<li class="${used ? 'used' : ''}"><button type="button" class="pickrow" data-act="pick-stmt" data-i="${i}" aria-current="${i === G.cur}">
-      <span class="n">${used ? penTick('a' + i) : i + 1}</span><span><span class="txt">${text}</span><span class="who">${who}</span></span></button></li>`;
-  }).join('');
-  openModal(`<h2>Statements</h2><ol class="allstmts">${rows}</ol>`, 'listsheet');
+// believe a statement, or call it a lie (pressing the same again clears it)
+function setSay(s, v) {
+  G.say[s] = G.say[s] === v ? 0 : v;
+  persist();
+  renderClues();
+  paintAll();
+  applyFocus();
+  if (G.mode === 'tutorial') warmSay(s, G.say[s]);
+}
+function setPane(p) {
+  G.pane = p;
+  document.body.dataset.pane = p;
+  const m = document.getElementById('case');
+  if (m) m.dataset.pane = p;
+  document.querySelectorAll('[data-act="pane"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pane === p)));
+  if (p === 'notebook') fitGrid();
+  window.scrollTo(0, 0);
 }
 
 // light up everything the statement in hand talks about
@@ -151,20 +197,21 @@ function applyFocus() {
   const lit = (sel) => document.querySelectorAll(sel).forEach((e) => e.classList.add('hl'));
   f.s.forEach((s) => lit(`[data-row="s${s}"]`));
   const ws = f.w.concat(f.kind ? ctx.types.map((t, i) => (t === f.kind ? i : -1)).filter((i) => i >= 0) : []);
-  ws.forEach((w) => lit(`[data-col="w${w}"]`));
+  ws.forEach((w) => { lit(`[data-col="w${w}"]`); lit(`.weapons [data-w="${w}"]`); });
   if (f.kind) lit(`[data-kind="${f.kind}"]`);
   const rs = f.r.concat(f.floor === null ? [] : ctx.floor.map((fl, i) => (fl === f.floor ? i : -1)).filter((i) => i >= 0));
   rs.forEach((r) => { lit(`[data-col="r${r}"]`); lit(`[data-row="r${r}"]`); lit(`[data-room="${r}"]`); });
   if (f.floor !== null) lit(`[data-floor="${f.floor}"]`);
   if (f.k) lit('[data-col="k"]');
-  // on a phone only half the notebook shows: a dot on the other tab when the statement is about it too
-  const touches = { sw: ws.length > 0, sr: rs.length > 0 };
+  // on a phone only one block shows: a dot on the others when the statement is about them too
+  const touches = { sw: ws.length > 0 || (f.s.length > 0 && !rs.length), sr: rs.length > 0, wr: ws.length > 0 && rs.length > 0 };
   document.querySelectorAll('[data-act="nbtab"]').forEach((b) => b.classList.toggle('has-cue', b.dataset.tab !== G.tab && touches[b.dataset.tab]));
 }
-// a statement only about weapons (or only about rooms) turns the phone notebook to that half by itself
+// a statement only about weapons (or only about rooms) turns the phone notebook to that block by itself
 function autoTab() {
-  if (!NARROW.matches) return;
+  if (WIDE.matches) return;
   const f = clueFocus(G.puzzle.clues[G.cur]);
   const w = f.w.length > 0 || !!f.kind, r = f.r.length > 0 || f.floor !== null;
-  if (w !== r) setTab(w ? 'sw' : 'sr');
+  if (w && r && !f.s.length) setTab('wr');
+  else if (w !== r) setTab(w ? 'sw' : 'sr');
 }

@@ -1,13 +1,12 @@
-// ---- the floor plan. It shows what "next to" means (a doorway or a stair between two rooms, a coupling between
-// two carriages), drawn from the same adjacency the statements use (ctx.adj), so the picture can't disagree with
-// the clues. Each room carries a row of weapon chips: which weapon was in which room is worked out here, where
-// the doors are. Wide screens mark the chips directly; on a phone a tap on a room opens its weapons at full size.
-// "Show as a table" swaps the plan for the same marks as a plain rooms-by-weapons table.
+// ---- the map. It shows what "next to" means (a doorway or a stair between two rooms, a coupling between two
+// carriages), drawn from the same adjacency the statements use (ctx.adj), so the picture can't disagree with the
+// clues. As the notebook fills in, it becomes a board: each person's face appears in the room you have put them
+// in, and each weapon where you have placed it.
 const SVGNS = 'http://www.w3.org/2000/svg';
 const svgText = (s) => esc(String(s).replace(/&shy;/g, ''));
 // a room name that will not fit its room on a phone breaks where its short name allows: "Conser-" / "vatory"
 function roomLabel(room, x, y, fs, width) {
-  const parts = room.name.length * fs * 0.5 > width && room.short.includes('&shy;') ? room.short.split('&shy;') : null;
+  const parts = room.name.length * fs * 0.52 > width && room.short.includes('&shy;') ? room.short.split('&shy;') : null;
   if (!parts) return `<text class="room-name" x="${x}" y="${y}" style="font-size:${fs}px">${svgText(room.name)}</text>`;
   return `<text class="room-name" x="${x}" y="${y}" style="font-size:${fs}px"><tspan>${svgText(parts[0])}-</tspan><tspan x="${x}" dy="${fs * 1.1}">${svgText(parts[1])}</tspan></text>`;
 }
@@ -15,50 +14,38 @@ function roomLabel(room, x, y, fs, width) {
 function buildPlan() {
   const el = document.getElementById('plan');
   if (!el) return;
-  const ctx = G.puzzle.ctx, w = ctx.world, line = isLine(ctx), table = G.wrView === 'table';
-  const unit = line ? 'carriage' : 'room';
-  const key = table
-    ? `Which weapon was in which ${unit}. A square fills in by itself once you have circled a person's weapon and their ${unit}.`
-    : line
-      ? `Carriages are <i>next to</i> each other when they are coupled together. A sealed carriage in between keeps them apart. The engine is at the top. Each carriage lists the weapons that could have been in it.`
-      : `Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. Each room lists the weapons that could have been in it.`;
-  el.innerHTML = `<div class="nb-head"><p class="label">${esc(w.name)}</p>
-      <button type="button" class="quiet" data-act="wrview">${table ? 'Show on the plan' : 'Show as a table'}</button></div>
-    <p class="plan-key">${key}<span class="tapnote"> Tap a ${unit} to mark its weapons.</span></p>
-    <div class="house" id="house">${table ? wrTableHTML(ctx) : line ? trainSVG(ctx) : manorSVG(ctx)}</div>`;
+  const ctx = G.puzzle.ctx, w = ctx.world, line = isLine(ctx);
+  const key = line
+    ? 'Carriages are <i>next to</i> each other when they are coupled together. A sealed carriage in between keeps them apart.'
+    : 'Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included.';
+  el.innerHTML = `<div class="nb-head"><h2>${esc(w.name)}</h2><p class="howmark">${key}</p></div>
+    <div class="house" id="house">${line ? trainSVG(ctx) : houseSVG(ctx)}</div>`;
 }
 
-// weapon chips for one room: small marked squares, drawn with their kind
-function chipsSVG(ctx, r, x0, y0, cs, gap, perRow) {
-  return weaponOrder(ctx).map((w, k) => {
-    const x = x0 + (k % perRow) * (cs + gap), y = y0 + Math.floor(k / perRow) * (cs + gap);
-    return `<g class="cell chip" transform="translate(${x} ${y})" data-b="wr" data-i="${w}" data-j="${r}" data-v="-1" data-cs="${cs}" data-label="${esc(`The ${ctx.weapons[w].name} in the ${ctx.rooms[r].name}`)}" aria-hidden="true">
-      <rect width="${cs}" height="${cs}"/><use href="#k-${ctx.types[w]}" x="${cs * 0.2}" y="${cs * 0.2}" width="${cs * 0.6}" height="${cs * 0.6}"/><g class="mk"></g></g>`;
-  }).join('');
-}
-
-function manorSVG(ctx) {
+function houseSVG(ctx) {
   const w = ctx.world, narrow = PHONE.matches;
-  const u = narrow ? 38 : 70, rowH = narrow ? 92 : 100, padL = narrow ? 0 : 96;
+  const u = narrow ? 40 : 72, rowH = narrow ? 104 : 118, padL = narrow ? 0 : 128;
   const inPlay = new Map(ctx.roomIdx.map((wi, li) => [wi, li]));
   let cols = 0, rows = 0;
   w.rooms.forEach((r) => { cols = Math.max(cols, r.rect.x + r.rect.w); rows = Math.max(rows, r.rect.y + r.rect.h); });
   const box = (r) => ({ x: padL + r.rect.x * u, y: r.rect.y * rowH, w: r.rect.w * u, h: r.rect.h * rowH });
-  const fs = narrow ? 11 : 14, cs = narrow ? 11 : 18, gap = narrow ? 1.5 : 3;
+  const fs = narrow ? 11.5 : 14.5;
   let g = '';
-  if (!narrow) for (let y = 0; y < rows; y++) g += `<text class="floor-name" x="0" y="${y * rowH + 22}">${svgText(cap(w.floors[rows - 1 - y].replace(/^(in|on) the /, '')))}</text>`;
+  for (let y = 0; y < rows; y++) {
+    const f = rows - 1 - y;
+    if (!narrow) g += `<text class="floor-name" data-floor="${f}" x="0" y="${y * rowH + 24}">${svgText(cap(w.floors[f].replace(/^(in|on) the /, '')))}</text>`;
+  }
   w.rooms.forEach((room, wi) => {
     const b = box(room), r = inPlay.get(wi);
     if (r === undefined) {
-      g += `<rect class="ghost" x="${b.x + 3}" y="${b.y + 3}" width="${b.w - 6}" height="${b.h - 6}"/><text class="ghost-name" x="${b.x + 9}" y="${b.y + 20}" style="font-size:${fs}px">${svgText(room.name)}</text>`;
+      g += `<rect class="ghost" x="${b.x + 3}" y="${b.y + 3}" width="${b.w - 6}" height="${b.h - 6}" rx="4"/><text class="ghost-name" x="${b.x + 10}" y="${b.y + 22}" style="font-size:${fs - 1}px">${svgText(room.name)}</text>`;
       return;
     }
-    const perRow = Math.max(1, Math.floor((b.w - 12 + gap) / (cs + gap))), chipRows = Math.ceil(ctx.n / perRow);
-    g += `<g class="room" data-room="${r}" role="button" tabindex="0" aria-label="${esc(room.name)}: mark its weapons">
-      <rect class="floorspace" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}"/>
-      ${roomLabel(room, b.x + (narrow ? 5 : 9), b.y + (narrow ? 16 : 21), fs, b.w - (narrow ? 12 : 18))}
-      <g class="pins" data-pins="${r}" transform="translate(${b.x + (narrow ? 5 : 9)} ${b.y + (narrow ? 42 : 44)})"></g>
-      ${chipsSVG(ctx, r, b.x + 6, b.y + b.h - 7 - chipRows * (cs + gap) + gap, cs, gap, perRow)}</g>`;
+    g += `<g class="room" data-room="${r}">
+      <rect class="floorspace" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="url(#pt-${room.pattern})"/>
+      <rect class="lit" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}"/>
+      ${roomLabel(room, b.x + (narrow ? 6 : 10), b.y + (narrow ? 17 : 23), fs, b.w - 14)}
+      <g class="occupants" data-occ="${r}" transform="translate(${b.x + (narrow ? 5 : 9)} ${b.y + b.h - (narrow ? 34 : 44)})"></g></g>`;
   });
   // walls on top of the rooms, then the openings cut into them
   w.rooms.forEach((room, wi) => { if (inPlay.has(wi)) { const b = box(room); g += `<rect class="wall" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}"/>`; } });
@@ -67,68 +54,62 @@ function manorSVG(ctx) {
     const a = box(ctx.rooms[i]), b = box(ctx.rooms[j]);
     if (a.y === b.y) { // side by side: a doorway in the shared wall
       const x = a.x + a.w === b.x ? b.x : a.x, ym = a.y + a.h / 2;
-      g += `<line class="door" x1="${x}" y1="${ym - 13}" x2="${x}" y2="${ym + 13}"/>`;
+      g += `<line class="door" x1="${x}" y1="${ym - 15}" x2="${x}" y2="${ym + 15}"/><path class="swing" d="M${x} ${ym - 15}A30 30 0 0 1 ${x + 15} ${ym + 11}"/>`;
     } else { // one above the other: a stair through the floor, near the right end of the overlap
       const top = a.y < b.y ? a : b, bot = a.y < b.y ? b : a;
-      const hi = Math.min(top.x + top.w, bot.x + bot.w), mx = hi - (narrow ? 14 : 22), y = bot.y;
-      g += `<line class="door" x1="${mx - 12}" y1="${y}" x2="${mx + 12}" y2="${y}"/><path class="stair" d="M${mx - 9} ${y + 9}h6v-6h6v-6h6v-6"/>`;
+      const hi = Math.min(top.x + top.w, bot.x + bot.w), mx = hi - (narrow ? 16 : 26), y = bot.y;
+      g += `<line class="door" x1="${mx - 13}" y1="${y}" x2="${mx + 13}" y2="${y}"/><path class="stair" d="M${mx - 10} ${y + 10}h6.5v-6.5h6.5v-6.5h6.5v-6.5"/>`;
     }
   }
   const W = padL + cols * u, H = rows * rowH;
-  return `<svg class="plan-svg${narrow ? ' narrow' : ''}" viewBox="-2 -2 ${W + 4} ${H + 4}" role="group" aria-label="Plan of ${esc(w.name)}">${g}</svg>`;
+  return `<svg class="plan-svg${narrow ? ' narrow' : ''}" viewBox="-3 -3 ${W + 6} ${H + 6}" role="img" aria-label="Plan of ${esc(w.name)}">${g}</svg>`;
 }
 
 function trainSVG(ctx) {
   const w = ctx.world, narrow = PHONE.matches;
-  const W = narrow ? 340 : 640, rowH = narrow ? 62 : 58, h = rowH - 14, top = 30, cs = narrow ? 14 : 18, gap = narrow ? 2 : 3;
+  const W = narrow ? 340 : 600, rowH = narrow ? 66 : 70, h = rowH - 16, top = 46;
   const inPlay = new Map(ctx.roomIdx.map((wi, li) => [wi, li]));
   const order = w.rooms.map((r, wi) => wi).sort((a, b) => w.rooms[a].rect.x - w.rooms[b].rect.x);
-  let g = `<text class="floor-name" x="0" y="16">The engine</text><path class="stair" d="M${W / 2 - 40} ${top - 4}h80"/>`;
+  // the engine, then the carriages from the front back
+  let g = `<g class="engine"><path d="M${W / 2 - 70} 34V14a8 8 0 0 1 8-8h70v-4h14v4h40a8 8 0 0 1 8 8v20Z"/><circle cx="${W / 2 - 46}" cy="36" r="6"/><circle cx="${W / 2 - 10}" cy="36" r="6"/><circle cx="${W / 2 + 26}" cy="36" r="6"/></g>
+    <text class="floor-name" x="0" y="22">The engine</text>`;
   order.forEach((wi, k) => {
     const room = w.rooms[wi], r = inPlay.get(wi), y = top + k * rowH;
-    if (k) g += `<line class="coupling" x1="${W / 2}" y1="${y - 14}" x2="${W / 2}" y2="${y}"/>`;
+    g += `<line class="coupling" x1="${W / 2}" y1="${y - 16}" x2="${W / 2}" y2="${y}"/>`;
     if (r === undefined) {
-      g += `<rect class="ghost" x="3" y="${y + 3}" width="${W - 6}" height="${h - 6}"/><text class="ghost-name" x="12" y="${y + h / 2 + 5}">${svgText(room.name)}, sealed</text>`;
+      g += `<rect class="ghost" x="3" y="${y + 3}" width="${W - 6}" height="${h - 6}" rx="8"/><text class="ghost-name" x="14" y="${y + h / 2 + 5}">${svgText(room.name)}, sealed</text>`;
       return;
     }
-    const chipsW = ctx.n * (cs + gap) - gap;
-    g += `<g class="room" data-room="${r}" role="button" tabindex="0" aria-label="${esc(room.name)}: mark its weapons">
-      <rect class="floorspace" x="0" y="${y}" width="${W}" height="${h}"/><rect class="wall" x="0" y="${y}" width="${W}" height="${h}" rx="6"/>
-      <text class="room-name" x="12" y="${y + (narrow ? 18 : h / 2 + 5)}" style="font-size:${narrow ? 13 : 15}px">${svgText(room.name)}</text>
-      <g class="pins" data-pins="${r}" transform="translate(${narrow ? 12 : W * 0.36} ${y + (narrow ? 36 : h / 2 - 4)})"></g>
-      ${chipsSVG(ctx, r, W - 10 - chipsW, y + (h - cs) / 2, cs, gap, ctx.n)}</g>`;
+    g += `<g class="room" data-room="${r}">
+      <rect class="floorspace" x="0" y="${y}" width="${W}" height="${h}" rx="8" fill="url(#pt-${room.pattern})"/><rect class="lit" x="0" y="${y}" width="${W}" height="${h}" rx="8"/>
+      <rect class="wall" x="0" y="${y}" width="${W}" height="${h}" rx="8"/>
+      <text class="room-name" x="14" y="${y + h / 2 + 5}" style="font-size:${narrow ? 13 : 15}px">${svgText(room.name)}</text>
+      <g class="occupants" data-occ="${r}" transform="translate(${narrow ? 128 : 220} ${y + (h - 30) / 2})"></g></g>`;
   });
-  const H = top + order.length * rowH - 14;
-  return `<svg class="plan-svg train${narrow ? ' narrow' : ''}" viewBox="-2 -2 ${W + 4} ${H + 4}" role="group" aria-label="${esc(w.name)}, from the engine back">${g}</svg>`;
+  const H = top + order.length * rowH - 16;
+  return `<svg class="plan-svg train${narrow ? ' narrow' : ''}" viewBox="-3 -3 ${W + 6} ${H + 6}" role="img" aria-label="${esc(w.name)}, from the engine back">${g}</svg>`;
 }
 
-// who is placed in each room: once a person's room is circled, their name appears there
-function paintPins(d) {
-  const ctx = G.puzzle.ctx;
-  document.querySelectorAll('[data-pins]').forEach((p) => {
-    const r = +p.dataset.pins, who = ctx.suspects.map((s, i) => i).filter((s) => d.sr[s][r] === 2 || d.sr[s][r] === 4);
-    p.innerHTML = who.map((s, k) => `<g transform="translate(0 ${k * 15})"><circle cx="4" cy="-4" r="4" style="fill:hsl(${ctx.suspects[s].hue} 34% 52%)"/><text class="pin" x="12" y="0">${esc(ctx.suspects[s].short)}</text></g>`).join('');
+// who and what is in each room, as the notebook has it so far: faces for people, icons for weapons
+function paintMap(d) {
+  const ctx = G.puzzle.ctx, yes = (v) => v === 2 || v === 4, narrow = PHONE.matches, sz = narrow ? 26 : 32, gap = 4;
+  document.querySelectorAll('[data-occ]').forEach((p) => {
+    const r = +p.dataset.occ;
+    const who = ctx.suspects.map((s, i) => i).filter((s) => yes(d.sr[s][r]));
+    const what = ctx.weapons.map((w, i) => i).filter((w) => yes(d.wr[w][r]));
+    let x = 0, out = '';
+    for (const s of who) {
+      const S = ctx.suspects[s];
+      out += `<g transform="translate(${x} 0)"><title>${esc(S.name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}" style="fill:hsl(${S.hue} 42% var(--face-l))"/><svg x="0" y="0" width="${sz}" height="${sz}" viewBox="7 3 50 50"><clipPath id="clip${r}-${s}"><circle cx="32" cy="28" r="25"/></clipPath><g clip-path="url(#clip${r}-${s})">${portraitSVG(S).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g></svg><circle class="pin-ring" cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2 - .5}"/></g>`;
+      x += sz + gap;
+    }
+    for (const w of what) {
+      out += `<g transform="translate(${x} 0)" class="pin-w"><title>${esc(ctx.weapons[w].name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}"/><svg x="${sz * 0.18}" y="${sz * 0.18}" width="${sz * 0.64}" height="${sz * 0.64}" viewBox="0 0 24 24" fill="currentColor">${WEAPON_ICONS[ctx.weapons[w].id]}</svg></g>`;
+      x += sz + gap;
+    }
+    p.innerHTML = out;
   });
-}
-
-// the fallback: the same marks as a rooms-by-weapons table
-function wrTableHTML(ctx) {
-  const WO = weaponOrder(ctx);
-  let h = `<table class="grid wr"><thead><tr class="names"><td class="corner"><span class="sr">${isLine(ctx) ? 'Carriage' : 'Room'}</span></td>`;
-  h += WO.map((w) => `<th scope="col" class="c" data-col="w${w}" title="${esc(ctx.weapons[w].name)}">${glyph(ctx.types[w])}<span>${shortName(ctx.weapons[w])}</span></th>`).join('') + '</tr></thead><tbody>';
-  roomOrder(ctx).forEach((r, row) => {
-    h += `<tr><th scope="row" data-row="r${r}"><span class="who">${esc(ctx.rooms[r].name)}</span></th>`;
-    h += WO.map((w, c) => cellHTML('wrt', 'wr', w, r, `The ${ctx.weapons[w].name} in the ${ctx.rooms[r].name}`, row, c, '', `w${w}`)).join('') + '</tr>';
-  });
-  return h + '</tbody></table>';
-}
-
-// a room's weapons at full size: the phone's way to work the plan, and the keyboard's
-function openRoomSheet(r) {
-  const ctx = G.puzzle.ctx, room = ctx.rooms[r], unit = isLine(ctx) ? 'carriage' : 'room';
-  const rows = weaponOrder(ctx).map((w, k) => `<li><button type="button" class="cell" data-grid="room" data-r="${k}" data-c="0" data-b="wr" data-i="${w}" data-j="${r}" data-v="-1" data-label="${esc(`The ${ctx.weapons[w].name} in the ${room.name}`)}" tabindex="${k ? -1 : 0}"></button>
-    <span class="wname">${glyph(ctx.types[w])}${esc(ctx.weapons[w].name)} <i>${KIND_WORD[ctx.types[w]].toLowerCase()}</i></span></li>`).join('');
-  openModal(`<h2>${esc(room.name)}</h2><p class="soft">Which weapon was in this ${unit}? Tap once to rule one out, twice for the one that was.</p>
-    <ul class="wr-list">${rows}</ul><div class="actions"><button type="button" class="btn" data-act="close">Done</button></div>`, 'roomsheet');
-  paintAll();
+  // the scene of the crime, once the case is closed
+  const s = G.puzzle.solution;
+  document.querySelectorAll('.room').forEach((el) => el.classList.toggle('scene', G.solved && G.mode !== 'tutorial' && +el.dataset.room === s.room));
 }

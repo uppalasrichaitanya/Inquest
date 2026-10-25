@@ -1,10 +1,30 @@
+let bad = 0;
 const E = require('./dist/engine.js');
+const { permutations } = E;
+// the rules of a case: a statement from every suspect, true unless the speaker is the killer; evidence that is
+// all true and all needed; and a lie that shows (taken at their word, the statements and evidence clash)
+function checkCase(name, p, minimal) {
+  const n = p.n, t = p.truth, { perms, inv } = permutations(n);
+  const pwi = inv[perms.findIndex((x) => x.join() === t.pw.join())], pri = inv[perms.findIndex((x) => x.join() === t.pr.join())];
+  const says = p.clues.filter((c) => c.speaker !== null), ev = p.clues.filter((c) => c.speaker === null);
+  if (says.map((c) => c.speaker).sort().join() !== [...Array(n).keys()].join()) { console.log('NOT ONE STATEMENT EACH', name); bad++; }
+  for (const c of says) if (E.statementTrue(c, t, pwi, pri) !== (c.speaker !== t.m)) { console.log('STATEMENT TRUTH WRONG', name, c.type, c.speaker); bad++; }
+  for (const c of ev) if (!E.clueHolds(c, t, pwi, pri)) { console.log('FALSE EVIDENCE', name, c.type); bad++; }
+  if (E.solveCount(p.ctx, says.map((c) => c.base).concat(ev), 0).count !== 0) { console.log('THE LIE DOES NOT SHOW', name); bad++; }
+  for (const c of p.clues) {
+    if (/undefined|NaN|\[object|\{/.test(E.plainText(c.text, p.ctx))) { console.log('BAD TEXT', name, c.text); bad++; }
+    if ((c.voice === 'say') !== (c.speaker !== null)) { console.log('VOICE AND SPEAKER DISAGREE', name); bad++; }
+  }
+  if (minimal) for (const c of ev) {
+    if (E.solveCount(p.ctx, p.clues.filter((x) => x !== c), 1).count === 1) { console.log('REDUNDANT EVIDENCE', name, c.type); bad++; }
+  }
+}
 const N = +process.argv[2] || 40;
 const tiers = ['constable', 'detective', 'inspector', 'mastermind'];
-let bad = 0;
+const N_FAST = { mastermind: Math.ceil(N / 4) }; // Sundays take longer to build
 for (const tier of tiers) {
   const stats = { ms: [], clues: [], fam: {}, worlds: {}, types: {} };
-  for (let i = 0; i < N; i++) {
+  for (let i = 0; i < (N_FAST[tier] || N); i++) {
     const seed = 'test-' + i;
     const t0 = Date.now();
     let p;
@@ -12,22 +32,15 @@ for (const tier of tiers) {
     stats.ms.push(Date.now() - t0);
     stats.clues.push(p.clues.length);
     stats.worlds[p.worldId] = (stats.worlds[p.worldId] || 0) + 1;
-    // independent checks
+    // independent checks: one whole world, and it is the hidden truth
     const r = E.solveCount(p.ctx, p.clues);
+    const t = p.truth;
     if (r.count !== 1) { console.log('NOT UNIQUE', tier, seed, r.count); bad++; }
-    else if (r.answers[0].killer !== p.solution.killer || r.answers[0].weapon !== p.solution.weapon || r.answers[0].room !== p.solution.room) {
-      console.log('WRONG ANSWER', tier, seed); bad++;
-    }
+    else if (r.worlds[0].m !== t.m || r.worlds[0].pw.join() !== t.pw.join() || r.worlds[0].pr.join() !== t.pr.join()) { console.log('WRONG ANSWER', tier, seed); bad++; }
+    checkCase(tier + ' ' + seed, p, true);
     for (const c of p.clues) {
       stats.fam[c.family] = (stats.fam[c.family] || 0) + 1;
       stats.types[c.type] = (stats.types[c.type] || 0) + 1;
-      if (/undefined|NaN|\[object/.test(E.plainText(c.text, p.ctx))) { console.log('BAD TEXT', c.text); bad++; }
-      if (c.voice === 'say' && c.speaker === null) { console.log('NO SPEAKER', seed); bad++; }
-    }
-    // minimality: dropping any clue must break uniqueness
-    for (let k = 0; k < p.clues.length; k++) {
-      const rest = p.clues.filter((_, j) => j !== k);
-      if (E.solveCount(p.ctx, rest, 1).count === 1) { console.log('REDUNDANT CLUE', tier, seed, p.clues[k].type); bad++; }
     }
     // determinism
     if (i < 3) {
@@ -51,13 +64,8 @@ for (const [src, spec] of shipped) {
   let p;
   try { p = E.importPuzzle(spec); } catch (e) { console.log('IMPORT FAIL', src, spec.s, e.message); bad++; continue; }
   const r = E.solveCount(p.ctx, p.clues);
-  if (r.count !== 1 || r.answers[0].killer !== p.solution.killer || r.answers[0].weapon !== p.solution.weapon || r.answers[0].room !== p.solution.room) { console.log('BANK CASE WRONG', src, spec.s, r.count); bad++; }
-  for (const c of p.clues) if (/undefined|NaN|\[object/.test(E.plainText(c.text, p.ctx))) { console.log('BAD TEXT', src, c.text); bad++; }
-  if (src === 'tutorial' || checked % 10 === 0) { // minimality is slower; sample the bank, always check the tutorial
-    for (let k = 0; k < p.clues.length; k++) {
-      if (E.solveCount(p.ctx, p.clues.filter((_, j) => j !== k), 1).count === 1) { console.log('REDUNDANT CLUE', src, spec.s, p.clues[k].type); bad++; }
-    }
-  }
+  if (r.count !== 1 || r.worlds[0].m !== spec.m || r.worlds[0].pw.join() !== spec.pw.join() || r.worlds[0].pr.join() !== spec.pr.join()) { console.log('BANK CASE WRONG', src, spec.s, r.count); bad++; }
+  checkCase(src + ' ' + spec.s, p, src === 'tutorial' || checked % 10 === 0); // minimality is slower; sample the bank, always check the tutorial
   checked++;
 }
 console.log(`\n== shipped: ${checked} cases checked (tutorial + bank)`);

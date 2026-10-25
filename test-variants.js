@@ -1,44 +1,41 @@
-// Guards clue rewording (src/25-text.js). Banked cases store a variant index per clue, so for every clue type
-// the number of variants and their voice ('say' = a witness speaks, 'note' = a case note) must stay exactly as
+// Guards clue rewording (src/25-text.js). Banked cases store a variant index per clue, so for every clue type the
+// number of evidence wordings ('note') and testimony wordings ('say', spoken by a suspect) must stay exactly as
 // recorded in clue-variants.json. The wording itself may change freely.
 //   node test-variants.js           check
 //   node test-variants.js --update  re-record (only when a change of shape is intended AND the bank is re-mined)
 //   node test-variants.js --wording re-record clue-wording.txt after rewording, then review its diff
 // clue-wording.txt holds every variant written out with real names, in each setting, so a rewording shows as a diff.
-// Also checks every shipped clue: its variant exists, and it has a speaker exactly when its voice is 'say'.
+// Testimony is written out twice: about someone else, and about the speaker ("I was in the Library").
+// Also checks every shipped clue: its variant exists, and only testimony types have a speaker.
 const fs = require('fs');
 const E = require('./dist/engine.js');
 const SNAP = __dirname + '/clue-variants.json';
+const WORDS = __dirname + '/clue-wording.txt';
 
-// one context per setting, so every clue type turns up (floors only exist in the manor, "ahead" only on the train)
-const shapes = {};
+const shapes = {}, seen = {};
 for (const w of Object.keys(E.WORLDS)) {
-  const pick = [0, 1, 2, 3, 4, 5];
+  const pick = [0, 1, 2, 3, 4];
   const ctx = E.buildCtx(E.WORLDS[w], pick, pick, pick);
   for (const c of E.enumerateClues(ctx)) {
-    if (shapes[c.type]) continue;
-    shapes[c.type] = E.clueVariants(c, ctx).map((v) => v[0]);
+    const say = E.TESTIMONY_TYPES.includes(c.type);
+    if (!shapes[c.type]) shapes[c.type] = { note: E.clueVariants(c, ctx, null).length, say: say ? E.clueVariants(c, ctx, 4).length : 0 };
+    if (seen[c.type + w]) continue;
+    const lines = [];
+    const put = (tag, sp) => E.clueVariants(c, ctx, sp).forEach(([voice, text], i) => {
+      lines.push(`  ${w.padEnd(5)} ${i} ${tag.padEnd(9)} ${E.plainText(text, ctx)}`);
+      const second = E.varyWording([{ text: 'a door or a stair' }, { text }])[1].text;
+      if (second !== text) lines.push(`  ${w.padEnd(5)} ${i} ${tag.padEnd(9)} ${E.plainText(second, ctx)}   (every second such clue in a case)`);
+    });
+    put('note', null);
+    if (say) {
+      put('say', 4);
+      const about = c.args.s !== undefined ? c.args.s : c.args.a;
+      if (about !== undefined && c.type !== 'murderNotSuspect') put('say self', about);
+    }
+    seen[c.type + w] = lines;
   }
 }
 const now = Object.fromEntries(Object.keys(shapes).sort().map((k) => [k, shapes[k]]));
-
-// every variant of every type, written out with real names (the first clue of each type in each setting)
-const WORDS = __dirname + '/clue-wording.txt';
-const seen = {};
-for (const w of Object.keys(E.WORLDS)) {
-  const pick = [0, 1, 2, 3, 4, 5];
-  const ctx = E.buildCtx(E.WORLDS[w], pick, pick, pick);
-  for (const c of E.enumerateClues(ctx)) {
-    if (seen[c.type + w]) continue;
-    seen[c.type + w] = E.clueVariants(c, ctx).flatMap(([voice, text], i) => {
-      const lines = [`  ${w.padEnd(5)} ${i} ${voice.padEnd(4)} ${E.plainText(text, ctx)}`];
-      // the same variant as it reads when it is the second "door or stair" clue in a case
-      const second = E.varyWording([{ text: 'a door or a stair' }, { text }])[1].text;
-      if (second !== text) lines.push(`  ${w.padEnd(5)} ${i} ${voice.padEnd(4)} ${E.plainText(second, ctx)}   (every second such clue in a case)`);
-      return lines;
-    });
-  }
-}
 const wording = Object.keys(now).map((k) => [k, ...Object.keys(E.WORLDS).flatMap((w) => seen[k + w] || [])].join('\n')).join('\n\n') + '\n';
 if (process.argv.includes('--wording')) { fs.writeFileSync(WORDS, wording); console.log('recorded clue-wording.txt: review it with git diff'); }
 
@@ -64,9 +61,8 @@ let clues = 0;
 for (const [src, spec] of shipped) {
   for (const [type, , vi, speaker] of spec.c) {
     clues++;
-    const voices = now[type];
-    if (!voices || vi >= voices.length) { console.log('NO SUCH VARIANT', src, spec.s, type, vi); bad++; continue; }
-    if ((voices[vi] === 'say') !== (speaker !== null)) { console.log('VOICE MISMATCH', src, spec.s, type, vi, voices[vi], speaker); bad++; }
+    const shape = now[type], say = speaker !== null && speaker !== undefined;
+    if (!shape || vi >= (say ? shape.say : shape.note)) { console.log('NO SUCH VARIANT', src, spec.s, type, vi, say ? 'say' : 'note'); bad++; }
   }
 }
 console.log(`shipped clues: ${clues} in ${shipped.length} cases checked`);

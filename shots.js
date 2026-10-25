@@ -2,7 +2,7 @@
 // and checks the basics every screen must pass: no horizontal scroll, no script errors, every button named.
 //   node shots.js                      -> dist/index.html
 //   node shots.js mockup/casebook.html -> any page in this folder
-//   node shots.js --set inq1:tutorial=1 -> seed localStorage first (repeatable), e.g. to skip the first-visit lesson
+//   node shots.js --set inq2:tutorial=1 -> seed localStorage first (repeatable), e.g. to skip the first-visit lesson
 // Writes playtest/latest/<page>-<size>-<scheme>.png (and -full.png for the whole page). Exit code 1 on any failure.
 // Drives the Edge or Chrome already installed (playwright-core, no browser download).
 const fs = require('fs'), path = require('path');

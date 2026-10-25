@@ -80,7 +80,18 @@ function permutations(n) {
 // ---- 10-worlds-manor.js
 // World data. Rooms carry a rectangle on a grid; adjacency and floors are derived from geometry,
 // so the floor plan the player sees is exactly the one the clues talk about.
+// Every suspect has three traits the evidence can point at (height, hand, hair), printed on their card,
+// a look for their portrait, and a motive the reveal uses when they turn out to be the killer.
+// Victims, occasions and the moment of discovery vary from case to case; {v} is the victim's short name.
 const WORLDS = {};
+
+// how the cards and the evidence talk about a trait
+const TRAITS = {
+  height: { label: 'Height', values: { tall: 'tall', short: 'short' } },
+  hand: { label: 'Hand', values: { left: 'left-handed', right: 'right-handed' } },
+  hair: { label: 'Hair', values: { dark: 'dark-haired', fair: 'fair-haired', red: 'red-haired', grey: 'grey-haired' } },
+};
+const TRAIT_KEYS = ['height', 'hand', 'hair'];
 
 WORLDS.manor = {
   id: 'manor',
@@ -88,21 +99,38 @@ WORLDS.manor = {
   year: '1926',
   tagline: 'A storm, a locked gate, and a dinner nobody finishes.',
   layoutKind: 'dollhouse',
+  guests: 'guests',
   floors: ['in the cellar', 'on the ground floor', 'upstairs'],
   relations: ['adjacent', 'floor'],
-  victim: { name: 'Sir Aldous Blackwood', desc: 'master of the manor and keeper of far too many secrets' },
-  scene: [
-    'The storm cut the telephone wires at nine. By midnight the gate was a river of mud.',
-    'Sir Aldous was found at one in the morning, and the household has been standing very still ever since.',
+  victims: [
+    { name: 'Sir Aldous Blackwood', short: 'Sir Aldous', desc: 'master of the manor, and keeper of far too many secrets' },
+    { name: 'Lady Agatha Blackwood', short: 'Lady Agatha', desc: 'the dowager, who held the purse strings and never let go' },
+    { name: 'Mr. Percival Gilt', short: 'Mr. Gilt', desc: 'the family solicitor, who arrived with a new will in his briefcase' },
+    { name: 'Colonel Hector Ames', short: 'the Colonel', desc: 'a house guest who collected other people’s letters' },
+    { name: 'Madame Sibyl Quist', short: 'Madame Quist', desc: 'a medium, hired to talk to the dead and suspected of listening to the living' },
+  ],
+  occasions: [
+    '{v} had called the whole household together to hear a new will read. Nobody liked the sound of that.',
+    'It was the night of the midsummer ball, and {v} had promised an announcement at midnight.',
+    '{v} insisted on a séance after dinner, to ask the dead a few pointed questions.',
+    'The storm cut the telephone wires at nine. {v} called it the perfect night for cards, and dealt everyone in.',
+    'It was {v}’s birthday, and every guest had brought a present and a grudge.',
+    'A shooting weekend, said {v}. Then the rain came, and nobody was allowed to leave.',
+  ],
+  found: [
+    '{v} was found at one in the morning, and the house has been holding its breath ever since.',
+    'At the stroke of midnight there was a crash, and then a scream. {v} was dead.',
+    'By breakfast {v} was dead, and the gate was a river of mud.',
+    'The butler found {v} at dawn, and dropped the tea tray.',
   ],
   rooms: [
-    { id: 'bedroom', name: 'Master Bedroom', short: 'Bed&shy;room', rect: { x: 0, y: 0, w: 5, h: 1 } },
-    { id: 'study', name: 'Study', short: 'Study', rect: { x: 5, y: 0, w: 4, h: 1 } },
-    { id: 'kitchen', name: 'Kitchen', short: 'Kitchen', rect: { x: 0, y: 1, w: 2, h: 1 } },
-    { id: 'dining', name: 'Dining Hall', short: 'Dining Hall', rect: { x: 2, y: 1, w: 3, h: 1 } },
-    { id: 'library', name: 'Library', short: 'Library', rect: { x: 5, y: 1, w: 2, h: 1 } },
-    { id: 'conservatory', name: 'Conservatory', short: 'Conser&shy;vatory', rect: { x: 7, y: 1, w: 2, h: 1 } },
-    { id: 'cellar', name: 'Wine Cellar', short: 'Wine Cellar', rect: { x: 0, y: 2, w: 2, h: 1 } },
+    { id: 'bedroom', name: 'Master Bedroom', short: 'Bed&shy;room', pattern: 'carpet', rect: { x: 0, y: 0, w: 5, h: 1 } },
+    { id: 'study', name: 'Study', short: 'Study', pattern: 'rug', rect: { x: 5, y: 0, w: 4, h: 1 } },
+    { id: 'kitchen', name: 'Kitchen', short: 'Kitchen', pattern: 'checker', rect: { x: 0, y: 1, w: 2, h: 1 } },
+    { id: 'dining', name: 'Dining Hall', short: 'Dining Hall', pattern: 'parquet', rect: { x: 2, y: 1, w: 3, h: 1 } },
+    { id: 'library', name: 'Library', short: 'Library', pattern: 'planks', rect: { x: 5, y: 1, w: 2, h: 1 } },
+    { id: 'conservatory', name: 'Conservatory', short: 'Conser&shy;vatory', pattern: 'leaves', rect: { x: 7, y: 1, w: 2, h: 1 } },
+    { id: 'cellar', name: 'Wine Cellar', short: 'Wine Cellar', pattern: 'stone', rect: { x: 0, y: 2, w: 2, h: 1 } },
   ],
   weapons: [
     { id: 'dagger', name: 'Moroccan Dagger', short: 'Dagger', type: 'blade', note: 'taken from the trophy wall' },
@@ -114,14 +142,30 @@ WORLDS.manor = {
     { id: 'revolver', name: 'Service Revolver', short: 'Revol&shy;ver', type: 'firearm', note: 'one chamber empty' },
   ],
   suspects: [
-    { id: 'vane', name: 'Lady Ottoline Vane', short: 'Lady Vane', role: "the widow's sister, always in black", hue: 340 },
-    { id: 'pell', name: 'Dr. Rufus Pell', short: 'Dr. Pell', role: 'family physician, never without his bag', hue: 200 },
-    { id: 'crisp', name: 'Major Barnaby Crisp', short: 'Major Crisp', role: 'retired officer who owed Sir Aldous money', hue: 28 },
-    { id: 'fenn', name: 'Miss Odalys Fenn', short: 'Miss Fenn', role: 'private secretary; knows every secret', hue: 160 },
-    { id: 'thorne', name: 'Reverend Silas Thorne', short: 'Rev. Thorne', role: 'parish vicar, sermon notes in his pocket', hue: 265 },
-    { id: 'marrow', name: 'Mrs. Edith Marrow', short: 'Mrs. Marrow', role: 'housekeeper of thirty years', hue: 95 },
-    { id: 'dray', name: 'Cassius Dray', short: 'Mr. Dray', role: 'art dealer with a suspiciously fresh Vermeer', hue: 48 },
-    { id: 'lark', name: 'Imogen Lark', short: 'Miss Lark', role: 'niece, aviator, arrived by motorcycle', hue: 5 },
+    { id: 'vane', name: 'Lady Ottoline Vane', short: 'Lady Vane', role: 'the widow’s sister, always in black', hue: 340,
+      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#EBC9AE', hair: 'bun', acc: ['veil', 'pearls'] },
+      motive: 'had been promised the house for twenty years, and had just learned that {v} meant to sell it' },
+    { id: 'pell', name: 'Dr. Rufus Pell', short: 'Dr. Pell', role: 'family physician, never without his bag', hue: 200,
+      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E3B48F', hair: 'bald', acc: ['glasses', 'moustache'] },
+      motive: 'had signed a death certificate years ago that {v} knew to be false' },
+    { id: 'crisp', name: 'Major Barnaby Crisp', short: 'Major Crisp', role: 'retired officer, in debt to half the county', hue: 28,
+      traits: { height: 'tall', hand: 'left', hair: 'grey' }, look: { skin: '#D99F7E', hair: 'short', acc: ['moustache', 'medal'] },
+      motive: 'owed {v} a small fortune, and {v} had started asking for it back' },
+    { id: 'fenn', name: 'Miss Odalys Fenn', short: 'Miss Fenn', role: 'private secretary; knows every secret', hue: 160,
+      traits: { height: 'short', hand: 'left', hair: 'dark' }, look: { skin: '#B98563', hair: 'bob', acc: ['glasses'] },
+      motive: 'had been quietly forging {v}’s signature for a year, and {v} had begun to notice' },
+    { id: 'thorne', name: 'Reverend Silas Thorne', short: 'Rev. Thorne', role: 'parish vicar, sermon notes in his pocket', hue: 265,
+      traits: { height: 'tall', hand: 'right', hair: 'fair' }, look: { skin: '#F0D2BC', hair: 'slick', acc: ['collar'] },
+      motive: 'had spent the church roof fund at the races, and {v} held the receipts' },
+    { id: 'marrow', name: 'Mrs. Edith Marrow', short: 'Mrs. Marrow', role: 'housekeeper of thirty years', hue: 95,
+      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E8BFA0', hair: 'curly', acc: ['brooch'] },
+      motive: 'had been dismissed by {v} that very morning, after thirty years and without a reference' },
+    { id: 'dray', name: 'Cassius Dray', short: 'Mr. Dray', role: 'art dealer with a suspiciously fresh Vermeer', hue: 48,
+      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#C99272', hair: 'slick', acc: ['monocle', 'bowtie'] },
+      motive: 'had sold {v} a Vermeer that was still drying, and {v} had sent it to be examined' },
+    { id: 'lark', name: 'Imogen Lark', short: 'Miss Lark', role: 'niece, aviator, arrived by motorcycle', hue: 5,
+      traits: { height: 'short', hand: 'left', hair: 'red' }, look: { skin: '#F2CDB3', hair: 'long', acc: ['goggles'] },
+      motive: 'needed {v}’s money for a flight across the Atlantic, and had been told no' },
   ],
 };
 
@@ -132,22 +176,38 @@ WORLDS.train = {
   year: '1931',
   tagline: 'Eleven hours to the border. One carriage too many.',
   layoutKind: 'line',
+  guests: 'passengers',
   floors: null,
   relations: ['adjacent', 'ahead'],
-  victim: { name: 'Lucian Marlowe', desc: 'a banker who bought secrets the way others buy newspapers' },
-  scene: [
-    'The night train is in the mountains, past the last station and short of the next.',
-    'Mr. Marlowe was found at a quarter to three. Nobody has been allowed to leave their carriage since.',
+  victims: [
+    { name: 'Lucian Marlowe', short: 'Mr. Marlowe', desc: 'a banker who bought secrets the way others buy newspapers' },
+    { name: 'Baroness Ilse von Roth', short: 'the Baroness', desc: 'who travelled with forty trunks and one enemy in each country' },
+    { name: 'Mr. Silas Penhaligon', short: 'Mr. Penhaligon', desc: 'a jeweller carrying a necklace nobody had seen' },
+    { name: 'Signor Enzo Bellini', short: 'Signor Bellini', desc: 'an impresario who owed every one of his singers' },
+    { name: 'Inspector Raoul Dufresne', short: 'the Inspector', desc: 'a detective on holiday, who could not stop asking questions' },
+  ],
+  occasions: [
+    'The night train is in the mountains, past the last station and short of the next. {v} had booked the whole of the first class.',
+    'Snow has stopped the Express on the high pass. {v} had spent the evening telling everyone exactly what they owed.',
+    '{v} boarded at the last minute, with a locked case chained to one wrist.',
+    'It was meant to be a quiet crossing. Then {v} announced, over dessert, that one of the passengers was not who they claimed to be.',
+    'The Express left the city at ten. By eleven, {v} had quarrelled with every passenger aboard.',
+  ],
+  found: [
+    '{v} was found at a quarter to three. Nobody has been allowed to leave their carriage since.',
+    'In the tunnel the lights went out. When they came back on, {v} was dead.',
+    'The conductor found {v} at dawn, and pulled the emergency cord.',
+    'A scream at midnight, a door slamming, and {v} would never reach the border.',
   ],
   // listed front (engine end) to back
   rooms: [
-    { id: 'mail', name: 'Mail Car', short: 'Mail', rect: { x: 0, y: 0, w: 1, h: 1 } },
-    { id: 'dining', name: 'Dining Car', short: 'Dining', rect: { x: 1, y: 0, w: 1, h: 1 } },
-    { id: 'smoking', name: 'Smoking Lounge', short: 'Smoking', rect: { x: 2, y: 0, w: 1, h: 1 } },
-    { id: 'sleeper', name: 'Sleeper Car', short: 'Sleeper', rect: { x: 3, y: 0, w: 1, h: 1 } },
-    { id: 'bar', name: 'Bar Car', short: 'Bar', rect: { x: 4, y: 0, w: 1, h: 1 } },
-    { id: 'observation', name: 'Observation Car', short: 'Obser&shy;vation', rect: { x: 5, y: 0, w: 1, h: 1 } },
-    { id: 'luggage', name: 'Luggage Van', short: 'Luggage', rect: { x: 6, y: 0, w: 1, h: 1 } },
+    { id: 'mail', name: 'Mail Car', short: 'Mail', pattern: 'planks', rect: { x: 0, y: 0, w: 1, h: 1 } },
+    { id: 'dining', name: 'Dining Car', short: 'Dining', pattern: 'parquet', rect: { x: 1, y: 0, w: 1, h: 1 } },
+    { id: 'smoking', name: 'Smoking Lounge', short: 'Smoking', pattern: 'rug', rect: { x: 2, y: 0, w: 1, h: 1 } },
+    { id: 'sleeper', name: 'Sleeper Car', short: 'Sleeper', pattern: 'carpet', rect: { x: 3, y: 0, w: 1, h: 1 } },
+    { id: 'bar', name: 'Bar Car', short: 'Bar', pattern: 'checker', rect: { x: 4, y: 0, w: 1, h: 1 } },
+    { id: 'observation', name: 'Observation Car', short: 'Obser&shy;vation', pattern: 'leaves', rect: { x: 5, y: 0, w: 1, h: 1 } },
+    { id: 'luggage', name: 'Luggage Van', short: 'Luggage', pattern: 'stone', rect: { x: 6, y: 0, w: 1, h: 1 } },
   ],
   weapons: [
     { id: 'hatpin', name: 'Jewelled Hat Pin', short: 'Hat pin', type: 'blade', note: 'longer than it looks' },
@@ -159,14 +219,105 @@ WORLDS.train = {
     { id: 'pistol', name: 'Pocket Pistol', short: 'Pistol', type: 'firearm', note: 'pearl handled' },
   ],
   suspects: [
-    { id: 'valcourt', name: 'Madame Zora Valcourt', short: 'Mme Valcourt', role: 'opera singer, travelling with three hatboxes', hue: 330 },
-    { id: 'orlov', name: 'Count Mikhail Orlov', short: 'Count Orlov', role: 'exiled aristocrat with a borrowed title', hue: 220 },
-    { id: 'brandt', name: 'Professor Hugo Brandt', short: 'Prof. Brandt', role: 'archaeologist, guarding a locked crate', hue: 35 },
-    { id: 'ashgrove', name: 'Miss Winifred Ashgrove', short: 'Miss Ashgrove', role: 'travel writer who notices everything', hue: 150 },
-    { id: 'quill', name: 'Mr. Jasper Quill', short: 'Mr. Quill', role: 'diamond broker with nervous hands', hue: 275 },
-    { id: 'crane', name: 'Lady Philippa Crane', short: 'Lady Crane', role: 'heiress, bored and well informed', hue: 10 },
-    { id: 'reyes', name: 'Dr. Tomas Reyes', short: 'Dr. Reyes', role: 'surgeon on his way to a conference', hue: 185 },
-    { id: 'hale', name: 'Captain Edmund Hale', short: 'Capt. Hale', role: 'retired naval officer, insomniac', hue: 75 },
+    { id: 'valcourt', name: 'Madame Zora Valcourt', short: 'Mme Valcourt', role: 'opera singer, travelling with three hatboxes', hue: 330,
+      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#D9A684', hair: 'long', acc: ['feather', 'earrings'] },
+      motive: 'had been replaced in next season’s Tosca, on the say-so of {v}' },
+    { id: 'orlov', name: 'Count Mikhail Orlov', short: 'Count Orlov', role: 'exiled aristocrat with a borrowed title', hue: 220,
+      traits: { height: 'tall', hand: 'left', hair: 'fair' }, look: { skin: '#F0D3C0', hair: 'slick', acc: ['beard', 'medal'] },
+      motive: 'was no count at all, and {v} had the birth certificate to prove it' },
+    { id: 'brandt', name: 'Professor Hugo Brandt', short: 'Prof. Brandt', role: 'archaeologist, guarding a locked crate', hue: 35,
+      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E5B897', hair: 'bald', acc: ['glasses', 'beard'] },
+      motive: 'had smuggled the crate out of Egypt, and {v} had threatened to tell the museum' },
+    { id: 'ashgrove', name: 'Miss Winifred Ashgrove', short: 'Miss Ashgrove', role: 'travel writer who notices everything', hue: 150,
+      traits: { height: 'short', hand: 'left', hair: 'fair' }, look: { skin: '#F3D6C2', hair: 'bob', acc: ['cloche'] },
+      motive: 'had written a book about {v} that {v} had paid a great deal to keep unpublished' },
+    { id: 'quill', name: 'Mr. Jasper Quill', short: 'Mr. Quill', role: 'diamond broker with nervous hands', hue: 275,
+      traits: { height: 'short', hand: 'right', hair: 'dark' }, look: { skin: '#C08A68', hair: 'short', acc: ['bowler', 'moustache'] },
+      motive: 'had sold {v} a diamond made of paste, and the jeweller in Vienna would have known' },
+    { id: 'crane', name: 'Lady Philippa Crane', short: 'Lady Crane', role: 'heiress, bored and well informed', hue: 10,
+      traits: { height: 'tall', hand: 'right', hair: 'red' }, look: { skin: '#F4D2BE', hair: 'curly', acc: ['pearls'] },
+      motive: 'was engaged to {v}’s son, and {v} had sworn the wedding would never happen' },
+    { id: 'reyes', name: 'Dr. Tomas Reyes', short: 'Dr. Reyes', role: 'surgeon on his way to a conference', hue: 185,
+      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#B07B57', hair: 'short', acc: ['moustache'] },
+      motive: 'had lost a patient on the table in Lisbon, and {v} knew exactly why' },
+    { id: 'hale', name: 'Captain Edmund Hale', short: 'Capt. Hale', role: 'retired naval officer, insomniac', hue: 75,
+      traits: { height: 'short', hand: 'left', hair: 'grey' }, look: { skin: '#DDA788', hair: 'short', acc: ['captcap', 'beard'] },
+      motive: 'had run a ship aground in 1919, and {v} had the logbook he swore was lost' },
+  ],
+};
+
+WORLDS.liner = {
+  id: 'liner',
+  name: 'The RMS Aurelia',
+  year: '1935',
+  tagline: 'Five days to New York. Somebody won’t make it.',
+  layoutKind: 'dollhouse',
+  guests: 'passengers',
+  floors: ['below decks', 'on the promenade deck', 'on the sun deck'],
+  relations: ['adjacent', 'floor'],
+  victims: [
+    { name: 'Mr. Thaddeus Vole', short: 'Mr. Vole', desc: 'a millionaire who had made his money in other people’s misfortunes' },
+    { name: 'Mrs. Honoria Bright', short: 'Mrs. Bright', desc: 'a gossip columnist with a notebook full of names' },
+    { name: 'Monsieur Gaston Leroux', short: 'Monsieur Leroux', desc: 'a card sharp who never lost, until tonight' },
+    { name: 'Lord Cuthbert Ainsley', short: 'Lord Ainsley', desc: 'a peer travelling under somebody else’s name' },
+    { name: 'Miss Verity Crowe', short: 'Miss Crowe', desc: 'a starlet whose last film nobody had been allowed to see' },
+  ],
+  occasions: [
+    'It was the captain’s gala, the third night out, and {v} had a table to the left of the orchestra.',
+    'The Aurelia was halfway across the Atlantic, and {v} had been heard promising to “settle accounts before New York”.',
+    'Fog had settled on the ocean, the foghorn sounded every minute, and {v} was winning at cards again.',
+    '{v} had come aboard at Southampton with a sealed envelope, and told the whole bar it was dynamite.',
+    'A fancy-dress ball on the second night out, and {v} had come as Napoleon.',
+  ],
+  found: [
+    '{v} was found when the ship’s bell rang two. The captain has sealed every deck.',
+    'The steward knocked, and knocked again, and found {v} dead.',
+    'Over the band, the purser heard a single cry. By the time he reached {v}, it was too late.',
+    'At dawn a deckhand found {v}, and the Aurelia sailed on, one passenger lighter.',
+  ],
+  rooms: [
+    { id: 'bridge', name: 'Wheelhouse', short: 'Wheel&shy;house', pattern: 'planks', rect: { x: 0, y: 0, w: 4, h: 1 } },
+    { id: 'lido', name: 'Palm Court', short: 'Palm Court', pattern: 'leaves', rect: { x: 4, y: 0, w: 4, h: 1 } },
+    { id: 'saloon', name: 'Grand Saloon', short: 'Saloon', pattern: 'parquet', rect: { x: 0, y: 1, w: 3, h: 1 } },
+    { id: 'writing', name: 'Writing Room', short: 'Writing Room', pattern: 'rug', rect: { x: 3, y: 1, w: 2, h: 1 } },
+    { id: 'purser', name: 'Purser’s Office', short: 'Purser’s Office', pattern: 'carpet', rect: { x: 5, y: 1, w: 3, h: 1 } },
+    { id: 'engine', name: 'Engine Room', short: 'Engine Room', pattern: 'checker', rect: { x: 0, y: 2, w: 4, h: 1 } },
+    { id: 'hold', name: 'Cargo Hold', short: 'Hold', pattern: 'stone', rect: { x: 4, y: 2, w: 4, h: 1 } },
+  ],
+  weapons: [
+    { id: 'harpoon', name: 'Whaling Harpoon', short: 'Harpoon', type: 'blade', note: 'a souvenir from the smoking room wall' },
+    { id: 'fishknife', name: 'Silver Fish Knife', short: 'Fish knife', type: 'blade', note: 'from the captain’s table' },
+    { id: 'sextant', name: 'Brass Sextant', short: 'Sextant', type: 'blunt', note: 'its mirror cracked' },
+    { id: 'pin', name: 'Belaying Pin', short: 'Belaying pin', type: 'blunt', note: 'solid oak' },
+    { id: 'gin', name: 'Poisoned Gin Fizz', short: 'Gin fizz', type: 'poison', note: 'smells faintly of almonds' },
+    { id: 'rope', name: 'Mooring Rope', short: 'Rope', type: 'cord', note: 'tarred and salty' },
+    { id: 'flare', name: 'Flare Pistol', short: 'Flare pistol', type: 'firearm', note: 'one cartridge fired' },
+  ],
+  suspects: [
+    { id: 'moreau', name: 'Miss Delphine Moreau', short: 'Miss Moreau', role: 'cabaret star, sailing to Broadway', hue: 320,
+      traits: { height: 'tall', hand: 'left', hair: 'fair' }, look: { skin: '#F1D0BA', hair: 'bob', acc: ['feather', 'earrings'] },
+      motive: 'had a contract on Broadway that {v} had promised to tear up' },
+    { id: 'fitch', name: 'Sir Reginald Fitch', short: 'Sir Reginald', role: 'shipping magnate who owns a share of the ship', hue: 210,
+      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E8B996', hair: 'bald', acc: ['tophat', 'moustache'] },
+      motive: 'had cut corners on the Aurelia’s lifeboats, and {v} had found out' },
+    { id: 'teague', name: 'Miss Ivy Teague', short: 'Miss Teague', role: 'ship’s nurse, with an excellent memory', hue: 120,
+      traits: { height: 'short', hand: 'right', hair: 'red' }, look: { skin: '#F4D5C0', hair: 'bun', acc: ['nursecap'] },
+      motive: 'had nursed {v}’s late wife, and had never believed it was a fever' },
+    { id: 'kraus', name: 'Dr. Anselm Kraus', short: 'Dr. Kraus', role: 'stage hypnotist, booked for the crossing', hue: 270,
+      traits: { height: 'tall', hand: 'left', hair: 'dark' }, look: { skin: '#E2B898', hair: 'slick', acc: ['monocle', 'beard'] },
+      motive: 'had hypnotised {v} into signing a cheque, and {v} had woken up' },
+    { id: 'ventura', name: 'Signor Paolo Ventura', short: 'Signor Ventura', role: 'bandleader of the Aurelia Seven', hue: 30,
+      traits: { height: 'short', hand: 'right', hair: 'dark' }, look: { skin: '#C7916C', hair: 'curly', acc: ['bowtie', 'moustache'] },
+      motive: 'had gambled away the band’s wages, and {v} held the markers' },
+    { id: 'holloway', name: 'Lady Beatrix Holloway', short: 'Lady Holloway', role: 'crime novelist, taking notes', hue: 0,
+      traits: { height: 'tall', hand: 'right', hair: 'grey' }, look: { skin: '#EFCDB6', hair: 'bun', acc: ['glasses', 'pearls'] },
+      motive: 'had lifted the plot of her bestseller from {v}, who wanted the royalties' },
+    { id: 'pike', name: 'Mr. Oswin Pike', short: 'Mr. Pike', role: 'the ship’s purser, keeper of the safe', hue: 190,
+      traits: { height: 'tall', hand: 'right', hair: 'fair' }, look: { skin: '#F0CBB0', hair: 'short', acc: ['captcap'] },
+      motive: 'had been helping himself to the passengers’ valuables, and {v} had counted' },
+    { id: 'ashby', name: 'Miss Clementine Ashby', short: 'Miss Ashby', role: 'tennis champion, travelling incognito', hue: 55,
+      traits: { height: 'short', hand: 'left', hair: 'dark' }, look: { skin: '#A8714F', hair: 'long', acc: ['headband'] },
+      motive: 'had thrown the Wimbledon final for money, and {v} was the one who paid' },
   ],
 };
 
@@ -175,7 +326,7 @@ const WEAPON_TYPES = {
   blade:   { label: 'a blade',        cause: 'a clean, deep cut',              held: 'something sharp',            any: 'anything sharp' },
   blunt:   { label: 'a blunt object', cause: 'a single heavy blow',            held: 'something heavy and blunt',  any: 'anything heavy' },
   poison:  { label: 'poison',         cause: 'poison in the blood',            held: 'something poisonous',        any: 'any poison' },
-  cord:    { label: 'a cord',         cause: 'ligature marks around the neck', held: 'something to strangle with', any: 'any cord or scarf' },
+  cord:    { label: 'a cord',         cause: 'ligature marks around the neck', held: 'something to strangle with', any: 'any cord or rope' },
   firearm: { label: 'a firearm',      cause: 'a gunshot wound',                held: 'a gun',                      any: 'a gun' },
 };
 
@@ -197,24 +348,25 @@ function buildCtx(world, suspectPick, weaponPick, roomPick) {
   const maxY = Math.max(...world.rooms.map((r) => r.rect.y));
   const floor = rooms.map((r) => (world.floors ? maxY - r.rect.y : 0));
   const pos = rooms.map((r) => r.rect.x);
+  const suspects = suspectPick.map((i) => world.suspects[i]);
   return {
-    world, n,
-    suspects: suspectPick.map((i) => world.suspects[i]),
+    world, n, suspects,
     weapons: weaponPick.map((i) => world.weapons[i]),
     rooms, adj, floor, pos,
     types: weaponPick.map((i) => world.weapons[i].type),
+    traits: suspects.map((s) => s.traits),
     roomIdx: roomPick, suspectIdx: suspectPick, weaponIdx: weaponPick,
   };
 }
 
 // kind: W = weapons only, R = rooms only, X = both, M = murder (returns a bitmask of possible killers)
-// family: direct | neg | link | rel | murder -- used to tune difficulty
+// family: direct | neg | link | rel | murder | trait -- used to tune difficulty
 function C(type, kind, family, args, test) {
   return { type, kind, family, args, test };
 }
 
 function enumerateClues(ctx) {
-  const { n, adj, floor, pos, types, world } = ctx;
+  const { n, adj, floor, pos, types, traits, world } = ctx;
   const S = [...Array(n).keys()];
   const out = [];
   const typeSet = [...new Set(types)];
@@ -223,6 +375,12 @@ function enumerateClues(ctx) {
   const hasAhead = world.relations.includes('ahead');
   const FULL = (1 << n) - 1;
   const maskOf = (f) => { let m = 0; for (const s of S) if (f(s)) m |= 1 << s; return m; };
+  // trait values that split tonight's suspects (a trait everyone shares tells nobody anything)
+  const traitVals = [];
+  for (const k of TRAIT_KEYS) {
+    const vals = [...new Set(traits.map((t) => t[k]))];
+    if (vals.length > 1) for (const v of vals) traitVals.push([k, v]);
+  }
 
   for (const s of S) for (const w of S) {
     out.push(C('has', 'W', 'direct', { s, w }, (pw) => pw[s] === w));
@@ -264,6 +422,11 @@ function enumerateClues(ctx) {
     out.push(C('typeInRoom', 'X', 'link', { r, t }, (pw, pwi, pr, pri) => types[pw[pri[r]]] === t));
     out.push(C('notTypeInRoom', 'X', 'neg', { r, t }, (pw, pwi, pr, pri) => types[pw[pri[r]]] !== t));
   }
+  // ---- traits: a hair on the weapon, a footprint in the room. Read them off the suspects' cards.
+  for (const [k, v] of traitVals) {
+    for (const w of S) out.push(C('traitWeapon', 'W', 'trait', { w, k, v }, (pw, pwi) => traits[pwi[w]][k] === v));
+    for (const r of S) out.push(C('traitRoom', 'R', 'trait', { r, k, v }, (pw, pwi, pr, pri) => traits[pri[r]][k] === v));
+  }
 
   // ---- murder clues: each returns the set of suspects who could still be the killer
   for (const t of typeSet) {
@@ -290,7 +453,28 @@ function enumerateClues(ctx) {
     out.push(C('murderFloor', 'M', 'murder', { f }, (pw, pwi, pr) => maskOf((m) => floor[pr[m]] === f)));
     out.push(C('murderNotFloor', 'M', 'murder', { f }, (pw, pwi, pr) => maskOf((m) => floor[pr[m]] !== f)));
   }
+  for (const [k, v] of traitVals) out.push(C('murderTrait', 'M', 'murder', { k, v }, () => maskOf((m) => traits[m][k] === v)));
   return out;
+}
+
+// ---- testimony. Every suspect says one thing. The innocent tell the truth; the killer lies.
+// Only statements a person could sensibly make, and that the human solver can turn into one small constraint
+// (so it can also be negated), can be testimony. Everything else is evidence, which is always true.
+const TESTIMONY_TYPES = ['has', 'notHas', 'in', 'notIn', 'eitherHas', 'eitherIn', 'holdsType', 'notHoldsType', 'sameType', 'diffType',
+  'adjacent', 'notAdjacent', 'sameFloor', 'diffFloor', 'ahead', 'murderNotSuspect', 'murderType', 'murderNotType', 'murderNotWeapon',
+  'murderNotRoom', 'murderFloor', 'murderNotFloor', 'murderAdjRoom', 'murderNotAdjRoom', 'murderTrait'];
+
+// A statement by `sp`, as a murder clue: in each arrangement, the killers it allows are those for whom it is
+// consistent (the statement is true and sp is not the killer, or it is false and sp is).
+function testimony(c, sp, n) {
+  const FULL = (1 << n) - 1, me = 1 << sp, base = c.test, M = c.kind === 'M';
+  const test = (pw, pwi, pr, pri) => ((M ? base(pw, pwi, pr, pri) : base(pw, pwi, pr, pri) ? FULL : 0) ^ me) & FULL;
+  return { type: c.type, kind: 'M', baseKind: c.kind, family: c.family, args: c.args, speaker: sp, test, base: c };
+}
+// Is the statement itself true in this arrangement (ignoring who said it)?
+function statementTrue(c, truth, pwi, pri) {
+  const b = c.base || c, v = b.test(truth.pw, pwi, truth.pr, pri);
+  return b.kind === 'M' ? (v & (1 << truth.m)) !== 0 : v;
 }
 
 // Does the clue hold for the hidden truth {pw, pr, m}?
@@ -301,110 +485,121 @@ function clueHolds(clue, truth, pwi, pri) {
 
 // ---- 25-text.js
 // Turns a clue into words. Tokens {s:i} {w:i} {r:i} are swapped for names by the renderer,
-// so the UI can highlight and cross-reference them. Everyone tells the truth.
-// Banked cases store the variant index, so keep the number of variants and their voice
-// ('say' or 'note') per type exactly as they are when rewording.
-function clueVariants(c, ctx) {
+// so the UI can highlight and cross-reference them.
+// Evidence ('note') is always true and has one wording. Testimony ('say') is spoken by a suspect, in their own
+// voice ("I was in the Library"), and has two wordings. Banked cases store the variant index, so keep the number
+// of variants per type as it is when rewording (test-variants.js checks it).
+const HAIR_WORD = { dark: 'dark', fair: 'fair', red: 'red', grey: 'grey' };
+const traitWord = (k, v) => TRAITS[k].values[v];
+
+function clueVariants(c, ctx, sp) {
   const a = c.args;
   const line = ctx.world.layoutKind === 'line';
   const unit = line ? 'carriage' : 'room';
   const S = (i) => `{s:${i}}`, W = (i) => `{w:${i}}`, R = (i) => `{r:${i}}`;
   const T = (t) => WEAPON_TYPES[t];
   const floorWord = (f) => ctx.world.floors[f];
-  // what "next to" counts as, said in the clue itself: in the house a door or a stair joins the two rooms
-  // (upstairs and down included); on the train the two carriages are coupled, with none in between
   const join = line ? 'a coupling' : 'a door or a stair';
   const away = line ? 'coupled to it' : 'a door or a stair away';
+  const cap = (s) => (s[0] === '{' ? s : s[0].toUpperCase() + s.slice(1));
+  const say = sp !== undefined && sp !== null;
+  if (say) {
+    const me = (i) => i === sp;
+    const subj = (i) => (me(i) ? 'I' : S(i)), obj = (i) => (me(i) ? 'me' : S(i));
+    const poss = (i) => (me(i) ? 'my' : `${S(i)}'s`), possN = (i) => (me(i) ? 'mine' : `${S(i)}'s`);
+    const both = (x, y) => (me(x) ? `${S(y)} and I` : me(y) ? `${S(x)} and I` : `${S(x)} and ${S(y)}`);
+    const either = (x, y, f) => (me(x) ? `${S(y)} or ${f}` : me(y) ? `${S(x)} or ${f}` : `${S(x)} or ${S(y)}`);
+    const self = a.s !== undefined && me(a.s);
+    const two = (v0, v1) => [['say', v0], ['say', v1]];
+    switch (c.type) {
+      case 'has': return self ? two(`I had the ${W(a.w)}. I won't pretend otherwise.`, `The ${W(a.w)} was mine to hold all evening.`)
+        : two(`${S(a.s)} had the ${W(a.w)}. I saw it plainly.`, `I saw ${S(a.s)} with the ${W(a.w)} in hand.`);
+      case 'notHas': return self ? two(`I never touched the ${W(a.w)}.`, `Whoever had the ${W(a.w)}, it wasn't me.`)
+        : two(`${S(a.s)} never touched the ${W(a.w)}.`, `Whoever had the ${W(a.w)}, it wasn't ${S(a.s)}.`);
+      case 'in': return self ? two(`I was in the ${R(a.r)} the whole time.`, `I never left the ${R(a.r)}.`)
+        : two(`${S(a.s)} was in the ${R(a.r)}. I'd know that voice anywhere.`, `I saw ${S(a.s)} in the ${R(a.r)}.`);
+      case 'notIn': return self ? two(`I never set foot in the ${R(a.r)}.`, `I wasn't in the ${R(a.r)}, whatever you've heard.`)
+        : two(`${S(a.s)} was not in the ${R(a.r)}.`, `${S(a.s)} never set foot in the ${R(a.r)}.`);
+      case 'eitherHas': return two(`Either ${either(a.a, a.b, 'I')} had the ${W(a.w)}.`, `The ${W(a.w)} was with ${either(a.a, a.b, 'me')}. One of the two.`);
+      case 'eitherIn': return two(`Either ${either(a.a, a.b, 'I')} was in the ${R(a.r)}.`, `Someone was in the ${R(a.r)}: ${either(a.a, a.b, 'me')}. ${me(a.a) || me(a.b) ? 'I won’t say which.' : 'It was too dark to see which.'}`);
+      case 'holdsType': return self ? two(`I'll admit I had ${T(a.t).held}.`, `Yes, I had ${T(a.t).held} on me.`)
+        : two(`${S(a.s)} was carrying ${T(a.t).held}.`, `${S(a.s)} had ${T(a.t).held}. I noticed it straight away.`);
+      case 'notHoldsType': return self ? two(`I didn't have ${T(a.t).any}. Search me.`, `I wasn't carrying ${T(a.t).any}.`)
+        : two(`${S(a.s)} wasn't carrying ${T(a.t).any}.`, `${S(a.s)} didn't have ${T(a.t).any}. I checked.`);
+      case 'sameType': return two(`${both(a.a, a.b)} carried the same kind of weapon.`, `${cap(poss(a.a))} weapon was the same kind as ${possN(a.b)}.`);
+      case 'diffType': return two(`${both(a.a, a.b)} carried different kinds of weapon.`, `${cap(poss(a.a))} weapon was a different kind from ${possN(a.b)}.`);
+      case 'adjacent': return line
+        ? two(`${both(a.a, a.b)} were in carriages next to each other, coupled together.`, `${cap(poss(a.a))} carriage was coupled to ${possN(a.b)}.`)
+        : two(`${both(a.a, a.b)} were in rooms next to each other, a door or a stair apart.`, `${cap(poss(a.a))} room was next to ${possN(a.b)}, a door or a stair away.`);
+      case 'notAdjacent': return line
+        ? two(`${both(a.a, a.b)} weren't in carriages next to each other.`, `${cap(poss(a.a))} carriage and ${possN(a.b)} were not coupled together.`)
+        : two(`${both(a.a, a.b)} weren't in rooms next to each other.`, `No single door or stair joined ${poss(a.a)} room to ${possN(a.b)}.`);
+      case 'sameFloor': return two(`${both(a.a, a.b)} were on the same floor.`, `${cap(poss(a.a))} room and ${possN(a.b)} were on one floor.`);
+      case 'diffFloor': return two(`${both(a.a, a.b)} were on different floors.`, `${subj(a.a)} was on one floor and ${subj(a.b)} on another.`);
+      case 'ahead': return two(`${cap(poss(a.a))} carriage was nearer the engine than ${possN(a.b)}.`, `Walking back from the engine, you'd pass ${obj(a.a)} before ${obj(a.b)}.`);
+      case 'murderNotSuspect': return two(`It wasn't ${S(a.s)}. I'd stake my life on it.`, `${S(a.s)} didn't do it. I'm certain.`);
+      case 'murderType': return two(`The killer used ${T(a.t).held}. I saw the wound.`, `It was done with ${T(a.t).label}. Anyone could see that.`);
+      case 'murderNotType': return two(`The killer didn't use ${T(a.t).any}.`, `Whatever the weapon was, it wasn't ${T(a.t).label}.`);
+      case 'murderNotWeapon': return two(`The ${W(a.w)} wasn't the murder weapon.`, `Forget the ${W(a.w)}. It's clean.`);
+      case 'murderNotRoom': return two(`The body wasn't in the ${R(a.r)}.`, `Nobody died in the ${R(a.r)}. I'd have known.`);
+      case 'murderFloor': return two(`The body was found ${floorWord(a.f)}.`, `It happened ${floorWord(a.f)}. I heard it.`);
+      case 'murderNotFloor': return two(`The body wasn't found ${floorWord(a.f)}.`, `Whatever happened, it didn't happen ${floorWord(a.f)}.`);
+      case 'murderAdjRoom': return line
+        ? two(`The body was in a carriage coupled to the ${R(a.r)}, not in it.`, `It happened right next to the ${R(a.r)}. Not in it, next to it.`)
+        : two(`The body was a door or a stair away from the ${R(a.r)}, not in it.`, `It happened next to the ${R(a.r)}, a door or a stair away. Not in it.`);
+      case 'murderNotAdjRoom': return line
+        ? two(`The body wasn't in the ${R(a.r)}, nor in a carriage coupled to it.`, `It didn't happen in the ${R(a.r)}, or anywhere next to it.`)
+        : two(`The body wasn't in the ${R(a.r)}, nor anywhere a door or a stair away.`, `It didn't happen in the ${R(a.r)}, or anywhere next to it.`);
+      case 'murderTrait': return two(`The killer was ${traitWord(a.k, a.v)}. I caught a glimpse.`, `Whoever did it was ${traitWord(a.k, a.v)}. I'd swear to that.`);
+    }
+    throw new Error('no testimony for clue type ' + c.type);
+  }
+  const note = (t) => [['note', t]];
   switch (c.type) {
-    case 'has': return [
-      ['say', `I saw ${S(a.s)} with the ${W(a.w)} in hand. I'm certain of it.`],
-      ['note', `${S(a.s)} had the ${W(a.w)}. The prints leave no doubt.`]];
-    case 'notHas': return [
-      ['say', `${S(a.s)} never touched the ${W(a.w)}. I'd swear to it.`],
-      ['note', `Whoever had the ${W(a.w)}, it was not ${S(a.s)}.`]];
-    case 'in': return [
-      ['say', `${S(a.s)} was in the ${R(a.r)} when the clock struck. I'd know that voice through any door.`],
-      ['note', `A witness puts ${S(a.s)} in the ${R(a.r)} at the time of the murder.`]];
-    case 'notIn': return [
-      ['say', `${S(a.s)} never set foot in the ${R(a.r)}. I'd have seen.`],
-      ['note', `${S(a.s)} was not in the ${R(a.r)}.`]];
-    case 'eitherHas': return [
-      ['say', `Either ${S(a.a)} or ${S(a.b)} had the ${W(a.w)}. I couldn't tell you which.`],
-      ['note', `The ${W(a.w)} was held by ${S(a.a)} or by ${S(a.b)}.`]];
-    case 'eitherIn': return [
-      ['say', `Someone was in the ${R(a.r)}: ${S(a.a)} or ${S(a.b)}. It was too dark to see which.`],
-      ['note', `Whoever was in the ${R(a.r)}, it was ${S(a.a)} or ${S(a.b)}.`]];
-    case 'holdsType': return [
-      ['say', `${S(a.s)} was carrying ${T(a.t).held}. I noticed it straight away.`],
-      ['note', `${S(a.s)}'s weapon was ${T(a.t).held}.`]];
-    case 'notHoldsType': return [
-      ['say', `${S(a.s)} wasn't carrying ${T(a.t).any}. I checked.`],
-      ['note', `Whatever ${S(a.s)} was carrying, it wasn't ${T(a.t).label}.`]];
-    case 'sameType': return [
-      ['say', `${S(a.a)} and ${S(a.b)} were carrying the same kind of weapon. I thought that was odd.`],
-      ['note', `${S(a.a)}'s weapon was the same kind as ${S(a.b)}'s.`]];
-    case 'diffType': return [
-      ['say', `${S(a.a)} and ${S(a.b)} were carrying different kinds of weapon.`],
-      ['note', `${S(a.a)}'s weapon and ${S(a.b)}'s were of different kinds.`]];
-    case 'adjacent': return [
-      ['say', `${S(a.a)} and ${S(a.b)} were in ${unit}s next to each other, ${line ? 'coupled together' : 'a door or a stair apart'}. I could hear them both.`],
-      ['note', `${S(a.a)}'s ${unit} was next to ${S(a.b)}'s, joined by ${join}.`]];
-    case 'notAdjacent': return [
-      ['say', `${S(a.a)} and ${S(a.b)} weren't in ${unit}s next to each other. ${line ? 'There was at least one carriage between them, sealed or not.' : 'You would need more than one door or stair to get from one to the other.'}`],
-      ['note', line ? `${S(a.a)}'s carriage and ${S(a.b)}'s were not coupled together.` : `No single door or stair joined ${S(a.a)}'s room to ${S(a.b)}'s.`]];
-    case 'sameFloor': return [
-      ['say', `${S(a.a)} and ${S(a.b)} were on the same floor. I heard the boards creak under both of them.`],
-      ['note', `${S(a.a)}'s room and ${S(a.b)}'s were on one floor.`]];
-    case 'diffFloor': return [
-      ['say', `${S(a.a)} was on one floor and ${S(a.b)} on another. I'm sure of that.`],
-      ['note', `${S(a.a)} and ${S(a.b)} were on different floors.`]];
-    case 'ahead': return [
-      ['say', `I walked the train from the engine back, and passed ${S(a.a)} before ${S(a.b)}.`],
-      ['note', `${S(a.a)}'s carriage was nearer the engine than ${S(a.b)}'s.`]];
-    case 'weaponIn': return [
-      ['say', `The ${W(a.w)} was in the ${R(a.r)}. I saw it in someone's hand.`],
-      ['note', `Whoever was in the ${R(a.r)} was holding the ${W(a.w)}.`]];
-    case 'weaponNotIn': return [
-      ['say', `The ${W(a.w)} was never in the ${R(a.r)}.`],
-      ['note', `Whoever was in the ${R(a.r)}, they weren't holding the ${W(a.w)}.`]];
-    case 'weaponNear': return [
-      ['say', `I saw the ${W(a.w)} ${line ? `in a carriage coupled to the ${R(a.r)}` : `one door or one stair from the ${R(a.r)}`}. Not in it.`],
-      ['note', `The ${W(a.w)} was in a ${unit} next to the ${R(a.r)} (${away}), not in the ${R(a.r)} itself.`]];
-    case 'typeInRoom': return [
-      ['say', `Whoever was in the ${R(a.r)} had ${T(a.t).held}. I saw it myself.`],
-      ['note', `The person in the ${R(a.r)} was carrying ${T(a.t).held}.`]];
-    case 'notTypeInRoom': return [
-      ['say', `Whoever was in the ${R(a.r)} didn't have ${T(a.t).any}. I'd have noticed.`],
-      ['note', `The person in the ${R(a.r)} wasn't carrying ${T(a.t).label}.`]];
+    case 'has': return note(`${S(a.s)} had the ${W(a.w)}. The prints leave no doubt.`);
+    case 'notHas': return note(`Whoever had the ${W(a.w)}, it was not ${S(a.s)}. The prints don't match.`);
+    case 'in': return note(`Muddy footprints put ${S(a.s)} in the ${R(a.r)}.`);
+    case 'notIn': return note(`${S(a.s)} was not in the ${R(a.r)}: not one footprint.`);
+    case 'eitherHas': return note(`Only ${S(a.a)} or ${S(a.b)} could have had the ${W(a.w)}.`);
+    case 'eitherIn': return note(`Whoever was in the ${R(a.r)}, it was ${S(a.a)} or ${S(a.b)}.`);
+    case 'holdsType': return note(`${S(a.s)}'s weapon was ${T(a.t).held}.`);
+    case 'notHoldsType': return note(`Whatever ${S(a.s)} carried, it wasn't ${T(a.t).label}.`);
+    case 'sameType': return note(`${S(a.a)}'s weapon was the same kind as ${S(a.b)}'s.`);
+    case 'diffType': return note(`${S(a.a)}'s weapon and ${S(a.b)}'s were of different kinds.`);
+    case 'adjacent': return note(line ? `${S(a.a)}'s carriage was coupled to ${S(a.b)}'s.` : `${S(a.a)}'s room was next to ${S(a.b)}'s, joined by ${join}.`);
+    case 'notAdjacent': return note(line ? `${S(a.a)}'s carriage and ${S(a.b)}'s were not coupled together.` : `No single door or stair joined ${S(a.a)}'s room to ${S(a.b)}'s.`);
+    case 'sameFloor': return note(`${S(a.a)}'s room and ${S(a.b)}'s were on one floor.`);
+    case 'diffFloor': return note(`${S(a.a)} and ${S(a.b)} were on different floors.`);
+    case 'ahead': return note(`${S(a.a)}'s carriage was nearer the engine than ${S(a.b)}'s.`);
+    case 'weaponIn': return note(`Whoever was in the ${R(a.r)} was holding the ${W(a.w)}.`);
+    case 'weaponNotIn': return note(`Whoever was in the ${R(a.r)}, they weren't holding the ${W(a.w)}.`);
+    case 'weaponNear': return note(`The ${W(a.w)} was in a ${unit} next to the ${R(a.r)} (${away}), not in the ${R(a.r)} itself.`);
+    case 'typeInRoom': return note(`The person in the ${R(a.r)} was carrying ${T(a.t).held}.`);
+    case 'notTypeInRoom': return note(`The person in the ${R(a.r)} wasn't carrying ${T(a.t).label}.`);
+    case 'traitWeapon': return note(a.k === 'hair' ? `A ${HAIR_WORD[a.v]} hair was caught on the ${W(a.w)}. Whoever had it is ${traitWord(a.k, a.v)}.`
+      : a.k === 'hand' ? `The ${W(a.w)} was held in the ${a.v} hand. Whoever had it is ${traitWord(a.k, a.v)}.`
+        : `A witness saw a ${a.v} figure with the ${W(a.w)}. Whoever had it is ${a.v}.`);
+    case 'traitRoom': return note(a.k === 'hair' ? `A ${HAIR_WORD[a.v]} hair was found in the ${R(a.r)}. Whoever was there is ${traitWord(a.k, a.v)}.`
+      : a.k === 'hand' ? `The door of the ${R(a.r)} was opened with the ${a.v} hand. Whoever was there is ${traitWord(a.k, a.v)}.`
+        : `The footprints in the ${R(a.r)} are ${a.v === 'tall' ? 'long' : 'small'}. Whoever was there is ${a.v}.`);
     // ---- the body
-    case 'murderType': return [
-      ['note', `The coroner found ${T(a.t).cause}. The killer used ${T(a.t).held}.`]];
-    case 'murderNotType': return [
-      ['note', `The coroner rules out ${T(a.t).label}.`]];
-    case 'murderNotSuspect': return [
-      ['note', `${S(a.s)} has an alibi that holds. Not the killer.`]];
-    case 'murderNextTo': return [
-      ['note', `The killer was in a ${unit} next to ${S(a.s)}'s, ${away}.`]];
-    case 'murderFarFrom': return [
-      ['note', `It wasn't ${S(a.s)}, nor anyone ${line ? `in a carriage coupled to ${S(a.s)}'s` : `a door or a stair from ${S(a.s)}'s room`}.`]];
-    case 'murderSameFloor': return [
-      ['note', `The killer was on the same floor as ${S(a.s)}, but it wasn't ${S(a.s)}.`]];
-    case 'murderAheadOf': return [
-      ['note', `The killer's carriage was nearer the engine than ${S(a.s)}'s.`]];
-    case 'murderBehind': return [
-      ['note', `The killer's carriage was further from the engine than ${S(a.s)}'s.`]];
-    case 'murderNotWeapon': return [
-      ['note', `The ${W(a.w)} is clean. It is not the murder weapon.`]];
-    case 'murderNotRoom': return [
-      ['note', `The body was not found in the ${R(a.r)}.`]];
-    case 'murderAdjRoom': return [
-      ['note', `The body was found ${line ? 'in a carriage coupled to' : 'a door or a stair away from'} the ${R(a.r)}, not in the ${R(a.r)} itself.`]];
-    case 'murderNotAdjRoom': return [
-      ['note', `The body was not in the ${R(a.r)}, nor ${line ? 'in a carriage coupled to it' : 'anywhere a door or a stair away'}.`]];
-    case 'murderFloor': return [
-      ['note', `The body was found ${floorWord(a.f)}.`]];
-    case 'murderNotFloor': return [
-      ['note', `The body was not found ${floorWord(a.f)}.`]];
+    case 'murderType': return note(`The coroner found ${T(a.t).cause}. The killer used ${T(a.t).held}.`);
+    case 'murderNotType': return note(`The coroner rules out ${T(a.t).label}.`);
+    case 'murderNotSuspect': return note(`${S(a.s)} has an alibi that holds. Not the killer.`);
+    case 'murderNextTo': return note(`The killer was in a ${unit} next to ${S(a.s)}'s, ${away}.`);
+    case 'murderFarFrom': return note(`It wasn't ${S(a.s)}, nor anyone ${line ? `in a carriage coupled to ${S(a.s)}'s` : `a door or a stair from ${S(a.s)}'s room`}.`);
+    case 'murderSameFloor': return note(`The killer was on the same floor as ${S(a.s)}, but it wasn't ${S(a.s)}.`);
+    case 'murderAheadOf': return note(`The killer's carriage was nearer the engine than ${S(a.s)}'s.`);
+    case 'murderBehind': return note(`The killer's carriage was further from the engine than ${S(a.s)}'s.`);
+    case 'murderNotWeapon': return note(`The ${W(a.w)} is clean. It is not the murder weapon.`);
+    case 'murderNotRoom': return note(`The body was not found in the ${R(a.r)}.`);
+    case 'murderAdjRoom': return note(`The body was found ${line ? 'in a carriage coupled to' : 'a door or a stair away from'} the ${R(a.r)}, not in the ${R(a.r)} itself.`);
+    case 'murderNotAdjRoom': return note(`The body was not in the ${R(a.r)}, nor ${line ? 'in a carriage coupled to it' : 'anywhere a door or a stair away'}.`);
+    case 'murderFloor': return note(`The body was found ${floorWord(a.f)}.`);
+    case 'murderNotFloor': return note(`The body was not found ${floorWord(a.f)}.`);
+    case 'murderTrait': return note(a.k === 'hair' ? `A ${HAIR_WORD[a.v]} hair was found on the body. The killer is ${traitWord(a.k, a.v)}.`
+      : a.k === 'hand' ? `The coroner says the killer is ${traitWord(a.k, a.v)}.`
+        : `A witness saw a ${a.v} figure hurry from the scene. The killer is ${a.v}.`);
   }
   throw new Error('no text for clue type ' + c.type);
 }
@@ -421,11 +616,22 @@ function varyWording(clues) {
   return clues;
 }
 
-// Which suspects does a clue talk about? (so a witness is never the subject of their own statement)
+// Which suspects does a clue talk about?
 function clueSuspects(c) {
   const a = c.args, out = [];
   for (const k of ['s', 'a', 'b']) if (a[k] !== undefined) out.push(a[k]);
   return out;
+}
+
+// The case's story: who died, on what occasion, and how they were found. {v} is the victim's short name.
+function caseStory(world, story) {
+  const [vi, oi, fi] = story;
+  const v = world.victims[vi], put = (s) => s.replace(/\{v\}/g, v.short);
+  const capFirst = (s) => s[0].toUpperCase() + s.slice(1);
+  return { victim: v, occasion: capFirst(put(world.occasions[oi])), found: capFirst(put(world.found[fi])) };
+}
+function pickStory(rng, world) {
+  return [rng.int(world.victims.length), rng.int(world.occasions.length), rng.int(world.found.length)];
 }
 
 // Plain-text rendering (tests, share text). The UI renders tokens itself.
@@ -438,8 +644,9 @@ function plainText(str, ctx) {
 
 // ---- 30-solver.js
 // Exhaustive logic solver. Weapon-only and room-only clues are applied to the permutation lists
-// first, so the expensive cross product only runs over what survives. The answer is the triple
-// (killer, weapon, room); a puzzle is fair only if exactly one triple survives.
+// first, so the expensive cross product only runs over what survives. A world is a whole story: every
+// suspect's weapon and room, and the killer. A puzzle is fair only if exactly one world survives, so the
+// whole notebook can be filled in, not just the answer. `answers` lists the distinct (killer, weapon, room).
 function solveCount(ctx, clues, limit) {
   const { n } = ctx;
   const { perms, inv } = permutations(n);
@@ -463,7 +670,7 @@ function solveCount(ctx, clues, limit) {
   }
 
   const seen = new Uint8Array(n * n * n);
-  const answers = [];
+  const answers = [], worlds = [];
   const lim = limit === undefined ? Infinity : limit;
   for (let ia = 0; ia < LA.length; ia++) {
     const pw = perms[LA[ia]], pwi = inv[LA[ia]];
@@ -479,16 +686,14 @@ function solveCount(ctx, clues, limit) {
       if (!mask) continue;
       for (let m = 0; m < n; m++) {
         if (!(mask & (1 << m))) continue;
+        worlds.push({ pw, pr, m });
         const key = (m * n + pw[m]) * n + pr[m];
-        if (!seen[key]) {
-          seen[key] = 1;
-          answers.push({ killer: m, weapon: pw[m], room: pr[m] });
-          if (answers.length > lim) return { count: answers.length, answers, capped: true };
-        }
+        if (!seen[key]) { seen[key] = 1; answers.push({ killer: m, weapon: pw[m], room: pr[m] }); }
+        if (worlds.length > lim) return { count: worlds.length, worlds, answers, capped: true };
       }
     }
   }
-  return { count: answers.length, answers, capped: false };
+  return { count: worlds.length, worlds, answers, capped: false };
 }
 
 // Every full arrangement that fits the clues (used for hints and for checking player grids).
@@ -572,19 +777,10 @@ function narrow(ctx, src, clue, dst) {
   return dst;
 }
 
-// How many distinct (killer, weapon, room) answers survive?
-function countSurvivingAnswers(ctx, set) {
-  const n = ctx.n, { perms } = permutations(n);
-  const seen = new Uint8Array(n * n * n);
+// How many whole worlds (weapons, rooms and killer) survive?
+function countSurvivingWorlds(ctx, set) {
   let count = 0;
-  for (let i = 0; i < set.size; i++) {
-    const pw = perms[set.A[i]], pr = perms[set.B[i]], mask = set.M[i];
-    for (let m = 0; m < n; m++) {
-      if (!(mask & (1 << m))) continue;
-      const key = (m * n + pw[m]) * n + pr[m];
-      if (!seen[key]) { seen[key] = 1; count++; }
-    }
-  }
+  for (let i = 0; i < set.size; i++) count += popcount(set.M[i]);
   return count;
 }
 
@@ -596,56 +792,74 @@ function countSurvivingAnswers(ctx, set) {
 //
 // Variables: 0..n-1 weapon of suspect s | n..2n-1 room of suspect s | 2n killer | 2n+1 murder weapon | 2n+2 murder room
 
+// The constraints a clue puts on the variables: a list of { vars, pred }.
+function clueCons(ctx, type, a) {
+  const n = ctx.n, { adj, floor, pos, types, traits } = ctx;
+  const PW = (s) => s, PR = (s) => n + s, K = 2 * n, MW = 2 * n + 1, MR = 2 * n + 2;
+  const out = [];
+  const add = (vars, pred) => out.push({ vars, pred });
+  const each = (f) => { for (let s = 0; s < n; s++) f(s); };
+  switch (type) {
+    case 'has': add([PW(a.s)], (x) => x === a.w); break;
+    case 'notHas': add([PW(a.s)], (x) => x !== a.w); break;
+    case 'in': add([PR(a.s)], (x) => x === a.r); break;
+    case 'notIn': add([PR(a.s)], (x) => x !== a.r); break;
+    case 'eitherHas': add([PW(a.a), PW(a.b)], (x, y) => x === a.w || y === a.w); break;
+    case 'eitherIn': add([PR(a.a), PR(a.b)], (x, y) => x === a.r || y === a.r); break;
+    case 'holdsType': add([PW(a.s)], (x) => types[x] === a.t); break;
+    case 'notHoldsType': add([PW(a.s)], (x) => types[x] !== a.t); break;
+    case 'sameType': add([PW(a.a), PW(a.b)], (x, y) => types[x] === types[y]); break;
+    case 'diffType': add([PW(a.a), PW(a.b)], (x, y) => types[x] !== types[y]); break;
+    case 'adjacent': add([PR(a.a), PR(a.b)], (x, y) => adj[x][y]); break;
+    case 'notAdjacent': add([PR(a.a), PR(a.b)], (x, y) => !adj[x][y]); break;
+    case 'sameFloor': add([PR(a.a), PR(a.b)], (x, y) => floor[x] === floor[y]); break;
+    case 'diffFloor': add([PR(a.a), PR(a.b)], (x, y) => floor[x] !== floor[y]); break;
+    case 'ahead': add([PR(a.a), PR(a.b)], (x, y) => pos[x] < pos[y]); break;
+    case 'weaponIn': each((s) => add([PW(s), PR(s)], (x, y) => (x === a.w) === (y === a.r))); break;
+    case 'weaponNotIn': each((s) => add([PW(s), PR(s)], (x, y) => !(x === a.w && y === a.r))); break;
+    case 'weaponNear': each((s) => add([PW(s), PR(s)], (x, y) => x !== a.w || adj[y][a.r])); break;
+    case 'typeInRoom': each((s) => add([PW(s), PR(s)], (x, y) => y !== a.r || types[x] === a.t)); break;
+    case 'notTypeInRoom': each((s) => add([PW(s), PR(s)], (x, y) => y !== a.r || types[x] !== a.t)); break;
+    case 'traitWeapon': each((s) => { if (traits[s][a.k] !== a.v) add([PW(s)], (x) => x !== a.w); }); break;
+    case 'traitRoom': each((s) => { if (traits[s][a.k] !== a.v) add([PR(s)], (x) => x !== a.r); }); break;
+    case 'murderType': add([MW], (x) => types[x] === a.t); break;
+    case 'murderNotType': add([MW], (x) => types[x] !== a.t); break;
+    case 'murderNotSuspect': add([K], (x) => x !== a.s); break;
+    case 'murderNextTo': add([K], (x) => x !== a.s); add([MR, PR(a.s)], (x, y) => adj[x][y]); break;
+    case 'murderFarFrom': add([K], (x) => x !== a.s); add([MR, PR(a.s)], (x, y) => !adj[x][y]); break;
+    case 'murderSameFloor': add([K], (x) => x !== a.s); add([MR, PR(a.s)], (x, y) => floor[x] === floor[y]); break;
+    case 'murderAheadOf': add([MR, PR(a.s)], (x, y) => pos[x] < pos[y]); break;
+    case 'murderBehind': add([MR, PR(a.s)], (x, y) => pos[x] > pos[y]); break;
+    case 'murderNotWeapon': add([MW], (x) => x !== a.w); break;
+    case 'murderNotRoom': add([MR], (x) => x !== a.r); break;
+    case 'murderAdjRoom': add([MR], (x) => adj[x][a.r]); break;
+    case 'murderNotAdjRoom': add([MR], (x) => x !== a.r && !adj[x][a.r]); break;
+    case 'murderFloor': add([MR], (x) => floor[x] === a.f); break;
+    case 'murderNotFloor': add([MR], (x) => floor[x] !== a.f); break;
+    case 'murderTrait': add([K], (x) => traits[x][a.k] === a.v); break;
+    default: throw new Error('human solver: unknown clue ' + type);
+  }
+  return out;
+}
+
 function buildCSP(ctx, clues) {
-  const n = ctx.n, { adj, floor, pos, types } = ctx;
+  const n = ctx.n;
   const PW = (s) => s, PR = (s) => n + s, K = 2 * n, MW = 2 * n + 1, MR = 2 * n + 2;
   const cons = [];
-  const add = (clue, vars, pred) => cons.push({ clue, vars, pred });
   const each = (f) => { for (let s = 0; s < n; s++) f(s); };
   clues.forEach((c, ci) => {
-    const a = c.args;
-    switch (c.type) {
-      case 'has': add(ci, [PW(a.s)], (x) => x === a.w); break;
-      case 'notHas': add(ci, [PW(a.s)], (x) => x !== a.w); break;
-      case 'in': add(ci, [PR(a.s)], (x) => x === a.r); break;
-      case 'notIn': add(ci, [PR(a.s)], (x) => x !== a.r); break;
-      case 'eitherHas': add(ci, [PW(a.a), PW(a.b)], (x, y) => x === a.w || y === a.w); break;
-      case 'eitherIn': add(ci, [PR(a.a), PR(a.b)], (x, y) => x === a.r || y === a.r); break;
-      case 'holdsType': add(ci, [PW(a.s)], (x) => types[x] === a.t); break;
-      case 'notHoldsType': add(ci, [PW(a.s)], (x) => types[x] !== a.t); break;
-      case 'sameType': add(ci, [PW(a.a), PW(a.b)], (x, y) => types[x] === types[y]); break;
-      case 'diffType': add(ci, [PW(a.a), PW(a.b)], (x, y) => types[x] !== types[y]); break;
-      case 'adjacent': add(ci, [PR(a.a), PR(a.b)], (x, y) => adj[x][y]); break;
-      case 'notAdjacent': add(ci, [PR(a.a), PR(a.b)], (x, y) => !adj[x][y]); break;
-      case 'sameFloor': add(ci, [PR(a.a), PR(a.b)], (x, y) => floor[x] === floor[y]); break;
-      case 'diffFloor': add(ci, [PR(a.a), PR(a.b)], (x, y) => floor[x] !== floor[y]); break;
-      case 'ahead': add(ci, [PR(a.a), PR(a.b)], (x, y) => pos[x] < pos[y]); break;
-      case 'weaponIn': each((s) => add(ci, [PW(s), PR(s)], (x, y) => (x === a.w) === (y === a.r))); break;
-      case 'weaponNotIn': each((s) => add(ci, [PW(s), PR(s)], (x, y) => !(x === a.w && y === a.r))); break;
-      case 'weaponNear': each((s) => add(ci, [PW(s), PR(s)], (x, y) => x !== a.w || adj[y][a.r])); break;
-      case 'typeInRoom': each((s) => add(ci, [PW(s), PR(s)], (x, y) => y !== a.r || types[x] === a.t)); break;
-      case 'notTypeInRoom': each((s) => add(ci, [PW(s), PR(s)], (x, y) => y !== a.r || types[x] !== a.t)); break;
-      case 'murderType': add(ci, [MW], (x) => types[x] === a.t); break;
-      case 'murderNotType': add(ci, [MW], (x) => types[x] !== a.t); break;
-      case 'murderNotSuspect': add(ci, [K], (x) => x !== a.s); break;
-      case 'murderNextTo': add(ci, [K], (x) => x !== a.s); add(ci, [MR, PR(a.s)], (x, y) => adj[x][y]); break;
-      case 'murderFarFrom': add(ci, [K], (x) => x !== a.s); add(ci, [MR, PR(a.s)], (x, y) => !adj[x][y]); break;
-      case 'murderSameFloor': add(ci, [K], (x) => x !== a.s); add(ci, [MR, PR(a.s)], (x, y) => floor[x] === floor[y]); break;
-      case 'murderAheadOf': add(ci, [MR, PR(a.s)], (x, y) => pos[x] < pos[y]); break;
-      case 'murderBehind': add(ci, [MR, PR(a.s)], (x, y) => pos[x] > pos[y]); break;
-      case 'murderNotWeapon': add(ci, [MW], (x) => x !== a.w); break;
-      case 'murderNotRoom': add(ci, [MR], (x) => x !== a.r); break;
-      case 'murderAdjRoom': add(ci, [MR], (x) => adj[x][a.r]); break;
-      case 'murderNotAdjRoom': add(ci, [MR], (x) => x !== a.r && !adj[x][a.r]); break;
-      case 'murderFloor': add(ci, [MR], (x) => floor[x] === a.f); break;
-      case 'murderNotFloor': add(ci, [MR], (x) => floor[x] !== a.f); break;
-      default: throw new Error('human solver: unknown clue ' + c.type);
-    }
+    const list = clueCons(ctx, c.type, c.args);
+    if (c.speaker === null || c.speaker === undefined) { list.forEach((x) => cons.push({ clue: ci, vars: x.vars, pred: x.pred })); return; }
+    // testimony: true unless the speaker is the killer, in which case it is false
+    if (list.length !== 1) throw new Error('testimony must be one constraint: ' + c.type);
+    const { vars, pred } = list[0], sp = c.speaker;
+    if (vars.includes(K)) cons.push({ clue: ci, vars: [K], pred: (k) => (k === sp) !== pred(k) });
+    else cons.push({ clue: ci, vars: [K, ...vars], pred: (k, x, y) => (k === sp) !== pred(x, y) });
   });
   // the killer is whoever holds the murder weapon and stands in the murder room
   each((s) => {
-    add(-1, [K, PW(s), MW], (k, w, mw) => (k === s) === (w === mw));
-    add(-1, [K, PR(s), MR], (k, r, mr) => (k === s) === (r === mr));
+    cons.push({ clue: -1, vars: [K, PW(s), MW], pred: (k, w, mw) => (k === s) === (w === mw) });
+    cons.push({ clue: -1, vars: [K, PR(s), MR], pred: (k, r, mr) => (k === s) === (r === mr) });
   });
   const groups = [[...Array(n).keys()].map(PW), [...Array(n).keys()].map(PR)];
   return { n, cons, groups, nv: 2 * n + 3, K, MW, MR, PW, PR };
@@ -711,7 +925,8 @@ function propagate(csp, dom, trace) {
   return true;
 }
 
-const answered = (csp, dom) => popcount(dom[csp.K]) === 1 && popcount(dom[csp.MW]) === 1 && popcount(dom[csp.MR]) === 1;
+// solved: every suspect's weapon and room, and the killer, are settled (the whole notebook, not just the answer)
+const answered = (csp, dom) => dom.every((d) => popcount(d) === 1);
 
 // Probing: assume a candidate; if that leads to a contradiction, it can be crossed out.
 function probe(csp, dom, depth, stats) {
@@ -743,44 +958,58 @@ function humanDifficulty(ctx, clues, maxDepth) {
   const dom = new Array(csp.nv).fill((1 << ctx.n) - 1);
   const stats = { probes: 0 };
   if (!propagate(csp, dom)) return { depth: -1, probes: 0 };
-  if (answered(csp, dom)) return { depth: 0, probes: 0, dom };
+  // how many could still be the killer (the liar) once plain elimination stalls
+  const open = popcount(dom[csp.K]);
+  if (answered(csp, dom)) return { depth: 0, probes: 0, open, dom };
   for (let d = 1; d <= (maxDepth || 2); d++) {
     const t = dom.slice(); stats.probes = 0;
-    if (probe(csp, t, d, stats) && answered(csp, t)) return { depth: d, probes: stats.probes, dom: t };
+    if (probe(csp, t, d, stats) && answered(csp, t)) return { depth: d, probes: stats.probes, open, dom: t };
   }
-  return { depth: 99, probes: stats.probes };
+  return { depth: 99, probes: stats.probes, open };
 }
 
 // ---- 40-generate.js
+// Difficulty tiers. Every case has one statement per suspect (the killer's is a lie) plus a few pieces of
+// evidence, which are always true. `ev` bounds the evidence after squeezing; `weights` steer which evidence is
+// drawn (by family); `say` steers testimony; `avoid` keeps clue shapes out of a tier (for evidence and testimony).
+const SPATIAL = ['murderFarFrom', 'murderNotAdjRoom', 'murderNextTo', 'murderAdjRoom', 'murderAheadOf', 'murderBehind', 'murderSameFloor',
+  'notAdjacent', 'adjacent', 'weaponNear', 'diffFloor', 'ahead'];
 const TIERS = {
-  // The on-ramp: four suspects, mostly plain testimony, and no step that needs a "what if?".
-  // `avoid` keeps out the clue shapes new players find hardest to read (layout negatives, relative positions).
+  // The on-ramp: three suspects, plain evidence, and a lie that shows at a glance.
   constable: {
-    id: 'constable', name: 'Constable', blurb: 'Four suspects. A gentle start.',
-    n: 4, minClues: 4, maxClues: 7, maxDirect: 3, minIndirect: 0, minTypes: 3,
-    weights: { direct: 2.0, neg: 1.4, link: 0.9, rel: 0.5, murder: 1.2 },
-    avoid: ['murderFarFrom', 'murderNotAdjRoom', 'murderNextTo', 'murderAdjRoom', 'murderAheadOf', 'murderBehind', 'murderSameFloor',
-      'notAdjacent', 'diffType', 'diffFloor', 'weaponNear', 'weaponNotIn', 'notTypeInRoom', 'ahead', 'sameType'],
-    accept: (h) => h.depth === 0, stars: 1,
+    id: 'constable', name: 'Constable', blurb: 'Three suspects. A gentle start.',
+    n: 3, ev: [1, 4], maxDirect: 1, minTypes: 2,
+    weights: { direct: 1.2, neg: 1.3, link: 1.0, rel: 0.4, murder: 1.3, trait: 1.4 },
+    avoid: SPATIAL.concat(['diffType', 'notTypeInRoom', 'weaponNotIn', 'eitherIn', 'eitherHas', 'diffFloor', 'sameFloor', 'murderNotAdjRoom']),
+    accept: (h) => h.depth === 0 || (h.depth === 1 && h.probes <= 8), stars: 1,
   },
   detective: {
-    id: 'detective', name: 'Detective', blurb: 'Five suspects. Patient reasoning.',
-    n: 5, minClues: 6, maxClues: 10, maxDirect: 1, minIndirect: 3, minTypes: 4,
-    weights: { direct: 0.4, neg: 1.0, link: 1.2, rel: 1.2, murder: 1.6 },
-    accept: (h) => h.depth <= 1 && h.probes <= 30, stars: 2,
+    id: 'detective', name: 'Detective', blurb: 'Four suspects. Patient reasoning.',
+    n: 4, ev: [2, 6], maxDirect: 1, minTypes: 3,
+    weights: { direct: 0.5, neg: 1.0, link: 1.2, rel: 0.9, murder: 1.4, trait: 1.4 },
+    avoid: ['murderFarFrom', 'murderNotAdjRoom', 'weaponNear', 'murderAheadOf', 'murderBehind'],
+    accept: (h) => h.depth === 1 && h.probes <= 30, stars: 2,
   },
   inspector: {
-    id: 'inspector', name: 'Inspector', blurb: 'Six suspects. Fewer gifts.',
-    n: 6, minClues: 8, maxClues: 13, maxDirect: 1, minIndirect: 5, minTypes: 6,
-    weights: { direct: 0.2, neg: 1.0, link: 1.3, rel: 1.5, murder: 1.5 },
-    accept: (h) => h.depth === 1 && h.probes >= 25 && h.probes <= 75, stars: 3,
+    id: 'inspector', name: 'Inspector', blurb: 'Four suspects. Fewer gifts.',
+    n: 4, ev: [2, 7], maxDirect: 0, minTypes: 3,
+    weights: { direct: 0, neg: 1.0, link: 1.3, rel: 1.3, murder: 1.4, trait: 1.3 },
+    accept: (h) => h.depth === 1 && h.probes >= 15 && h.probes <= 70 && h.open > 1, stars: 3,
   },
   mastermind: {
-    id: 'mastermind', name: 'Mastermind', blurb: 'Six suspects. No direct testimony at all.',
-    n: 6, minClues: 8, maxClues: 14, maxDirect: 0, minIndirect: 7, minTypes: 7,
-    weights: { direct: 0, neg: 0.8, link: 1.4, rel: 1.8, murder: 1.4 },
-    accept: (h) => h.depth === 2 || (h.depth === 1 && h.probes >= 55), stars: 4,
+    id: 'mastermind', name: 'Mastermind', blurb: 'Five suspects. Nothing given away.',
+    n: 5, ev: [3, 9], maxDirect: 0, minTypes: 4,
+    weights: { direct: 0, neg: 0.8, link: 1.4, rel: 1.6, murder: 1.4, trait: 1.2 },
+    accept: (h) => h.open > 1 && (h.depth === 2 || (h.depth === 1 && h.probes >= 30)), stars: 4,
   },
+};
+
+// How likely a suspect is to say each kind of thing. People mostly talk about where they were and what they
+// held; liars mostly lie about themselves.
+const SAY_WEIGHT = {
+  has: 1.0, notHas: 1.0, in: 1.2, notIn: 1.0, eitherHas: 0.6, eitherIn: 0.6, holdsType: 0.9, notHoldsType: 0.9, sameType: 0.6, diffType: 0.5,
+  adjacent: 0.6, notAdjacent: 0.5, sameFloor: 0.6, diffFloor: 0.5, ahead: 0.7, murderNotSuspect: 0.6, murderType: 0.7, murderNotType: 0.6,
+  murderNotWeapon: 0.6, murderNotRoom: 0.7, murderFloor: 0.6, murderNotFloor: 0.5, murderAdjRoom: 0.4, murderNotAdjRoom: 0.3, murderTrait: 0.7,
 };
 
 function pickN(rng, count, n) {
@@ -791,12 +1020,14 @@ function validPicks(world, ctx) {
   const types = ctx.types;
   const distinct = new Set(types).size;
   const dup = types.length - distinct;
-  if (distinct < 3 || dup < 1) return false;
+  if (distinct < Math.min(3, ctx.n - 1) || (ctx.n >= 4 && dup < 1)) return false;
   if (world.relations.includes('floor') && new Set(ctx.floor).size < 2) return false;
+  // at least two traits must tell tonight's suspects apart, or the cards are dead weight
+  if (TRAIT_KEYS.filter((k) => new Set(ctx.traits.map((t) => t[k])).size > 1).length < 2) return false;
   // there must be some adjacency among the rooms in play, or the layout clues are dead weight
   let edges = 0;
   for (let i = 0; i < ctx.n; i++) for (let j = i + 1; j < ctx.n; j++) if (ctx.adj[i][j]) edges++;
-  return edges >= 2;
+  return edges >= (ctx.n >= 4 ? 2 : 1);
 }
 
 function attempt(rng, tier, worldId) {
@@ -811,16 +1042,52 @@ function attempt(rng, tier, worldId) {
   const pw = perms[rng.int(perms.length)], pr = perms[rng.int(perms.length)];
   const pwi = inv[perms.indexOf(pw)], pri = inv[perms.indexOf(pr)];
   const truth = { pw, pr, m: rng.int(n) };
+  const avoid = (c) => tier.avoid && tier.avoid.includes(c.type);
+  const all = enumerateClues(ctx);
+  // a statement that is true (or false) whatever happened gives itself away: nobody says one
+  const informative = (c) => {
+    let yes = false, no = false;
+    for (let a = 0; a < perms.length; a++) for (let b = 0; b < perms.length; b++) {
+      const v = c.test(perms[a], inv[a], perms[b], inv[b]);
+      if (c.kind === 'M') { if (v) yes = true; if (v !== (1 << n) - 1) no = true; } else if (v) yes = true; else no = true;
+      if (yes && no) return true;
+    }
+    return false;
+  };
 
-  const pool = enumerateClues(ctx).filter((c) => clueHolds(c, truth, pwi, pri) && !(tier.avoid && tier.avoid.includes(c.type)));
+  // ---- testimony: one statement each. The innocent say something true, the killer something false.
+  const says = [], usedKey = new Set();
+  let directSaid = 0;
+  for (let sp = 0; sp < n; sp++) {
+    const liar = sp === truth.m;
+    const cands = all.filter((c) => TESTIMONY_TYPES.includes(c.type) && !avoid(c) && !usedKey.has(c.type + JSON.stringify(c.args))
+      && !(c.type === 'murderNotSuspect' && c.args.s === sp) && statementTrue(c, truth, pwi, pri) !== liar
+      && !(c.family === 'direct' && !liar && directSaid >= 1) && informative(c));
+    if (!cands.length) return null;
+    const perType = {};
+    cands.forEach((c) => { perType[c.type] = (perType[c.type] || 0) + 1; });
+    const w = cands.map((c) => {
+      const self = clueSuspects(c).includes(sp);
+      return (SAY_WEIGHT[c.type] || 0.5) / perType[c.type] * (self ? (liar ? 3 : 1.6) : 1);
+    });
+    const c = cands[rng.weighted(w)];
+    usedKey.add(c.type + JSON.stringify(c.args));
+    if (c.family === 'direct' && !liar) directSaid++;
+    says.push(testimony(c, sp, n));
+  }
+
+  // ---- evidence: always true. Draw until exactly one world is left, then squeeze out what isn't needed.
+  const pool = all.filter((c) => clueHolds(c, truth, pwi, pri) && !avoid(c));
   const perType = {};
   pool.forEach((c) => { perType[c.type] = (perType[c.type] || 0) + 1; });
   const alive = pool.map(() => true);
   const usedType = {};
-  const chosen = [];
-  let direct = 0, count = n * n * n * 2; // anything above the true maximum
+  let chosen = [];
+  let direct = 0;
   let cur = newSurvivors(ctx), spare = newSurvivors(ctx);
-  while (chosen.length < tier.maxClues + 8) {
+  for (const t of says) { narrow(ctx, cur, t, spare); [cur, spare] = [spare, cur]; }
+  let count = countSurvivingWorlds(ctx, cur);
+  while (count > 1 && chosen.length < tier.ev[1] + 10) {
     // every kind of clue gets a fair turn, however many instances of it happen to be true
     const w = pool.map((c, j) => alive[j] ? (tier.weights[c.family] || 0) / perType[c.type] * Math.pow(0.3, usedType[c.type] || 0) : 0);
     const i = rng.weighted(w);
@@ -829,32 +1096,31 @@ function attempt(rng, tier, worldId) {
     const c = pool[i];
     if (c.family === 'direct' && direct >= tier.maxDirect) continue;
     narrow(ctx, cur, c, spare);
-    const cnt = countSurvivingAnswers(ctx, spare);
+    const cnt = countSurvivingWorlds(ctx, spare);
     if (cnt >= count) continue; // adds nothing right now
     [cur, spare] = [spare, cur];
     chosen.push(c);
     usedType[c.type] = (usedType[c.type] || 0) + 1;
     if (c.family === 'direct') direct++;
     count = cnt;
-    if (count === 1) break;
   }
   if (count !== 1) return null;
-
-  // squeeze out every clue that is not pulling its weight
   for (const c of rng.shuffle(chosen)) {
     const rest = chosen.filter((x) => x !== c);
-    if (solveCount(ctx, rest, 1).count === 1) chosen.splice(chosen.indexOf(c), 1);
+    if (solveCount(ctx, says.concat(rest), 1).count === 1) chosen = rest;
   }
-  const indirect = chosen.filter((c) => c.family !== 'direct' && c.family !== 'neg').length;
-  if (chosen.length < tier.minClues || chosen.length > tier.maxClues || indirect < tier.minIndirect) return null;
+  if (chosen.length < tier.ev[0] || chosen.length > tier.ev[1]) return null;
   const typeCount = {};
   chosen.forEach((c) => { typeCount[c.type] = (typeCount[c.type] || 0) + 1; });
-  if (Object.keys(typeCount).length < tier.minTypes || Math.max(...Object.values(typeCount)) > 3) return null;
-  const murders = chosen.filter((c) => c.kind === 'M').length;
-  if (murders < 2 || murders > Math.ceil(chosen.length * 0.55)) return null;
-  const human = humanDifficulty(ctx, chosen, 2);
+  if (Object.keys(typeCount).length < Math.min(tier.minTypes, chosen.length) || Math.max(...Object.values(typeCount)) > 2) return null;
+  // the testimony has to matter: the evidence alone leaves more than one story
+  if (solveCount(ctx, chosen, 1).count < 2) return null;
+  // and the lie has to show: taken at their word, the statements and the evidence cannot all be true
+  if (solveCount(ctx, says.map((t) => t.base).concat(chosen), 0).count !== 0) return null;
+  const clues = says.concat(chosen);
+  const human = humanDifficulty(ctx, clues, 2);
   if (human.depth < 0 || human.depth > 2) return null; // needs more than nested what-ifs: not a fair puzzle
-  return { ctx, truth, chosen, human };
+  return { ctx, truth, says, chosen, human };
 }
 
 function generatePuzzle(seed, tierId, opts) {
@@ -874,38 +1140,32 @@ function generatePuzzle(seed, tierId, opts) {
   const strict = !!got;
   got = got || best;
   if (!got) throw new Error(`could not build a ${tierId} case for seed ${seed}`);
-  const { ctx, truth, chosen, human } = got;
+  const { ctx, truth, says, chosen, human } = got;
 
-  const ordered = rng.shuffle(chosen);
-  const clues = varyWording(ordered.map((c) => {
-    const variants = clueVariants(c, ctx);
-    const say = variants.filter((v) => v[0] === 'say'), note = variants.filter((v) => v[0] === 'note');
-    const useSay = say.length && (!note.length || rng.chance(0.62));
-    const v = useSay ? rng.pick(say) : rng.pick(note);
-    let speaker = null;
-    if (v[0] === 'say') {
-      const banned = clueSuspects(c);
-      speaker = rng.pick([...Array(ctx.n).keys()].filter((i) => !banned.includes(i)));
-    }
-    return { type: c.type, kind: c.kind, family: c.family, args: c.args, voice: v[0], speaker, text: v[1], vi: variants.indexOf(v), test: c.test };
-  }));
-
+  const word = (c, sp) => {
+    const variants = clueVariants(c.base || c, ctx, sp);
+    const vi = rng.int(variants.length);
+    return Object.assign(c, { voice: variants[vi][0], text: variants[vi][1], vi, speaker: sp === undefined ? null : sp });
+  };
+  const clues = varyWording(says.map((t) => word(t, t.speaker)).concat(rng.shuffle(chosen).map((c) => word(Object.assign({}, c)))));
   const solution = { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m] };
   const rating = Math.max(1, Math.min(5, tier.stars + (human.probes >= 45 ? 1 : 0) - (human.depth === 0 ? 1 : 0)));
   return {
     seed: String(seed), tier: tierId, tierName: tier.name, worldId, n: ctx.n, ctx, clues,
     solution, truth, rating, human: { depth: human.depth, probes: human.probes }, tries, strict,
-    title: rng.pick(titlePool(worldId)), // one draw, as before; node retitle.js makes banked titles unique
+    story: pickStory(rng, ctx.world),
+    title: rng.pick(titlePool(worldId)), // one draw; node retitle.js makes banked titles unique
   };
 }
 
 // ---- 45-bank.js
-// Cases can be saved as small specs (what was picked, the hidden truth, which clues in which wording)
+// Cases can be saved as small specs (what was picked, the hidden truth, the story, which clues in which wording)
 // and rebuilt instantly, so curated cases ship with the page and load with no searching.
+// A clue is [type, args, variant, speaker]: a speaker means testimony (true unless the speaker is the killer).
 function exportPuzzle(p) {
   const { ctx } = p;
   return {
-    s: p.seed, t: p.tier, w: p.worldId, ti: p.title, r: p.rating, h: [p.human.depth, p.human.probes],
+    s: p.seed, t: p.tier, w: p.worldId, ti: p.title, r: p.rating, h: [p.human.depth, p.human.probes], y: p.story,
     S: ctx.suspectIdx, W: ctx.weaponIdx, R: ctx.roomIdx,
     pw: p.truth.pw, pr: p.truth.pr, m: p.truth.m,
     c: p.clues.map((c) => [c.type, c.args, c.vi, c.speaker]),
@@ -921,8 +1181,11 @@ function importPuzzle(spec) {
   const clues = varyWording(spec.c.map(([type, args, vi, speaker]) => {
     const c = byKey.get(key(type, args));
     if (!c) throw new Error('bank clue not found: ' + type);
-    const v = clueVariants(c, ctx)[vi];
-    return { type, kind: c.kind, family: c.family, args, voice: v[0], speaker, text: v[1], vi, test: c.test };
+    const say = speaker !== null && speaker !== undefined;
+    const v = clueVariants(c, ctx, say ? speaker : null)[vi];
+    if (!v) throw new Error('bank clue variant not found: ' + type + ' ' + vi);
+    const base = say ? testimony(c, speaker, ctx.n) : c;
+    return Object.assign({}, base, { voice: v[0], speaker: say ? speaker : null, text: v[1], vi });
   }));
   const truth = { pw: spec.pw, pr: spec.pr, m: spec.m };
   const tier = TIERS[spec.t];
@@ -930,26 +1193,28 @@ function importPuzzle(spec) {
     seed: spec.s, tier: spec.t, tierName: tier.name, worldId: spec.w, n: ctx.n, ctx, clues,
     solution: { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m] },
     truth, rating: spec.r, human: { depth: spec.h[0], probes: spec.h[1] }, title: spec.ti, strict: true,
+    story: spec.y || [0, 0, 0],
   };
 }
 
 // ---- 46-tutorial.js
-// The hand-made first case, in bank format. Three guests, five statements, one move taught per statement:
-// cross out (1), confirm a match (2), cross out (3), the last open square (rooms), a weapon kind (4),
-// and the body's floor (5). test-engine.js checks it has one answer and no spare statement.
+// The hand-made first case, in bank format. Three guests, a statement each, three pieces of evidence.
+// Two guests both claim the Study, so one of them is lying, and the liar is the killer. The evidence then
+// says who, where and with what. test-engine.js checks it has one answer and no spare piece of evidence.
 //   suspects: Dr. Pell, Major Crisp, Miss Lark   weapons: Brass Candlestick, Decanter of Port, Service Revolver
 //   rooms: Study (upstairs), Library (ground floor), Wine Cellar (cellar)
 //   truth: Pell has the Revolver in the Cellar, Crisp has the Port in the Library (the killer), Lark has the Candlestick in the Study
 const TUTORIAL = {
-  s: 'tutorial', t: 'constable', w: 'manor', ti: 'A Lesson at Blackwood', r: 1, h: [0, 0],
+  s: 'tutorial', t: 'constable', w: 'manor', ti: 'A Lesson at Blackwood', r: 1, h: [0, 0], y: [0, 3, 0],
   S: [1, 2, 7], W: [2, 4, 6], R: [1, 4, 6],
   pw: [2, 1, 0], pr: [2, 1, 0], m: 1,
   c: [
-    ['notHas', { s: 0, w: 1 }, 0, 2],
-    ['in', { s: 2, r: 0 }, 1, null],
-    ['notIn', { s: 1, r: 2 }, 0, 0],
-    ['holdsType', { s: 2, t: 'blunt' }, 0, 1],
+    ['notHas', { s: 0, w: 1 }, 0, 0],
+    ['in', { s: 1, r: 0 }, 0, 1],
+    ['in', { s: 2, r: 0 }, 1, 2],
+    ['murderTrait', { k: 'height', v: 'tall' }, 0, null],
     ['murderFloor', { f: 1 }, 0, null],
+    ['holdsType', { s: 2, t: 'blunt' }, 0, null],
   ],
 };
 
@@ -985,12 +1250,17 @@ const TITLE_PLACE = {
   manor: {
     tails: ['at Blackwood', 'at the Manor', 'in the Shires', 'at Michaelmas', 'in the Fog', 'Under the Eaves', 'Behind the Gate', 'in the Rain',
       'Before the Storm', 'After the Storm', 'on the Moor', 'Down the Long Drive', 'in the Small Hours', 'Past the Lodge'],
-    owners: ['Sir Aldous', 'Blackwood Manor', 'the Blackwoods', 'the Old House'],
+    owners: ['Blackwood Manor', 'the Blackwoods', 'the Old House'],
   },
   train: {
     tails: ['on the Meridian', 'Aboard the Express', 'in the Mountains', 'at the Border', 'Through the Pass', 'Before Vienna', 'East of Zurich',
       'Beyond the Viaduct', 'in the Tunnel', 'at Full Speed', 'Past the Frontier', 'at the Eleventh Hour', 'Between Stations', 'Above the Valley'],
-    owners: ['Lucian Marlowe', 'the Meridian', 'the Express', 'the High Pass'],
+    owners: ['the Meridian', 'the Express', 'the High Pass'],
+  },
+  liner: {
+    tails: ['Aboard the Aurelia', 'at Sea', 'in Mid-Atlantic', 'off Nantucket', 'in the Fog', 'on the High Seas', 'Before New York',
+      'After Southampton', 'in the Gulf Stream', 'Under the Stars', 'on the Third Night', 'in Calm Waters', 'at Eight Bells', 'Out of Sight of Land'],
+    owners: ['the Aurelia', 'the Atlantic', 'the Crossing'],
   },
 };
 // words that would point at a method, a room or a suspect even though no name uses them
@@ -1003,7 +1273,9 @@ const TITLE_HINTS = `poison poisoned bitter laced drink draught cup toast port w
   secrets major army regiment debt debts money owed art painting portrait canvas niece flight wings aviator opera aria song
   singer encore count crown exile professor relic tomb crate ink diary diamond jewel jewels gem heiress fortune surgeon
   scalpel naval sea ship captain admiral anchor tide widow mourning black veil fire flame ember candle candlelight light
-  lantern signal lamp ice frost frozen thaw cold chill snow night midnight hat crest trophy curtain drapes`.split(/\s+/).filter(Boolean);
+  lantern signal lamp ice frost frozen thaw cold chill snow night midnight hat crest trophy curtain drapes
+  harpoon whale whaling fish sextant oak gin fizz almond almonds flare deck decks bridge lido pool saloon engine hold cargo purser
+  nurse cabaret broadway tennis wimbledon band hypnotist novelist`.split(/\s+/).filter(Boolean);
 const TITLE_STOP = new Set('the a an of in on at to by and his her one from for with than it is its who never without were was'.split(' '));
 
 const titleWords = (s) => String(s).replace(/&shy;/g, '').toLowerCase().split(/[^a-z]+/).filter((w) => w && !TITLE_STOP.has(w));
@@ -1039,5 +1311,5 @@ function checkAccusation(puzzle, acc) {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { TUTORIAL, generatePuzzle, exportPuzzle, importPuzzle, checkAccusation, solveCount, marginals, humanDifficulty, buildCSP, propagate, TIERS, WORLDS, WEAPON_TYPES, plainText, permutations, makeRng, enumerateClues, buildCtx, clueVariants, titlePool, titleClash, titleBanned, varyWording };
+  module.exports = { TUTORIAL, TRAITS, TRAIT_KEYS, TESTIMONY_TYPES, testimony, statementTrue, caseStory, clueHolds, countSurvivingWorlds, generatePuzzle, exportPuzzle, importPuzzle, checkAccusation, solveCount, marginals, humanDifficulty, buildCSP, propagate, TIERS, WORLDS, WEAPON_TYPES, plainText, permutations, makeRng, enumerateClues, buildCtx, clueVariants, titlePool, titleClash, titleBanned, varyWording };
 }

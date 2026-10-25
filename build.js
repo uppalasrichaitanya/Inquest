@@ -14,18 +14,18 @@ for (const t in bank) { const seen = new Set(); bank[t] = bank[t].filter((c) => 
 const css = dir('ui', '.css');
 const engine = read('dist/engine.js').replace(/if \(typeof module[\s\S]*$/, '');
 const ui = dir('ui', '.js');
-const fonts = 'https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap';
+const fonts = 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..700,0..100;1,9..144,400..700,0..100&family=Instrument+Sans:wght@400..700&display=swap';
 // What a shared link shows: the name and a one-line pitch. SITE_URL (the published address, e.g.
 // https://you.github.io/inquest/) adds the canonical link and og:url, which must be absolute.
-const SITE = { name: 'Inquest', pitch: 'A daily murder mystery. A few true statements, one notebook, exactly one answer.' };
+const SITE = { name: 'Inquest', pitch: 'A daily murder mystery. Every suspect makes a statement, and only the killer lies.' };
 const url = process.env.SITE_URL || '';
-const icon = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#F1F2EE"/><path d="M16.5 6.2c5.6.2 9.6 4.4 9.3 9.9-.3 5.6-4.8 9.8-10.3 9.6-5.4-.2-9.4-4.6-9.1-10 .3-5.5 4.9-9.6 10.6-9.3" fill="none" stroke="#CF3F28" stroke-width="2.6" stroke-linecap="round"/></svg>`);
+const icon = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1D5641"/><circle cx="13.5" cy="13.5" r="7.5" fill="none" stroke="#F4EEDF" stroke-width="3"/><path d="M19.5 19.5L26 26" stroke="#F4EEDF" stroke-width="4" stroke-linecap="round"/><circle cx="13.5" cy="13.5" r="3" fill="#D9452F"/></svg>`);
 const head = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${SITE.name}</title>
 <meta name="description" content="${SITE.pitch}">
-<meta name="theme-color" content="#F1F2EE" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#15181D" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#1D5641" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#143B2E" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="${icon}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="${SITE.name}">
