@@ -56,6 +56,17 @@ ahead
   train 1 say self  Walking back from the engine, you'd pass me before Count Orlov.
   train 2 say self  I was further up the train than Count Orlov. Nearer the engine, I mean.
 
+attrInRoom
+  manor 0 note      Whoever was in the Master Bedroom had something light.
+  manor 1 note      The person in the Master Bedroom was carrying something light.
+  manor 2 note      The weapon in the Master Bedroom was light: the marks on the floor say so.
+  train 0 note      Whoever was in the Mail Car had something light.
+  train 1 note      The person in the Mail Car was carrying something light.
+  train 2 note      The weapon in the Mail Car was light: the marks on the floor say so.
+  liner 0 note      Whoever was in the Wheelhouse had something heavy.
+  liner 1 note      The person in the Wheelhouse was carrying something heavy.
+  liner 2 note      The weapon in the Wheelhouse was heavy: the marks on the floor say so.
+
 diffFloor
   manor 0 note      Lady Vane and Dr. Pell were on different floors.
   manor 1 note      Lady Vane was on one floor, Dr. Pell on another.
@@ -163,6 +174,35 @@ eitherIn
   liner 1 say self  Someone was in the Wheelhouse: Sir Reginald or me. I won’t say which.
   liner 2 say self  The Wheelhouse? That was Sir Reginald or me. I’m saying no more.
 
+eitherMotive
+  manor 0 note      Money was the motive of Lady Vane or of Dr. Pell.
+  manor 1 note      Either Lady Vane or Dr. Pell had money as a motive.
+  manor 2 note      Look for money, and you'll find Lady Vane or Dr. Pell.
+  manor 0 say       Either Lady Vane or Dr. Pell had money as a motive.
+  manor 1 say       Money was the motive of Lady Vane or Dr. Pell.
+  manor 2 say       Look for money, and you'll find Lady Vane or Dr. Pell.
+  manor 0 say self  Either Dr. Pell or I had money as a motive.
+  manor 1 say self  Money was the motive of Dr. Pell or me.
+  manor 2 say self  Look for money, and you'll find Dr. Pell or me.
+  train 0 note      Money was the motive of Mme Valcourt or of Count Orlov.
+  train 1 note      Either Mme Valcourt or Count Orlov had money as a motive.
+  train 2 note      Look for money, and you'll find Mme Valcourt or Count Orlov.
+  train 0 say       Either Mme Valcourt or Count Orlov had money as a motive.
+  train 1 say       Money was the motive of Mme Valcourt or Count Orlov.
+  train 2 say       Look for money, and you'll find Mme Valcourt or Count Orlov.
+  train 0 say self  Either Count Orlov or I had money as a motive.
+  train 1 say self  Money was the motive of Count Orlov or me.
+  train 2 say self  Look for money, and you'll find Count Orlov or me.
+  liner 0 note      Money was the motive of Miss Moreau or of Sir Reginald.
+  liner 1 note      Either Miss Moreau or Sir Reginald had money as a motive.
+  liner 2 note      Look for money, and you'll find Miss Moreau or Sir Reginald.
+  liner 0 say       Either Miss Moreau or Sir Reginald had money as a motive.
+  liner 1 say       Money was the motive of Miss Moreau or Sir Reginald.
+  liner 2 say       Look for money, and you'll find Miss Moreau or Sir Reginald.
+  liner 0 say self  Either Sir Reginald or I had money as a motive.
+  liner 1 say self  Money was the motive of Sir Reginald or me.
+  liner 2 say self  Look for money, and you'll find Sir Reginald or me.
+
 has
   manor 0 note      Lady Vane had the Moroccan Dagger. The prints leave no doubt.
   manor 1 note      The Moroccan Dagger is covered in Lady Vane's fingerprints, and nobody else's. Lady Vane had it.
@@ -191,6 +231,64 @@ has
   liner 0 say self  I had the Whaling Harpoon. I won't pretend otherwise.
   liner 1 say self  The Whaling Harpoon was mine to hold all evening.
   liner 2 say self  Fine, yes, I had the Whaling Harpoon. It went with my outfit.
+
+hasMotive
+  manor 0 note      Lady Vane's motive was money.
+  manor 1 note      If Lady Vane had a reason, it was money.
+  manor 2 note      Lady Vane had a motive: money. Doesn't everyone?
+  manor 0 say       Lady Vane's motive was money.
+  manor 1 say       If Lady Vane had a reason, it was money.
+  manor 2 say       Lady Vane's reason? Money, obviously.
+  manor 0 say self  If I had a motive, it was money. I'm not ashamed.
+  manor 1 say self  My reason? It would be money, I suppose.
+  manor 2 say self  It was money, if you must know. That's my motive.
+  train 0 note      Mme Valcourt's motive was money.
+  train 1 note      If Mme Valcourt had a reason, it was money.
+  train 2 note      Mme Valcourt had a motive: money. Doesn't everyone?
+  train 0 say       Mme Valcourt's motive was money.
+  train 1 say       If Mme Valcourt had a reason, it was money.
+  train 2 say       Mme Valcourt's reason? Money, obviously.
+  train 0 say self  If I had a motive, it was money. I'm not ashamed.
+  train 1 say self  My reason? It would be money, I suppose.
+  train 2 say self  It was money, if you must know. That's my motive.
+  liner 0 note      Miss Moreau's motive was money.
+  liner 1 note      If Miss Moreau had a reason, it was money.
+  liner 2 note      Miss Moreau had a motive: money. Doesn't everyone?
+  liner 0 say       Miss Moreau's motive was money.
+  liner 1 say       If Miss Moreau had a reason, it was money.
+  liner 2 say       Miss Moreau's reason? Money, obviously.
+  liner 0 say self  If I had a motive, it was money. I'm not ashamed.
+  liner 1 say self  My reason? It would be money, I suppose.
+  liner 2 say self  It was money, if you must know. That's my motive.
+
+holdsAttr
+  manor 0 note      Lady Vane's weapon was something light.
+  manor 1 note      Lady Vane was carrying something light. It showed.
+  manor 2 note      A search of Lady Vane's luggage settles it: Lady Vane's weapon was something light.
+  manor 0 say       Lady Vane had something light.
+  manor 1 say       Lady Vane's weapon was something light. I noticed.
+  manor 2 say       Lady Vane was carrying something light, and making a poor job of hiding it.
+  manor 0 say self  My weapon was something light, if you must know.
+  manor 1 say self  I had something light. What of it?
+  manor 2 say self  I'll admit to carrying something light.
+  train 0 note      Mme Valcourt's weapon was something light.
+  train 1 note      Mme Valcourt was carrying something light. It showed.
+  train 2 note      A search of Mme Valcourt's luggage settles it: Mme Valcourt's weapon was something light.
+  train 0 say       Mme Valcourt had something light.
+  train 1 say       Mme Valcourt's weapon was something light. I noticed.
+  train 2 say       Mme Valcourt was carrying something light, and making a poor job of hiding it.
+  train 0 say self  My weapon was something light, if you must know.
+  train 1 say self  I had something light. What of it?
+  train 2 say self  I'll admit to carrying something light.
+  liner 0 note      Miss Moreau's weapon was something heavy.
+  liner 1 note      Miss Moreau was carrying something heavy. It showed.
+  liner 2 note      A search of Miss Moreau's luggage settles it: Miss Moreau's weapon was something heavy.
+  liner 0 say       Miss Moreau had something heavy.
+  liner 1 say       Miss Moreau's weapon was something heavy. I noticed.
+  liner 2 say       Miss Moreau was carrying something heavy, and making a poor job of hiding it.
+  liner 0 say self  My weapon was something heavy, if you must know.
+  liner 1 say self  I had something heavy. What of it?
+  liner 2 say self  I'll admit to carrying something heavy.
 
 holdsType
   manor 0 note      Lady Vane's weapon was something sharp.
@@ -250,6 +348,79 @@ in
   liner 1 say self  I never left the Wheelhouse.
   liner 2 say self  I was in the Wheelhouse, minding my own business, which is more than some people can say.
 
+inLight
+  manor 0 note      Lady Vane was in a dark room.
+  manor 1 note      Wherever Lady Vane was, it was dark.
+  manor 2 note      Lady Vane was in a dark room: there are cobwebs on the cuffs to prove it.
+  manor 0 say       Lady Vane was in a dark room.
+  manor 1 say       Wherever Lady Vane was, it was dark.
+  manor 2 say       Lady Vane was in a dark room. I heard the stumbling.
+  manor 0 say self  I was in a dark room.
+  manor 1 say self  Wherever I was, it was dark.
+  manor 2 say self  I was in a dark room. I couldn't see my own hand.
+  train 0 note      Mme Valcourt was in a dark carriage.
+  train 1 note      Wherever Mme Valcourt was, it was dark.
+  train 2 note      Mme Valcourt was in a dark carriage: there are cobwebs on the cuffs to prove it.
+  train 0 say       Mme Valcourt was in a dark carriage.
+  train 1 say       Wherever Mme Valcourt was, it was dark.
+  train 2 say       Mme Valcourt was in a dark carriage. I heard the stumbling.
+  train 0 say self  I was in a dark carriage.
+  train 1 say self  Wherever I was, it was dark.
+  train 2 say self  I was in a dark carriage. I couldn't see my own hand.
+  liner 0 note      Miss Moreau was in a dark room.
+  liner 1 note      Wherever Miss Moreau was, it was dark.
+  liner 2 note      Miss Moreau was in a dark room: there are cobwebs on the cuffs to prove it.
+  liner 0 say       Miss Moreau was in a dark room.
+  liner 1 say       Wherever Miss Moreau was, it was dark.
+  liner 2 say       Miss Moreau was in a dark room. I heard the stumbling.
+  liner 0 say self  I was in a dark room.
+  liner 1 say self  Wherever I was, it was dark.
+  liner 2 say self  I was in a dark room. I couldn't see my own hand.
+
+motiveNotRoom
+  manor 0 note      Whoever's motive was money wasn't in the Master Bedroom.
+  manor 1 note      The Master Bedroom and money don't go together.
+  manor 2 note      Whoever had money as a motive, it wasn't the Master Bedroom they were in.
+  train 0 note      Whoever's motive was money wasn't in the Mail Car.
+  train 1 note      The Mail Car and money don't go together.
+  train 2 note      Whoever had money as a motive, it wasn't the Mail Car they were in.
+  liner 0 note      Whoever's motive was money wasn't in the Wheelhouse.
+  liner 1 note      The Wheelhouse and money don't go together.
+  liner 2 note      Whoever had money as a motive, it wasn't the Wheelhouse they were in.
+
+motiveNotWeapon
+  manor 0 note      Whoever's motive was money didn't have the Moroccan Dagger.
+  manor 1 note      The Moroccan Dagger and money don't go together.
+  manor 2 note      Whoever had money as a motive, it wasn't the Moroccan Dagger they carried.
+  train 0 note      Whoever's motive was money didn't have the Jewelled Hat Pin.
+  train 1 note      The Jewelled Hat Pin and money don't go together.
+  train 2 note      Whoever had money as a motive, it wasn't the Jewelled Hat Pin they carried.
+  liner 0 note      Whoever's motive was money didn't have the Whaling Harpoon.
+  liner 1 note      The Whaling Harpoon and money don't go together.
+  liner 2 note      Whoever had money as a motive, it wasn't the Whaling Harpoon they carried.
+
+motiveRoom
+  manor 0 note      Whoever had money as a motive was in the Master Bedroom.
+  manor 1 note      The Master Bedroom held whoever's motive was money.
+  manor 2 note      Find the motive money and you find the Master Bedroom: they go together.
+  train 0 note      Whoever had money as a motive was in the Mail Car.
+  train 1 note      The Mail Car held whoever's motive was money.
+  train 2 note      Find the motive money and you find the Mail Car: they go together.
+  liner 0 note      Whoever had money as a motive was in the Wheelhouse.
+  liner 1 note      The Wheelhouse held whoever's motive was money.
+  liner 2 note      Find the motive money and you find the Wheelhouse: they go together.
+
+motiveWeapon
+  manor 0 note      Whoever had money as a motive had the Moroccan Dagger.
+  manor 1 note      The Moroccan Dagger belonged to whoever's motive was money.
+  manor 2 note      Find the motive money and you find the Moroccan Dagger: they go together.
+  train 0 note      Whoever had money as a motive had the Jewelled Hat Pin.
+  train 1 note      The Jewelled Hat Pin belonged to whoever's motive was money.
+  train 2 note      Find the motive money and you find the Jewelled Hat Pin: they go together.
+  liner 0 note      Whoever had money as a motive had the Whaling Harpoon.
+  liner 1 note      The Whaling Harpoon belonged to whoever's motive was money.
+  liner 2 note      Find the motive money and you find the Whaling Harpoon: they go together.
+
 murderAdjRoom
   manor 0 note      The body was found a door or a stair away from the Master Bedroom, not in the Master Bedroom itself.
   manor 0 note      The body was found a doorway or a flight of stairs away from the Master Bedroom, not in the Master Bedroom itself.   (every second such clue in a case)
@@ -287,6 +458,26 @@ murderAheadOf
   train 1 note      The killer was further up the train than Mme Valcourt.
   train 2 note      Walking back from the engine, you'd reach the killer before Mme Valcourt.
 
+murderAttr
+  manor 0 note      The murder weapon was light.
+  manor 1 note      The coroner says the murder weapon was light.
+  manor 2 note      Whatever the killer used, it was light.
+  manor 0 say       The killer used something light. I'm sure of it.
+  manor 1 say       It was done with something light. I saw.
+  manor 2 say       Mark my words: the murder weapon was light.
+  train 0 note      The murder weapon was light.
+  train 1 note      The coroner says the murder weapon was light.
+  train 2 note      Whatever the killer used, it was light.
+  train 0 say       The killer used something light. I'm sure of it.
+  train 1 say       It was done with something light. I saw.
+  train 2 say       Mark my words: the murder weapon was light.
+  liner 0 note      The murder weapon was heavy.
+  liner 1 note      The coroner says the murder weapon was heavy.
+  liner 2 note      Whatever the killer used, it was heavy.
+  liner 0 say       The killer used something heavy. I'm sure of it.
+  liner 1 say       It was done with something heavy. I saw.
+  liner 2 say       Mark my words: the murder weapon was heavy.
+
 murderBehind
   train 0 note      The killer's carriage was further from the engine than Mme Valcourt's.
   train 1 note      The killer was further back along the train than Mme Valcourt.
@@ -320,6 +511,46 @@ murderFloor
   liner 0 say       The body was found on the sun deck.
   liner 1 say       It happened on the sun deck. I heard it.
   liner 2 say       It was on the sun deck, I'm sure of it. I heard the commotion.
+
+murderLight
+  manor 0 note      The body was found in a dark room.
+  manor 1 note      It happened in a dark room.
+  manor 2 note      It happened in the dark: the body was in a dark room.
+  manor 0 say       The body was in a dark room.
+  manor 1 say       It happened in a dark room. I'm sure.
+  manor 2 say       It happened in the dark, in a dark room. Typical.
+  train 0 note      The body was found in a dark carriage.
+  train 1 note      It happened in a dark carriage.
+  train 2 note      It happened in the dark: the body was in a dark carriage.
+  train 0 say       The body was in a dark carriage.
+  train 1 say       It happened in a dark carriage. I'm sure.
+  train 2 say       It happened in the dark, in a dark carriage. Typical.
+  liner 0 note      The body was found in a dark room.
+  liner 1 note      It happened in a dark room.
+  liner 2 note      It happened in the dark: the body was in a dark room.
+  liner 0 say       The body was in a dark room.
+  liner 1 say       It happened in a dark room. I'm sure.
+  liner 2 say       It happened in the dark, in a dark room. Typical.
+
+murderMotive
+  manor 0 note      The killer's motive was money.
+  manor 1 note      Mallory is sure of the why: money.
+  manor 2 note      The motive was money. It usually is.
+  manor 0 say       The killer's motive was money, I'd bet on it.
+  manor 1 say       It was money. It's always money.
+  manor 2 say       Whoever did it, the reason was money.
+  train 0 note      The killer's motive was money.
+  train 1 note      Mallory is sure of the why: money.
+  train 2 note      The motive was money. It usually is.
+  train 0 say       The killer's motive was money, I'd bet on it.
+  train 1 say       It was money. It's always money.
+  train 2 say       Whoever did it, the reason was money.
+  liner 0 note      The killer's motive was money.
+  liner 1 note      Mallory is sure of the why: money.
+  liner 2 note      The motive was money. It usually is.
+  liner 0 say       The killer's motive was money, I'd bet on it.
+  liner 1 say       It was money. It's always money.
+  liner 2 say       Whoever did it, the reason was money.
 
 murderNextTo
   manor 0 note      The killer was in a room next to Lady Vane's, a door or a stair away.
@@ -379,6 +610,26 @@ murderNotFloor
   liner 0 say       The body wasn't found on the sun deck.
   liner 1 say       Whatever happened, it didn't happen on the sun deck.
   liner 2 say       It can't have been on the sun deck. It was quiet as a church on the sun deck.
+
+murderNotMotive
+  manor 0 note      The motive was not money.
+  manor 1 note      Rule out money as the motive.
+  manor 2 note      Whatever the killer's reason, it wasn't money.
+  manor 0 say       The motive wasn't money.
+  manor 1 say       Whatever the reason, it wasn't money.
+  manor 2 say       Nobody here would kill for money. Not this time.
+  train 0 note      The motive was not money.
+  train 1 note      Rule out money as the motive.
+  train 2 note      Whatever the killer's reason, it wasn't money.
+  train 0 say       The motive wasn't money.
+  train 1 say       Whatever the reason, it wasn't money.
+  train 2 say       Nobody here would kill for money. Not this time.
+  liner 0 note      The motive was not money.
+  liner 1 note      Rule out money as the motive.
+  liner 2 note      Whatever the killer's reason, it wasn't money.
+  liner 0 say       The motive wasn't money.
+  liner 1 say       Whatever the reason, it wasn't money.
+  liner 2 say       Nobody here would kill for money. Not this time.
 
 murderNotRoom
   manor 0 note      The body was not found in the Master Bedroom.
@@ -636,6 +887,35 @@ notIn
   liner 1 say self  I wasn't in the Wheelhouse, whatever you've heard.
   liner 2 say self  The Wheelhouse? I wasn't there. I wouldn't be seen dead there, if you'll pardon the expression.
 
+notMotive
+  manor 0 note      Lady Vane's motive was not money.
+  manor 1 note      Whatever drove Lady Vane, it wasn't money.
+  manor 2 note      Rule out money for Lady Vane.
+  manor 0 say       Lady Vane's motive was not money.
+  manor 1 say       Whatever drove Lady Vane, it wasn't money.
+  manor 2 say       Lady Vane, driven by money? Hardly.
+  manor 0 say self  My motive was not money.
+  manor 1 say self  Whatever my reasons, money wasn't one of them.
+  manor 2 say self  Me? Driven by money? Hardly.
+  train 0 note      Mme Valcourt's motive was not money.
+  train 1 note      Whatever drove Mme Valcourt, it wasn't money.
+  train 2 note      Rule out money for Mme Valcourt.
+  train 0 say       Mme Valcourt's motive was not money.
+  train 1 say       Whatever drove Mme Valcourt, it wasn't money.
+  train 2 say       Mme Valcourt, driven by money? Hardly.
+  train 0 say self  My motive was not money.
+  train 1 say self  Whatever my reasons, money wasn't one of them.
+  train 2 say self  Me? Driven by money? Hardly.
+  liner 0 note      Miss Moreau's motive was not money.
+  liner 1 note      Whatever drove Miss Moreau, it wasn't money.
+  liner 2 note      Rule out money for Miss Moreau.
+  liner 0 say       Miss Moreau's motive was not money.
+  liner 1 say       Whatever drove Miss Moreau, it wasn't money.
+  liner 2 say       Miss Moreau, driven by money? Hardly.
+  liner 0 say self  My motive was not money.
+  liner 1 say self  Whatever my reasons, money wasn't one of them.
+  liner 2 say self  Me? Driven by money? Hardly.
+
 notTypeInRoom
   manor 0 note      The person in the Master Bedroom wasn't carrying a blade.
   manor 1 note      Whoever was in the Master Bedroom didn't have anything sharp.
@@ -739,6 +1019,17 @@ weaponIn
   liner 0 note      Whoever was in the Wheelhouse was holding the Whaling Harpoon.
   liner 1 note      The Whaling Harpoon was in the Wheelhouse, in somebody's hand.
   liner 2 note      The Whaling Harpoon turned up in the Wheelhouse, along with whoever was holding it.
+
+weaponLight
+  manor 0 note      The Moroccan Dagger was in a dark room.
+  manor 1 note      Whoever had the Moroccan Dagger was in a dark room.
+  manor 2 note      The Moroccan Dagger spent the evening in a dark room.
+  train 0 note      The Jewelled Hat Pin was in a dark carriage.
+  train 1 note      Whoever had the Jewelled Hat Pin was in a dark carriage.
+  train 2 note      The Jewelled Hat Pin spent the evening in a dark carriage.
+  liner 0 note      The Whaling Harpoon was in a dark room.
+  liner 1 note      Whoever had the Whaling Harpoon was in a dark room.
+  liner 2 note      The Whaling Harpoon spent the evening in a dark room.
 
 weaponNear
   manor 0 note      The Moroccan Dagger was in a room next to the Master Bedroom (a door or a stair away), not in the Master Bedroom itself.

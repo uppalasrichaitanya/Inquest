@@ -3,12 +3,17 @@
 // is a candidate being crossed out. Where plain elimination stalls, it tries one "what if?" at a
 // time (depth 1), or a what-if inside a what-if (depth 2). That depth is how hard the case feels.
 //
-// Variables: 0..n-1 weapon of suspect s | n..2n-1 room of suspect s | 2n killer | 2n+1 murder weapon | 2n+2 murder room
+// Variables: 0..n-1 weapon of suspect s | n..2n-1 room of suspect s | (with motives) 2n..3n-1 motive of suspect s |
+// then the killer, the murder weapon, the murder room and (with motives) the killer's motive. varsOf() names them.
+function varsOf(ctx) {
+  const n = ctx.n, mot = !!ctx.motives, K = mot ? 3 * n : 2 * n;
+  return { n, PW: (s) => s, PR: (s) => n + s, PM: (s) => 2 * n + s, K, MW: K + 1, MR: K + 2, MM: mot ? K + 3 : -1, nv: K + (mot ? 4 : 3), mot };
+}
 
 // The constraints a clue puts on the variables: a list of { vars, pred }.
 function clueCons(ctx, type, a) {
-  const n = ctx.n, { adj, floor, pos, types, traits } = ctx;
-  const PW = (s) => s, PR = (s) => n + s, K = 2 * n, MW = 2 * n + 1, MR = 2 * n + 2;
+  const n = ctx.n, { adj, floor, pos, types, traits, wattr, light } = ctx;
+  const { PW, PR, PM, K, MW, MR, MM } = varsOf(ctx);
   const out = [];
   const add = (vars, pred) => out.push({ vars, pred });
   const each = (f) => { for (let s = 0; s < n; s++) f(s); };
@@ -50,14 +55,28 @@ function clueCons(ctx, type, a) {
     case 'murderFloor': add([MR], (x) => floor[x] === a.f); break;
     case 'murderNotFloor': add([MR], (x) => floor[x] !== a.f); break;
     case 'murderTrait': add([K], (x) => traits[x][a.k] === a.v); break;
+    case 'holdsAttr': add([PW(a.s)], (x) => wattr[a.k][x] === a.v); break;
+    case 'attrInRoom': each((s) => add([PW(s), PR(s)], (x, y) => y !== a.r || wattr[a.k][x] === a.v)); break;
+    case 'murderAttr': add([MW], (x) => wattr[a.k][x] === a.v); break;
+    case 'inLight': add([PR(a.s)], (x) => light[x] === a.v); break;
+    case 'weaponLight': each((s) => add([PW(s), PR(s)], (x, y) => x !== a.w || light[y] === a.v)); break;
+    case 'murderLight': add([MR], (x) => light[x] === a.v); break;
+    case 'hasMotive': add([PM(a.s)], (x) => x === a.m); break;
+    case 'notMotive': add([PM(a.s)], (x) => x !== a.m); break;
+    case 'eitherMotive': add([PM(a.a), PM(a.b)], (x, y) => x === a.m || y === a.m); break;
+    case 'motiveWeapon': each((s) => add([PM(s), PW(s)], (x, y) => (x === a.m) === (y === a.w))); break;
+    case 'motiveNotWeapon': each((s) => add([PM(s), PW(s)], (x, y) => !(x === a.m && y === a.w))); break;
+    case 'motiveRoom': each((s) => add([PM(s), PR(s)], (x, y) => (x === a.m) === (y === a.r))); break;
+    case 'motiveNotRoom': each((s) => add([PM(s), PR(s)], (x, y) => !(x === a.m && y === a.r))); break;
+    case 'murderMotive': add([MM], (x) => x === a.m); break;
+    case 'murderNotMotive': add([MM], (x) => x !== a.m); break;
     default: throw new Error('human solver: unknown clue ' + type);
   }
   return out;
 }
 
 function buildCSP(ctx, clues) {
-  const n = ctx.n;
-  const PW = (s) => s, PR = (s) => n + s, K = 2 * n, MW = 2 * n + 1, MR = 2 * n + 2;
+  const V = varsOf(ctx), { n, PW, PR, PM, K, MW, MR, MM } = V;
   const cons = [];
   const each = (f) => { for (let s = 0; s < n; s++) f(s); };
   clues.forEach((c, ci) => {
@@ -69,13 +88,15 @@ function buildCSP(ctx, clues) {
     if (vars.includes(K)) cons.push({ clue: ci, vars: [K], pred: (k) => (k === sp) !== pred(k) });
     else cons.push({ clue: ci, vars: [K, ...vars], pred: (k, x, y) => (k === sp) !== pred(x, y) });
   });
-  // the killer is whoever holds the murder weapon and stands in the murder room
+  // the killer is whoever holds the murder weapon, stands in the murder room and (with motives) had the motive
   each((s) => {
     cons.push({ clue: -1, vars: [K, PW(s), MW], pred: (k, w, mw) => (k === s) === (w === mw) });
     cons.push({ clue: -1, vars: [K, PR(s), MR], pred: (k, r, mr) => (k === s) === (r === mr) });
+    if (V.mot) cons.push({ clue: -1, vars: [K, PM(s), MM], pred: (k, m, mm) => (k === s) === (m === mm) });
   });
   const groups = [[...Array(n).keys()].map(PW), [...Array(n).keys()].map(PR)];
-  return { n, cons, groups, nv: 2 * n + 3, K, MW, MR, PW, PR };
+  if (V.mot) groups.push([...Array(n).keys()].map(PM));
+  return Object.assign({ cons, groups }, V);
 }
 
 const popcount = (x) => { let c = 0; while (x) { x &= x - 1; c++; } return c; };

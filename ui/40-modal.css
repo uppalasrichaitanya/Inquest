@@ -90,3 +90,17 @@ table.verdict thead td { font: 700 11px/1 var(--sans); letter-spacing: .1em; tex
   .rules3 li { grid-template-columns: 1fr; gap: 8px; }
   .stamp.big { right: -34px; font-size: 15px; }
 }
+
+/* the verdict: how the lie unravelled */
+.unravel { margin: 0 0 16px; padding: 16px 18px; border-radius: 14px; background: var(--wash); text-align: left; }
+.unravel .kicker { color: var(--red); margin-bottom: 8px; }
+.unravel p { margin: 0 0 8px; }
+.unravel .said-lie { font: italic 400 17px/1.45 var(--serif); text-decoration: line-through; text-decoration-color: var(--pen); text-decoration-thickness: 2px; }
+.unravel .core { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
+.unravel .core li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border-radius: 10px; background: var(--card); font-size: 15px; line-height: 1.4; }
+.unravel .core .face { --fs: 26px !important; }
+.unravel .core .evi { width: 20px; height: 20px; margin-top: 1px; }
+.opt .ri, .opt .mi { width: 22px; height: 22px; color: var(--green); }
+.opt .mi { color: var(--red); }
+.opt[aria-pressed='true'] .ri, .opt[aria-pressed='true'] .mi { color: var(--gold); }
+.how .mi { width: 16px; height: 16px; vertical-align: -3px; color: var(--red); }

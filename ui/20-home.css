@@ -14,6 +14,12 @@
 .today h2 { margin: 8px 0 8px; font: 600 clamp(30px, 3.6vw, 44px)/1.05 var(--serif); letter-spacing: -.01em; font-variation-settings: 'opsz' 96; text-wrap: balance; }
 .today .where { margin: 0; color: var(--muted); max-width: 36em; }
 .today .feel { margin: 10px 0 0; font: italic 500 18px/1.4 var(--serif); }
+.props { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.props li { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--wash); color: var(--green); --card: var(--wash); }
+.props li svg { width: 24px; height: 24px; }
+.props li.dark { background: #1E2A33; color: #C9D6E2; --card: #1E2A33; }
+.props li.mot { color: var(--red); }
+.props li.div { width: 1px; height: 26px; margin: 0 4px; background: var(--rule); border-radius: 0; }
 .today .go { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 22px; }
 .state { font-size: 14.5px; color: var(--muted); }
 .state.done { color: var(--green); font-weight: 600; }

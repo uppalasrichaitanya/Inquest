@@ -42,6 +42,7 @@ function renderHome() {
           <h2 id="today-title">${esc(D.spec.ti)}</h2>
           <p class="where">${esc(w.name)}, ${w.year}. ${esc(story.occasion)}</p>
           <p class="feel">${esc(DAY_FEEL[D.tier])}</p>
+          <ul class="props" aria-label="The weapons and the ${unitOf(P.ctx)}s">${P.ctx.weapons.map((x) => `<li title="${esc(x.name)}">${weaponIcon(x)}</li>`).join('')}<li class="div"></li>${P.ctx.rooms.map((x) => `<li title="${esc(x.name)}" class="${x.light === 'dark' ? 'dark' : ''}">${roomIcon(x)}</li>`).join('')}${P.ctx.motives ? '<li class="div"></li>' + P.ctx.motives.map((x) => `<li title="${esc(x.name)}" class="mot">${motiveIcon(x)}</li>`).join('') : ''}</ul>
           <div class="go"><button class="btn big" data-act="open-day" data-n="${n}">${go}</button>${s.solved ? `<span class="state done">${stateWord(D.spec)}</span>` : ''}</div>
           ${gentle}
         </div>
@@ -136,6 +137,7 @@ function howToHTML() {
   return `<p class="kicker">Inquest</p><h2>How to play</h2>
     <p>Someone has been murdered. Each suspect was in a different room, holding a different weapon. Find <b>who</b> did it, <b>with what</b>, and <b>where</b>.</p>
     ${rulesHTML()}
+    <p><b>The cards.</b> Every suspect, weapon and room has a card with its facts: height, hand, hair and eyes; weight and material; floor, and whether the lamps were lit. The evidence often names a fact rather than a person, so read the cards. On Sundays each suspect also had a different motive.</p>
     <p><b>The notebook.</b> Tap a square once to rule it out, twice to circle a match, a third time to clear it. Faint marks follow from yours. Mark a statement <b>True</b> or <b>A lie</b> and the notebook follows that too.</p>
     <p><b>The map.</b> Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included. On the train, carriages coupled together are next to each other. As you place people and weapons, they appear on the map.</p>
     <p class="soft">Every case has exactly one answer, and the whole notebook can be filled in by logic alone. A wrong accusation goes on your record, and tells you which clue it breaks.</p>

@@ -16,7 +16,8 @@ const TIERS = {
     id: 'detective', name: 'Detective', blurb: 'Four suspects. Patient reasoning.',
     n: 4, ev: [2, 6], maxDirect: 1, minTypes: 3,
     weights: { direct: 0.5, neg: 1.0, link: 1.2, rel: 0.9, murder: 1.4, trait: 1.4 },
-    avoid: ['murderFarFrom', 'murderNotAdjRoom', 'weaponNear', 'murderAheadOf', 'murderBehind'],
+    // easy days keep "next to" for the evidence and keep it plain
+    avoid: ['murderFarFrom', 'murderNotAdjRoom', 'murderNextTo', 'weaponNear', 'murderAheadOf', 'murderBehind', 'notAdjacent', 'murderAdjRoom'],
     accept: (h) => h.depth === 1 && h.probes <= 30, stars: 2,
   },
   inspector: {
@@ -25,11 +26,12 @@ const TIERS = {
     weights: { direct: 0, neg: 1.0, link: 1.3, rel: 1.3, murder: 1.4, trait: 1.3 },
     accept: (h) => h.depth === 1 && h.probes >= 15 && h.probes <= 70 && h.open > 1, stars: 3,
   },
+  // Sundays ask why as well: four suspects, and a motive each
   mastermind: {
-    id: 'mastermind', name: 'Mastermind', blurb: 'Five suspects. Nothing given away.',
-    n: 5, ev: [3, 9], maxDirect: 0, minTypes: 4,
-    weights: { direct: 0, neg: 0.8, link: 1.4, rel: 1.6, murder: 1.4, trait: 1.2 },
-    accept: (h) => h.open > 1 && (h.depth === 2 || (h.depth === 1 && h.probes >= 30)), stars: 4,
+    id: 'mastermind', name: 'Mastermind', blurb: 'Four suspects, four motives. Nothing given away.',
+    n: 4, motives: true, ev: [3, 10], maxDirect: 0, minTypes: 4,
+    weights: { direct: 0, neg: 0.9, link: 1.4, rel: 1.4, murder: 1.4, trait: 1.2 },
+    accept: (h) => h.open > 1 && (h.depth === 2 || (h.depth === 1 && h.probes >= 25)), stars: 4,
   },
 };
 
@@ -39,6 +41,7 @@ const SAY_WEIGHT = {
   has: 1.0, notHas: 1.0, in: 1.2, notIn: 1.0, eitherHas: 0.6, eitherIn: 0.6, holdsType: 0.9, notHoldsType: 0.9, sameType: 0.6, diffType: 0.5,
   adjacent: 0.6, notAdjacent: 0.5, sameFloor: 0.6, diffFloor: 0.5, ahead: 0.7, murderNotSuspect: 0.6, murderType: 0.7, murderNotType: 0.6,
   murderNotWeapon: 0.6, murderNotRoom: 0.7, murderFloor: 0.6, murderNotFloor: 0.5, murderAdjRoom: 0.4, murderNotAdjRoom: 0.3, murderTrait: 0.7,
+  holdsAttr: 0.8, inLight: 0.8, murderAttr: 0.7, murderLight: 0.7, hasMotive: 0.9, notMotive: 0.9, eitherMotive: 0.6, murderMotive: 0.7, murderNotMotive: 0.6,
 };
 
 function pickN(rng, count, n) {
@@ -64,20 +67,21 @@ function attempt(rng, tier, worldId) {
   const n = tier.n;
   let ctx, tries = 0;
   do {
-    ctx = buildCtx(world, pickN(rng, world.suspects.length, n), pickN(rng, world.weapons.length, n), pickN(rng, world.rooms.length, n));
+    ctx = buildCtx(world, pickN(rng, world.suspects.length, n), pickN(rng, world.weapons.length, n), pickN(rng, world.rooms.length, n),
+      tier.motives ? pickN(rng, MOTIVES.length, n) : null);
   } while (!validPicks(world, ctx) && ++tries < 200);
 
-  const { perms, inv } = permutations(n);
+  const { perms, inv } = permutations(n), MP = motivePerms(ctx);
   const pw = perms[rng.int(perms.length)], pr = perms[rng.int(perms.length)];
-  const pwi = inv[perms.indexOf(pw)], pri = inv[perms.indexOf(pr)];
   const truth = { pw, pr, m: rng.int(n) };
+  if (ctx.motives) truth.pm = perms[rng.int(perms.length)];
   const avoid = (c) => tier.avoid && tier.avoid.includes(c.type);
   const all = enumerateClues(ctx);
   // a statement that is true (or false) whatever happened gives itself away: nobody says one
   const informative = (c) => {
     let yes = false, no = false;
-    for (let a = 0; a < perms.length; a++) for (let b = 0; b < perms.length; b++) {
-      const v = c.test(perms[a], inv[a], perms[b], inv[b]);
+    for (let a = 0; a < perms.length; a++) for (let b = 0; b < perms.length; b++) for (let k = 0; k < MP.perms.length; k++) {
+      const v = c.test(perms[a], inv[a], perms[b], inv[b], MP.perms[k], MP.inv[k]);
       if (c.kind === 'M') { if (v) yes = true; if (v !== (1 << n) - 1) no = true; } else if (v) yes = true; else no = true;
       if (yes && no) return true;
     }
@@ -90,7 +94,7 @@ function attempt(rng, tier, worldId) {
   for (let sp = 0; sp < n; sp++) {
     const liar = sp === truth.m;
     const cands = all.filter((c) => TESTIMONY_TYPES.includes(c.type) && !avoid(c) && !usedKey.has(c.type + JSON.stringify(c.args))
-      && !(c.type === 'murderNotSuspect' && c.args.s === sp) && statementTrue(c, truth, pwi, pri) !== liar
+      && !(c.type === 'murderNotSuspect' && c.args.s === sp) && statementTrue(c, truth) !== liar
       && !(c.family === 'direct' && !liar && directSaid >= 1) && informative(c));
     if (!cands.length) return null;
     const perType = {};
@@ -106,7 +110,7 @@ function attempt(rng, tier, worldId) {
   }
 
   // ---- evidence: always true. Draw until exactly one world is left, then squeeze out what isn't needed.
-  const pool = all.filter((c) => clueHolds(c, truth, pwi, pri) && !avoid(c));
+  const pool = all.filter((c) => clueHolds(c, truth) && !avoid(c));
   const perType = {};
   pool.forEach((c) => { perType[c.type] = (perType[c.type] || 0) + 1; });
   const alive = pool.map(() => true);
@@ -177,7 +181,7 @@ function generatePuzzle(seed, tierId, opts) {
     return Object.assign(c, { voice: variants[vi][0], text: variants[vi][1], vi, speaker: sp === undefined ? null : sp });
   };
   const clues = varyWording(says.map((t) => word(t, t.speaker)).concat(rng.shuffle(chosen).map((c) => word(Object.assign({}, c)))));
-  const solution = { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m] };
+  const solution = { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m], motive: truth.pm ? truth.pm[truth.m] : null };
   const rating = Math.max(1, Math.min(5, tier.stars + (human.probes >= 45 ? 1 : 0) - (human.depth === 0 ? 1 : 0)));
   return {
     seed: String(seed), tier: tierId, tierName: tier.name, worldId, n: ctx.n, ctx, clues,

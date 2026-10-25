@@ -2,6 +2,7 @@
 // Portraits are built from a suspect's look (skin, hairstyle, accessories) and their traits (hair colour),
 // so the card shows exactly what the evidence talks about.
 const HAIR_COLOUR = { dark: '#2B201B', fair: '#D8B068', red: '#B04A26', grey: '#A9A49B' };
+const EYE_COLOUR = { blue: '#3D74B8', brown: '#6B4126', green: '#3F8D57', grey: '#7F8C95' };
 
 function portraitSVG(s, cls) {
   const L = s.look, hair = HAIR_COLOUR[s.traits.hair], skin = L.skin, acc = new Set(L.acc), st = L.hair;
@@ -48,7 +49,8 @@ function portraitSVG(s, cls) {
     <rect x="28.2" y="38" width="7.6" height="9" rx="2.4" fill="${skin}"/>
     <ellipse cx="21.3" cy="31.5" rx="1.9" ry="2.7" fill="${skin}"/><ellipse cx="42.7" cy="31.5" rx="1.9" ry="2.7" fill="${skin}"/>
     <ellipse cx="32" cy="30" rx="10.6" ry="12.6" fill="${skin}"/>
-    <circle cx="27.8" cy="31" r="1.25" fill="#231D1A"/><circle cx="36.2" cy="31" r="1.25" fill="#231D1A"/>
+    <circle cx="27.8" cy="31" r="1.55" fill="${EYE_COLOUR[s.traits.eyes] || '#231D1A'}"/><circle cx="36.2" cy="31" r="1.55" fill="${EYE_COLOUR[s.traits.eyes] || '#231D1A'}"/>
+    <circle cx="27.8" cy="31" r=".7" fill="#1A1412"/><circle cx="36.2" cy="31" r=".7" fill="#1A1412"/><circle cx="28.3" cy="30.5" r=".35" fill="#fff"/><circle cx="36.7" cy="30.5" r=".35" fill="#fff"/>
     <ellipse cx="25.6" cy="35.2" rx="2" ry="1.2" fill="#E07A6A" opacity=".28"/><ellipse cx="38.4" cy="35.2" rx="2" ry="1.2" fill="#E07A6A" opacity=".28"/>
     <path d="M29.8 37.6Q32 38.9 34.2 37.6" fill="none" stroke="#7A4A3C" stroke-width="1.1" stroke-linecap="round"/>
     ${front.join('')}${over.join('')}${neck}
@@ -110,6 +112,59 @@ const EVIDENCE_ICONS = {
   lens: '<circle cx="10" cy="10" r="5.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14.4 14.4L20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
   print: '<ellipse cx="9" cy="14" rx="3.4" ry="5.2" fill="currentColor"/><circle cx="8" cy="6.4" r="1.4" fill="currentColor"/><circle cx="11.2" cy="6" r="1.2" fill="currentColor"/><ellipse cx="16.4" cy="10" rx="2.6" ry="4" fill="currentColor"/><circle cx="16" cy="4.4" r="1.1" fill="currentColor"/>',
   hair: '<path d="M5 19C9 15 7 9 12 6S18 4 20 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 14C7 12 6 8 10 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>',
+ eye: '<path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/>',
+  lamp: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  seal: '<rect x="2.5" y="5" width="19" height="14" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.2 5.8L12 12.5l8.8-6.7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="15" r="2.6" fill="currentColor"/>',
   file: '<path d="M6 3h8l4 4v14H6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 11h6M9 15h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
 };
 const evIcon = (k) => `<svg class="evi" viewBox="0 0 24 24" aria-hidden="true">${EVIDENCE_ICONS[k]}</svg>`;
+
+// ---- room icons: what you would see on walking in
+const ROOM_ICONS = {
+  bedroom: '<path d="M2.5 18.5V7M2.5 13.5h19v5M21.5 13.5V11a2 2 0 0 0-2-2H10v4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="4" y="9.5" width="4.5" height="3.2" rx="1.4"/>',
+  study: '<path d="M3 20.5h18M5 20.5V12h14v8.5M5 15h14" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 12V6.5l-3-2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 4.5l4-2 1.5 3.5-4 1.5Z"/>',
+  kitchen: '<path d="M4 10.5h16v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5Z"/><path d="M2 12h2M20 12h2M8.5 7.5C8 6 9.5 5 9 3.5M12.5 7.5C12 6 13.5 5 13 3.5M16.5 7.5C16 6 17.5 5 17 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+  dining: '<path d="M2.5 12h19M5 12v8.5M19 12v8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7.5" y="6" width="1.6" height="6"/><rect x="14.9" y="6" width="1.6" height="6"/><path d="M8.3 2.6c.8 1 .8 1.8 0 2.6-.8-.8-.8-1.6 0-2.6ZM15.7 2.6c.8 1 .8 1.8 0 2.6-.8-.8-.8-1.6 0-2.6Z"/><ellipse cx="12" cy="10.6" rx="2.6" ry="1"/>',
+  library: '<rect x="3" y="4" width="3.4" height="16" rx=".6"/><rect x="7.4" y="6" width="3" height="14" rx=".6"/><rect x="11.4" y="3" width="3.6" height="17" rx=".6"/><path d="M16.2 6.6l3-.8 3.2 13.6-3 .8Z"/><path d="M2 21h20" stroke="currentColor" stroke-width="1.6"/>',
+  conservatory: '<path d="M12 21V11" stroke="currentColor" stroke-width="1.6"/><path d="M12 12C7 12 4.5 9 4.5 5c4 0 7.5 2.5 7.5 7ZM12 14c4.5 0 7.5-2.5 7.5-6.5-4 0-7.5 2.5-7.5 6.5Z"/><path d="M8 21h8l-1 2H9Z"/>',
+  cellar: '<ellipse cx="12" cy="12" rx="7.5" ry="9"/><path d="M4.8 8h14.4M4.8 16h14.4" stroke="var(--card)" stroke-width="1.4"/><circle cx="12" cy="12" r="1.5" fill="var(--card)"/>',
+  mail: '<rect x="3" y="5.5" width="18" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 6.5L12 13l8.2-6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="15" r="2.2"/>',
+  smoking: '<path d="M3 13.5h9.5v2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3Z"/><path d="M12.5 14.5h7.5l1.5-1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 10C5 8 7 7 6 4.5M9.5 10c-1-2 1-3 0-5.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
+  sleeper: '<path d="M14.5 3.5a8.5 8.5 0 1 0 6 13.5 7 7 0 0 1-6-13.5Z"/><circle cx="18.5" cy="5.5" r="1"/><circle cx="20.5" cy="9.5" r=".7"/>',
+  bar: '<path d="M4 4h16l-8 8.5Z"/><path d="M12 12.5V20M7.5 20.5h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.5" cy="5.5" r="1.4" fill="var(--card)"/>',
+  observation: '<rect x="2.5" y="4" width="19" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 17l5.5-7 4 5 2.5-3 5 5Z"/><circle cx="16.5" cy="8" r="1.6"/>',
+  luggage: '<rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M9 7.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7.5v12.5M16 7.5v12.5" stroke="var(--card)" stroke-width="1.4"/>',
+  bridge: '<circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.6"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4M5.3 5.3l2.8 2.8M15.9 15.9l2.8 2.8M18.7 5.3l-2.8 2.8M8.1 15.9l-2.8 2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  lido: '<path d="M12 21.5V10" stroke="currentColor" stroke-width="1.8"/><path d="M12 10C9 6.5 5.5 6.5 3 8.5 6 8 9 8.5 12 10ZM12 10c3-3.5 6.5-3.5 9-1.5-3-.5-6 0-9 1.5ZM12 10C10.5 6 11 3.5 13 2c0 3 0 5.5-1 8Z"/><path d="M8 21.5h8" stroke="currentColor" stroke-width="1.8"/>',
+  saloon: '<path d="M12 2v4" stroke="currentColor" stroke-width="1.6"/><path d="M4 9.5h16l-2 4H6Z"/><path d="M6 13.5v3M10 13.5v4M14 13.5v4M18 13.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.6"/>',
+  writing: '<path d="M20 2.5C13 4 8 9.5 6.5 17.5L8 18c1.5-2.5 3.5-4 6-4.5L13 12c3 0 5-2.5 7-9.5Z"/><path d="M6.5 17.5L4 21.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  purser: '<rect x="3" y="3.5" width="18" height="16" rx="1.6"/><circle cx="12" cy="11.5" r="4" fill="none" stroke="var(--card)" stroke-width="1.6"/><path d="M12 9v2.5h2" stroke="var(--card)" stroke-width="1.4" fill="none"/><path d="M5.5 19.5v2M18.5 19.5v2" stroke="currentColor" stroke-width="1.8"/>',
+  engine: '<path d="M10.3 2.5h3.4l.5 2.6 2 .9 2.3-1.5 2.4 2.4-1.5 2.3.9 2 2.6.5v3.4l-2.6.5-.9 2 1.5 2.3-2.4 2.4-2.3-1.5-2 .9-.5 2.6h-3.4l-.5-2.6-2-.9-2.3 1.5-2.4-2.4 1.5-2.3-.9-2-2.6-.5v-3.4l2.6-.5.9-2-1.5-2.3 2.4-2.4 2.3 1.5 2-.9Z"/><circle cx="12" cy="12" r="3.2" fill="var(--card)"/>',
+  hold: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 4l18 16M21 4L3 20" stroke="var(--card)" stroke-width="1.6"/><rect x="3" y="4" width="18" height="16" rx="1" fill="none" stroke="var(--card)" stroke-width="1"/>',
+};
+const roomIcon = (r, cls) => `<svg class="${cls || 'ri'}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ROOM_ICONS[r.id] || ''}</svg>`;
+
+// ---- motive icons
+const MOTIVE_ICONS = {
+  money: '<circle cx="12" cy="12" r="9"/><path d="M14.8 8.6c-.6-1-1.6-1.4-2.8-1.4-1.6 0-2.8.9-2.8 2.2 0 3 5.8 1.6 5.8 4.6 0 1.4-1.3 2.4-3 2.4-1.3 0-2.4-.6-3-1.6M12 5.5v13" fill="none" stroke="var(--card)" stroke-width="1.6" stroke-linecap="round"/>',
+  revenge: '<path d="M12 2c1 3.5 5.5 6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.2 1-3.8 2.2-5 .2 1.6.9 2.8 2.1 3.3C10 8 11 5 12 2Z"/>',
+  love: '<path d="M12 20.5S3 14.8 3 8.8A4.6 4.6 0 0 1 12 6.5a4.6 4.6 0 0 1 9 2.3c0 6-9 11.7-9 11.7Z"/>',
+  jealousy: '<path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3.6" fill="var(--card)"/><circle cx="12" cy="12" r="1.8"/>',
+  blackmail: '<rect x="2.5" y="5" width="19" height="14" rx="1.4"/><path d="M3.2 5.8L12 12.5l8.8-6.7" fill="none" stroke="var(--card)" stroke-width="1.5"/><circle cx="12" cy="15" r="2.6" fill="#C2372B"/>',
+  ambition: '<path d="M3 18.5L4.5 7l4.5 4.5L12 4l3 7.5L19.5 7 21 18.5Z"/><rect x="3" y="19.5" width="18" height="2" rx=".6"/>',
+  inheritance: '<path d="M6 3h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2Z"/><path d="M9 8h7M9 11h7M9 14h4.5" stroke="var(--card)" stroke-width="1.4" stroke-linecap="round"/><path d="M4 17a2 2 0 0 0 2 2h2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="16.5" cy="16" r="1.8" fill="#C2372B"/>',
+  fear: '<path d="M12 2.5a7 7 0 0 0-7 7V21l2.4-1.8L9.8 21l2.2-1.8 2.2 1.8 2.4-1.8L19 21V9.5a7 7 0 0 0-7-7Z"/><circle cx="9.5" cy="10" r="1.4" fill="var(--card)"/><circle cx="14.5" cy="10" r="1.4" fill="var(--card)"/><ellipse cx="12" cy="14.2" rx="1.3" ry="1.7" fill="var(--card)"/>',
+};
+const motiveIcon = (m, cls) => `<svg class="${cls || 'mi'}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${MOTIVE_ICONS[m.id] || ''}</svg>`;
+
+// ---- small pictograms for the cards' facts
+const FACT_ICONS = {
+  height: '<path d="M12 2.5v19M8.5 6L12 2.5 15.5 6M8.5 18l3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  hand: '<path d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11V4a1.5 1.5 0 0 1 3 0v7V5.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 7-6.5 7-2.6 0-4.3-1.3-5.6-3.4L3 13.6a1.5 1.5 0 0 1 2.4-1.7L8 14.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+  weight: '<path d="M7 9h10l3 11.5H4Z"/><circle cx="12" cy="6" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+  material: '<path d="M12 2.5l8.5 5v9L12 21.5l-8.5-5v-9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3.5 7.5L12 12.5l8.5-5M12 12.5v9" fill="none" stroke="currentColor" stroke-width="1.4"/>',
+  floor: '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  lit: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  dark: '<path d="M15 3.5a8.5 8.5 0 1 0 5.5 14 7 7 0 0 1-5.5-14Z"/>',
+};
+const factIcon = (k) => `<svg class="fi" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${FACT_ICONS[k]}</svg>`;

@@ -7,7 +7,9 @@ function openModal(html, cls) {
   s.innerHTML = `<div class="sheetbox paper ${cls || ''}" role="dialog" aria-modal="true"><button class="x" data-act="close" aria-label="Close">&times;</button>${html}</div>`;
   document.body.appendChild(s);
   const f = s.querySelector('.opt, .btn, button:not(.x)');
-  if (f) f.focus();
+  if (f) f.focus({ preventScroll: true }); // the dialog opens at its top, whatever has focus
+  const box = s.querySelector('.sheetbox');
+  if (box) box.scrollTop = 0;
 }
 function closeModal() {
   const s = document.getElementById('scrim');
@@ -28,10 +30,11 @@ function openAccuse() {
   const ctx = G.puzzle.ctx;
   const group = (title, key, items) => `<div class="pick"><h4>${title}</h4><div class="opts">${items.map((it, i) => `<button type="button" class="opt" data-pick="${key}" data-v="${i}" aria-pressed="${G.pick[key] === i}">${it}</button>`).join('')}</div></div>`;
   openModal(`<p class="kicker">The accusation</p><h2>Who did it?</h2>
-    <p class="soft">Name the killer, the weapon and the ${unitOf(ctx)}. A wrong guess goes on your record.</p>
+    <p class="soft">Name the killer, the weapon${ctx.motives ? ', the motive' : ''} and the ${unitOf(ctx)}. A wrong guess goes on your record.</p>
     ${group('The killer', 'killer', ctx.suspects.map((s) => `${face(s, 34)}<span>${esc(s.name)}</span>`))}
     ${group('The weapon', 'weapon', ctx.weapons.map((w) => `${weaponIcon(w)}<span>${esc(w.name)}</span>`))}
-    ${group(cap(unitOf(ctx)), 'room', ctx.rooms.map((r) => `<span>${esc(r.name)}</span>`))}
+    ${group(cap(unitOf(ctx)), 'room', ctx.rooms.map((r) => `${roomIcon(r)}<span>${esc(r.name)}</span>`))}
+    ${ctx.motives ? group('The motive', 'motive', ctx.motives.map((m) => `${motiveIcon(m)}<span>${esc(m.name)}</span>`)) : ''}
     <p class="said" id="said"></p>
     <div id="accuse-result"></div>
     <div class="actions"><button class="btn red" id="do-accuse" data-act="submit-accuse">Make the accusation</button><button class="btn ghost" data-act="close">Not yet</button></div>`, 'accuse');
@@ -43,24 +46,28 @@ function updateSaid() {
   const who = p.killer === null ? '…' : b(ctx.suspects[p.killer].name);
   const wp = p.weapon === null ? '…' : b(ctx.weapons[p.weapon].name);
   const rm = p.room === null ? '…' : b(ctx.rooms[p.room].name);
+  const mo = !ctx.motives ? '' : `, for ${p.motive === null || p.motive === undefined ? '…' : b(ctx.motives[p.motive].name.toLowerCase())}`;
   const el = document.getElementById('said');
-  if (el) el.innerHTML = `“It was ${who}, in the ${rm}, with the ${wp}.”`;
+  if (el) el.innerHTML = `“It was ${who}, in the ${rm}, with the ${wp}${mo}.”`;
   const btn = document.getElementById('do-accuse');
-  if (btn) btn.disabled = p.killer === null || p.weapon === null || p.room === null;
+  if (btn) btn.disabled = !picked();
 }
+
+const picked = () => { const p = G.pick; return p.killer !== null && p.weapon !== null && p.room !== null && (!G.puzzle.ctx.motives || (p.motive !== null && p.motive !== undefined)); };
 
 // Which statement first rules out this exact accusation?
 function firstContradiction(P, acc) {
-  const { perms, inv } = permutations(P.n);
-  const A = [], B = [];
+  const { perms, inv } = permutations(P.n), MP = motivePerms(P.ctx);
+  const A = [], B = [], Cm = [];
   perms.forEach((p, a) => { if (p[acc.killer] === acc.weapon) A.push(a); if (p[acc.killer] === acc.room) B.push(a); });
+  MP.perms.forEach((p, c) => { if (!p || p[acc.killer] === acc.motive) Cm.push(c); });
   let alive = [];
-  for (const a of A) for (const b of B) alive.push([a, b]);
+  for (const a of A) for (const b of B) for (const c of Cm) alive.push([a, b, c]);
   for (let k = 0; k < P.clues.length; k++) {
-    const c = P.clues[k];
-    alive = alive.filter(([a, b]) => {
-      const v = c.test(perms[a], inv[a], perms[b], inv[b]);
-      return c.kind === 'M' ? (v & (1 << acc.killer)) !== 0 : v;
+    const cl = P.clues[k];
+    alive = alive.filter(([a, b, c]) => {
+      const v = cl.test(perms[a], inv[a], perms[b], inv[b], MP.perms[c], MP.inv[c]);
+      return cl.kind === 'M' ? (v & (1 << acc.killer)) !== 0 : v;
     });
     if (!alive.length) return k + 1;
   }
@@ -69,9 +76,9 @@ function firstContradiction(P, acc) {
 
 function submitAccuse() {
   const p = G.pick;
-  if (p.killer === null || p.weapon === null || p.room === null) return;
+  if (!picked()) return;
   const res = checkAccusation(G.puzzle, p);
-  if (res.killer && res.weapon && res.room) { closeModal(); solveCase(); return; }
+  if (res.killer && res.weapon && res.room && res.motive) { closeModal(); solveCase(); return; }
   G.wrong++; persist();
   const k = firstContradiction(G.puzzle, p);
   const box = document.getElementById('accuse-result');
@@ -124,24 +131,47 @@ function shareText() {
   return [head, named, `${minutes(G.elapsed)} · ${bulbs}${hintWord(G.hints)}`].join('\n');
 }
 
+// The smallest set of other clues that, taken at their word, cannot stand with the killer's statement:
+// the contradiction that gives the liar away. (Innocent statements are true, so they count as given.)
+function liarCore(P) {
+  const lieI = P.clues.findIndex((c) => c.speaker === P.solution.killer), lie = P.clues[lieI];
+  const plain = (i) => P.clues[i].base || P.clues[i];
+  const clash = (set) => solveCount(P.ctx, [lie.base].concat(set.map(plain)), 0).count === 0;
+  let core = P.clues.map((c, i) => i).filter((i) => i !== lieI);
+  if (!clash(core)) return null;
+  for (const i of core.slice()) { const rest = core.filter((x) => x !== i); if (clash(rest)) core = rest; }
+  return { lieI, core };
+}
+function clueLine(i) {
+  const P = G.puzzle, c = P.clues[i], ctx = P.ctx;
+  return isSay(c) ? `<li>${face(ctx.suspects[c.speaker], 26)}<span><b>${esc(ctx.suspects[c.speaker].short)}:</b> “${tokens(c.text, ctx)}”</span></li>`
+    : `<li>${evIcon(noteLabel(c)[0])}<span><b>Evidence ${evidenceNo(i)}:</b> ${tokens(c.text, ctx)}</span></li>`;
+}
+
 function openVerdict() {
   const P = G.puzzle, ctx = P.ctx, s = P.solution, t = P.truth, K = ctx.suspects[s.killer];
   const story = caseStory(ctx.world, P.story);
   const lie = P.clues.find((c) => c.speaker === s.killer);
-  const rows = ctx.suspects.map((su, i) => `<tr class="${i === s.killer ? 'killer' : ''}"><td>${face(su, 28)}<span>${esc(su.short)}</span></td><td>${esc(ctx.rooms[t.pr[i]].name)}</td><td>${weaponIcon(ctx.weapons[t.pw[i]])} ${esc(ctx.weapons[t.pw[i]].name)}</td></tr>`).join('');
+  const mot = ctx.motives;
+  const rows = ctx.suspects.map((su, i) => `<tr class="${i === s.killer ? 'killer' : ''}"><td>${face(su, 28)}<span>${esc(su.short)}</span></td><td>${esc(ctx.rooms[t.pr[i]].name)}</td><td>${weaponIcon(ctx.weapons[t.pw[i]])} ${esc(ctx.weapons[t.pw[i]].name)}</td>${mot ? `<td>${motiveIcon(mot[t.pm[i]])} ${esc(mot[t.pm[i]].name)}</td>` : ''}</tr>`).join('');
   const went = `Solved on the ${tryWord(G.wrong + 1)} try, in ${G.elapsed < 60 ? 'under a minute' : `${Math.round(G.elapsed / 60)} minute${Math.round(G.elapsed / 60) === 1 ? '' : 's'}`}, with ${hintWord(G.hints)}.`;
   const day = G.day ? `${esc(dayName(G.day))} · No. ${G.day}` : 'A practice case';
-  const motive = K.motive.replace(/\{v\}/g, story.victim.short);
+  const why = (mot ? mot[s.motive].did : K.motive).replace(/\{v\}/g, story.victim.short);
+  const core = liarCore(P);
+  const unravel = core ? `<div class="unravel"><p class="kicker">How it unravelled</p>
+      <p>${esc(K.short)} said: <span class="said-lie">“${tokens(lie.text, ctx)}”</span></p>
+      <p>But that can’t stand alongside:</p><ul class="core">${core.core.map(clueLine).join('')}</ul>
+      <p>Something had to give, and everything else holds. So ${esc(K.short)} was lying, and the liar is the killer.</p></div>` : '';
   openModal(`<div class="verdict">
     <div class="reveal" style="--h:${K.hue}">${face(K, 112)}<span class="stamp big" aria-hidden="true">Guilty</span></div>
     <p class="kicker">${day} · Case closed</p>
-    <h2 class="tale">It was ${esc(K.name)}, in the ${esc(ctx.rooms[s.room].name)}, with the ${esc(ctx.weapons[s.weapon].name)}.</h2>
-    <p class="motive">Why? ${esc(K.short)} ${esc(motive)}.</p>
-    <blockquote class="thelie"><span class="kicker">The lie</span><span class="txt">“${tokens(lie.text, ctx)}”</span></blockquote>
+    <h2 class="tale">It was ${esc(K.name)}, in the ${esc(ctx.rooms[s.room].name)}, with the ${esc(ctx.weapons[s.weapon].name)}${mot ? `, for ${esc(mot[s.motive].name.toLowerCase())}` : ''}.</h2>
+    <p class="motive">Why? ${esc(K.short)} ${esc(why)}.</p>
+    ${unravel}
     ${malloryLine(story.close, 'signoff')}
     <p class="went">${went}</p>
     <details class="how"><summary>Where everyone was</summary>
-      <table><thead><tr><td></td><td>Was in</td><td>Held</td></tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr><td></td><td>Was in</td><td>Held</td>${mot ? '<td>Motive</td>' : ''}</tr></thead><tbody>${rows}</tbody></table>
       <p class="soft sharekey">${SHARE_KEY}</p></details>
     <div class="sharebox">
       <pre class="share" id="share" tabindex="0" aria-label="Your result, to share">${esc(shareText())}</pre>
@@ -200,7 +230,7 @@ function nextHint() {
   // a mark the statements contradict: a circle on something impossible, or a cross on something that has to be true
   if (!G.marg) G.marg = marginals(P.ctx, P.clues);
   const M = G.marg;
-  for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+  for (const b of P.ctx.motives ? BLOCKS : BLOCKS.slice(0, 3)) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
     const v = G.marks[b][i][j];
     if (v === 2 && !M[b][i][j]) return { type: 'mistake', b, i, j, v };
     if (v === 1) {
@@ -214,23 +244,25 @@ function nextHint() {
     if ((G.marks.k[i] === 2 || G.say[i] === 2) && !M.killer[i]) return { type: 'mistake', b: G.marks.k[i] === 2 ? 'k' : 'say', i, j: 0, v: 2 };
     if ((G.marks.k[i] === 1 || G.say[i] === 1) && i === only) return { type: 'mistake', b: G.marks.k[i] === 1 ? 'k' : 'say', i, j: 0, v: 1 };
   }
+  // a variable of the human solver as a square of the notebook: [block, row, column of the value]
+  const square = (v, x) => (v === csp.K ? ['k', x, 0] : v < n ? ['sw', v, x] : v < 2 * n ? ['sr', v - n, x] : v < csp.K ? ['sm', v - 2 * n, x] : null);
   const dom = new Array(csp.nv).fill((1 << n) - 1), trace = [];
   propagate(csp, dom, trace);
   for (const ev of trace) {
-    if (ev.v > 2 * n) continue;
     for (let x = 0; x < n; x++) {
       if (!(ev.removed & (1 << x))) continue;
-      if (ev.v === 2 * n) { if (!done('k', x, 0) && G.say[x] !== 1) return { type: 'elim', b: 'k', i: x, j: 0, clue: ev.clue }; continue; }
-      const b = ev.v < n ? 'sw' : 'sr', i = ev.v < n ? ev.v : ev.v - n;
-      if (!done(b, i, x)) return { type: 'elim', b, i, j: x, clue: ev.clue };
+      const sq = square(ev.v, x);
+      if (!sq) continue;
+      const [b, i, j] = sq;
+      if (b === 'k' ? !done('k', i, 0) && G.say[i] !== 1 : !done(b, i, j)) return { type: 'elim', b, i, j, clue: ev.clue };
     }
   }
   if (answered(csp, dom)) return { type: 'ready' };
-  for (let v = 0; v <= 2 * n; v++) for (let x = 0; x < n; x++) {
+  for (let v = 0; v <= csp.K; v++) for (let x = 0; x < n; x++) {
     if (!(dom[v] & (1 << x)) || popcount(dom[v]) === 1) continue;
     const trial = dom.slice(); trial[v] = 1 << x;
     if (!propagate(csp, trial)) {
-      const b = v === 2 * n ? 'k' : v < n ? 'sw' : 'sr', i = v === 2 * n ? x : v < n ? v : v - n, j = v === 2 * n ? 0 : x;
+      const [b, i, j] = square(v, x);
       if (!done(b, i, j)) return { type: 'whatif', b, i, j, clue: -1 };
     }
   }
@@ -243,6 +275,7 @@ function hintNames(h) {
   if (h.b === 'wr') return { S: `the ${ctx.weapons[h.i].name}`, what: `in the ${ctx.rooms[h.j].name}`, pair: `the ${ctx.weapons[h.i].name} and the ${ctx.rooms[h.j].name}` };
   const S = ctx.suspects[h.i].short;
   if (h.b === 'k' || h.b === 'say') return { S, what: 'the killer', pair: h.b === 'say' ? `${S}’s statement` : `${S} under “Did it?”` };
+  if (h.b === 'sm') { const X = ctx.motives[h.j].name.toLowerCase(); return { S, X, what: `driven by ${X}`, pair: `${S} and ${X}` }; }
   const X = h.b === 'sw' ? ctx.weapons[h.j].name : ctx.rooms[h.j].name;
   return { S, X, what: h.b === 'sw' ? `holding the ${X}` : `in the ${X}`, pair: `${S} and the ${X}` };
 }

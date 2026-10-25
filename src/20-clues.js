@@ -8,7 +8,7 @@ function rectsAdjacent(a, b) {
   return horiz || vert;
 }
 
-function buildCtx(world, suspectPick, weaponPick, roomPick) {
+function buildCtx(world, suspectPick, weaponPick, roomPick, motivePick) {
   const n = suspectPick.length;
   const rooms = roomPick.map((i) => world.rooms[i]);
   const adj = rooms.map((a) => rooms.map((b) => a !== b && rectsAdjacent(a.rect, b.rect)));
@@ -22,7 +22,10 @@ function buildCtx(world, suspectPick, weaponPick, roomPick) {
     rooms, adj, floor, pos,
     types: weaponPick.map((i) => world.weapons[i].type),
     traits: suspects.map((s) => s.traits),
-    roomIdx: roomPick, suspectIdx: suspectPick, weaponIdx: weaponPick,
+    wattr: Object.fromEntries(WEAPON_ATTR_KEYS.map((k) => [k, weaponPick.map((i) => world.weapons[i][k])])),
+    light: rooms.map((r) => r.light),
+    motives: motivePick ? motivePick.map((i) => MOTIVES[i]) : null,
+    roomIdx: roomPick, suspectIdx: suspectPick, weaponIdx: weaponPick, motiveIdx: motivePick || null,
   };
 }
 
@@ -33,7 +36,7 @@ function C(type, kind, family, args, test) {
 }
 
 function enumerateClues(ctx) {
-  const { n, adj, floor, pos, types, traits, world } = ctx;
+  const { n, adj, floor, pos, types, traits, world, wattr, light } = ctx;
   const S = [...Array(n).keys()];
   const out = [];
   const typeSet = [...new Set(types)];
@@ -95,6 +98,41 @@ function enumerateClues(ctx) {
     for (const r of S) out.push(C('traitRoom', 'R', 'trait', { r, k, v }, (pw, pwi, pr, pri) => traits[pri[r]][k] === v));
   }
 
+  // ---- weapon attributes (weight, material) and lit or dark rooms: read them off the weapon and room cards
+  for (const k of WEAPON_ATTR_KEYS) for (const v of [...new Set(wattr[k])]) {
+    if (new Set(wattr[k]).size < 2) break;
+    for (const s of S) out.push(C('holdsAttr', 'W', 'link', { s, k, v }, (pw) => wattr[k][pw[s]] === v));
+    for (const r of S) out.push(C('attrInRoom', 'X', 'link', { r, k, v }, (pw, pwi, pr, pri) => wattr[k][pw[pri[r]]] === v));
+    out.push(C('murderAttr', 'M', 'murder', { k, v }, (pw) => maskOf((m) => wattr[k][pw[m]] === v)));
+  }
+  if (new Set(light).size > 1) for (const v of [...new Set(light)]) {
+    for (const s of S) out.push(C('inLight', 'R', 'link', { s, v }, (pw, pwi, pr) => light[pr[s]] === v));
+    for (const w of S) out.push(C('weaponLight', 'X', 'link', { w, v }, (pw, pwi, pr) => light[pr[pwi[w]]] === v));
+    out.push(C('murderLight', 'M', 'murder', { v }, (pw, pwi, pr) => maskOf((m) => light[pr[m]] === v)));
+  }
+  // ---- motives (only in cases that have them): each suspect had a different one
+  if (ctx.motives) {
+    for (const s of S) for (const m of S) {
+      out.push(C('hasMotive', 'P', 'direct', { s, m }, (pw, pwi, pr, pri, pm) => pm[s] === m));
+      out.push(C('notMotive', 'P', 'neg', { s, m }, (pw, pwi, pr, pri, pm) => pm[s] !== m));
+    }
+    for (const m of S) for (const a of S) for (const b of S) if (a < b) {
+      out.push(C('eitherMotive', 'P', 'rel', { m, a, b }, (pw, pwi, pr, pri, pm, pmi) => pmi[m] === a || pmi[m] === b));
+    }
+    for (const m of S) {
+      for (const w of S) {
+        out.push(C('motiveWeapon', 'X', 'link', { m, w }, (pw, pwi, pr, pri, pm, pmi) => pw[pmi[m]] === w));
+        out.push(C('motiveNotWeapon', 'X', 'neg', { m, w }, (pw, pwi, pr, pri, pm, pmi) => pw[pmi[m]] !== w));
+      }
+      for (const r of S) {
+        out.push(C('motiveRoom', 'X', 'link', { m, r }, (pw, pwi, pr, pri, pm, pmi) => pr[pmi[m]] === r));
+        out.push(C('motiveNotRoom', 'X', 'neg', { m, r }, (pw, pwi, pr, pri, pm, pmi) => pr[pmi[m]] !== r));
+      }
+      out.push(C('murderMotive', 'M', 'murder', { m }, (pw, pwi, pr, pri, pm) => maskOf((x) => pm[x] === m)));
+      out.push(C('murderNotMotive', 'M', 'murder', { m }, (pw, pwi, pr, pri, pm) => maskOf((x) => pm[x] !== m)));
+    }
+  }
+
   // ---- murder clues: each returns the set of suspects who could still be the killer
   for (const t of typeSet) {
     out.push(C('murderType', 'M', 'murder', { t }, (pw) => maskOf((m) => types[pw[m]] === t)));
@@ -129,23 +167,26 @@ function enumerateClues(ctx) {
 // (so it can also be negated), can be testimony. Everything else is evidence, which is always true.
 const TESTIMONY_TYPES = ['has', 'notHas', 'in', 'notIn', 'eitherHas', 'eitherIn', 'holdsType', 'notHoldsType', 'sameType', 'diffType',
   'adjacent', 'notAdjacent', 'sameFloor', 'diffFloor', 'ahead', 'murderNotSuspect', 'murderType', 'murderNotType', 'murderNotWeapon',
-  'murderNotRoom', 'murderFloor', 'murderNotFloor', 'murderAdjRoom', 'murderNotAdjRoom', 'murderTrait'];
+  'murderNotRoom', 'murderFloor', 'murderNotFloor', 'murderAdjRoom', 'murderNotAdjRoom', 'murderTrait',
+  'holdsAttr', 'inLight', 'murderAttr', 'murderLight', 'hasMotive', 'notMotive', 'eitherMotive', 'murderMotive', 'murderNotMotive'];
 
 // A statement by `sp`, as a murder clue: in each arrangement, the killers it allows are those for whom it is
 // consistent (the statement is true and sp is not the killer, or it is false and sp is).
 function testimony(c, sp, n) {
   const FULL = (1 << n) - 1, me = 1 << sp, base = c.test, M = c.kind === 'M';
-  const test = (pw, pwi, pr, pri) => ((M ? base(pw, pwi, pr, pri) : base(pw, pwi, pr, pri) ? FULL : 0) ^ me) & FULL;
+  const test = (pw, pwi, pr, pri, pm, pmi) => ((M ? base(pw, pwi, pr, pri, pm, pmi) : base(pw, pwi, pr, pri, pm, pmi) ? FULL : 0) ^ me) & FULL;
   return { type: c.type, kind: 'M', baseKind: c.kind, family: c.family, args: c.args, speaker: sp, test, base: c };
 }
+// the inverse of a permutation (who holds weapon w, who is in room r, whose motive is m)
+const invert = (p) => { if (!p) return null; const q = new Array(p.length); p.forEach((x, i) => { q[x] = i; }); return q; };
 // Is the statement itself true in this arrangement (ignoring who said it)?
-function statementTrue(c, truth, pwi, pri) {
-  const b = c.base || c, v = b.test(truth.pw, pwi, truth.pr, pri);
+function statementTrue(c, truth) {
+  const b = c.base || c, v = b.test(truth.pw, invert(truth.pw), truth.pr, invert(truth.pr), truth.pm || null, invert(truth.pm));
   return b.kind === 'M' ? (v & (1 << truth.m)) !== 0 : v;
 }
 
 // Does the clue hold for the hidden truth {pw, pr, m}?
-function clueHolds(clue, truth, pwi, pri) {
-  const v = clue.test(truth.pw, pwi, truth.pr, pri);
+function clueHolds(clue, truth) {
+  const v = clue.test(truth.pw, invert(truth.pw), truth.pr, invert(truth.pr), truth.pm || null, invert(truth.pm));
   return clue.kind === 'M' ? (v & (1 << truth.m)) !== 0 : v;
 }

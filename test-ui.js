@@ -104,7 +104,8 @@ const n = w.eval('G.puzzle.n'), nc = w.eval('G.puzzle.clues.length');
 ok(w.eval('G.mode') === 'daily' && w.eval('G.day') === 20 && w.eval('G.puzzle.tier') === 'detective' && n === 4, "today's case opens: a Tuesday, four suspects");
 ok(/Tuesday 3 November · No\. 20/.test($('.case-head .kicker').textContent), 'the case says which day it is');
 ok($('.case-head .scene').textContent.length > 60 && /The victim/.test($('.case-head .victim').textContent), 'it has a story and a victim');
-ok($$('.suspect').length === n && $$('.suspect .traits li').length === 3 * n, 'a card for each suspect, with their three traits');
+ok($$('.suspect').length === n && $$('.suspect .facts li').length === 4 * n, 'a card for each suspect, with their four traits');
+ok($$('.tcard.weapon').length === n && $$('.tcard.place').length === n && $$('.tcard.weapon .facts li').length === 3 * n, 'and a card for each weapon (kind, weight, material) and each room');
 ok($$('.ev').length === nc - n, 'and the evidence: ' + (nc - n));
 ok($$('#grid .cell').length === 3 * n * n + n, `one notebook, the whole L: who-what, who-where, what-where and "Did it?" (${$$('#grid .cell').length} squares)`);
 const ctx = JSON.parse(w.eval('JSON.stringify({ adj: G.puzzle.ctx.adj, line: G.puzzle.ctx.world.layoutKind === "line" })'));
@@ -160,7 +161,7 @@ ok($$('#grid .ring').length === 4, 'the answer is ringed: did it, the weapon, th
   const K = w.eval('G.puzzle.ctx.suspects[G.puzzle.solution.killer]');
   ok($('.finish') && $('.finish .tale').textContent.startsWith('It was ' + K.name), 'the verdict: ' + $('.finish .tale').textContent);
   ok(/^Why\? /.test($('.finish .motive').textContent) && !/\{v\}/.test($('.finish .motive').textContent), 'with a motive: ' + $('.finish .motive').textContent);
-  ok($('.finish .thelie .txt').textContent.length > 8, 'and the lie that gave it away: ' + $('.finish .thelie .txt').textContent);
+  ok($('.finish .unravel .said-lie').textContent.length > 8 && $$('.finish .unravel .core li').length >= 1, 'and how the lie unravelled: ' + $('.finish .unravel .said-lie').textContent + ' against ' + $$('.finish .unravel .core li').length + ' clue(s)');
   ok(/Solved on the second try/.test($('.finish .went').textContent) && /2 hints/.test($('.finish .went').textContent), 'and how it went: ' + $('.finish .went').textContent);
   ok(/^Inquest No\. 20 · Tuesday ●●○○\n✕🔎 solved on the second try\n.+ · 💡💡 2 hints$/.test($('#share').textContent), 'share text: ' + $('#share').textContent.replace(/\n/g, ' | '));
   const names = w.eval('JSON.stringify([...G.puzzle.ctx.suspects, ...G.puzzle.ctx.weapons, ...G.puzzle.ctx.rooms].map((x) => x.name))');
@@ -195,6 +196,17 @@ w.eval(`newGame(BANK.inspector[3], 'practice'); renderCase();`);
   w.eval(`G.marks.sw[${sol.killer}][${(sol.weapon + 1) % m}] = 0; G.say[${sol.killer}] = 1;`);
   ok(w.eval('nextHint().b') === 'say', "and so is believing the killer's statement");
 }
+// a Sunday: four suspects with a motive each, named in the accusation
+w.eval(`newGame(BANK.mastermind[2], 'practice'); renderCase();`);
+ok(w.eval('G.puzzle.n') === 4 && $$('.tcard.motive').length === 4 && $$('#grid .cell[data-b="sm"]').length === 16, 'a Sunday has motives: cards, and a who-why block in the notebook');
+click($('.bar .accuse'));
+ok($$('#scrim .opt[data-pick="motive"]').length === 4, 'the accusation asks for the motive too');
+w.eval('G.pick = { ...G.puzzle.solution, motive: (G.puzzle.solution.motive + 1) % 4 }; updateSaid();');
+click($('#do-accuse'));
+ok(/Not quite/.test($('#accuse-result').textContent), 'and the wrong motive is a wrong accusation');
+w.eval('FINISH_DELAY = 0; G.pick = { ...G.puzzle.solution }; submitAccuse();');
+ok(/, for [a-z]+\.$/.test($('.finish .tale').textContent) && $$('#grid .ring').length === 5, 'the right one names it: ' + $('.finish .tale').textContent);
+
 // every tier, wide and narrow, renders without an error
 for (const wide of [true, false]) {
   const P = page(true, wide);

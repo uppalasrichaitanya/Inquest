@@ -69,7 +69,7 @@ function titleBanned(worldId) {
 // the first banned word in a title, or null
 function titleClash(worldId, title) {
   const ban = titleBanned(worldId);
-  return titleWords(title).find((w) => ban.has(w) || ban.has(w + 's') || ban.has(w.replace(/e?s$/, ''))) || null;
+  return titleWords(title).find((w) => ban.has(w) || ban.has(w + 's') || ban.has(w.replace(/s$/, '')) || ban.has(w.replace(/e?s$/, ''))) || null;
 }
 // every allowed title for a setting, in a fixed shuffled order so neighbouring days read differently
 const TITLE_POOLS = {};

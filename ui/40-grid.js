@@ -4,6 +4,8 @@
 // On a phone it shows one block at a time (who-what, who-where, what-where), chosen with the tabs.
 const KIND_ORDER = ['blade', 'blunt', 'poison', 'cord', 'firearm'];
 const KIND_WORD = { blade: 'Sharp', blunt: 'Blunt', cord: 'Cord', poison: 'Poison', firearm: 'Gun' };
+// motive names, with places to break in a narrow column
+const MOTIVE_SHORT = { revenge: 'Re&shy;venge', jealousy: 'Jeal&shy;ousy', blackmail: 'Black&shy;mail', ambition: 'Ambi&shy;tion', inheritance: 'Inheri&shy;tance' };
 const isLine = (ctx) => ctx.world.layoutKind === 'line';
 function weaponOrder(ctx) {
   return [...Array(ctx.n).keys()].sort((a, b) => KIND_ORDER.indexOf(ctx.types[a]) - KIND_ORDER.indexOf(ctx.types[b]) || a - b);
@@ -28,30 +30,34 @@ function cellHTML(b, i, j, label, r, c, tdCls, col) {
 function buildGrid() {
   const ctx = G.puzzle.ctx, el = document.getElementById('grid');
   if (!el) return;
-  const WO = weaponOrder(ctx), RO = roomOrder(ctx), line = isLine(ctx), n = ctx.n;
+  const WO = weaponOrder(ctx), RO = roomOrder(ctx), line = isLine(ctx), n = ctx.n, mot = !!ctx.motives;
   const wg = groupsOf(WO, (w) => ctx.types[w]), rg = groupsOf(RO, (r) => (line ? 'line' : ctx.floor[r]));
   const grp = (g, cls, attr, label) => `<th scope="colgroup" colspan="${g.items.length}" class="grp ${cls}" ${attr}><span>${label}</span></th>`;
   let h = '<thead><tr class="grps"><td class="corner"></td>';
   h += wg.map((g) => grp(g, 'wpart', `data-kind="${g.key}"`, KIND_WORD[g.key])).join('') + '<td class="gap"></td>';
-  h += rg.map((g) => grp(g, 'rpart', line ? '' : `data-floor="${g.key}"`, line ? 'Engine end first' : floorLabel(ctx, g.key))).join('');
-  h += '<td class="gap rpart"></td><td class="kpart"></td></tr><tr class="names"><td class="corner"><span class="sr">Suspect</span></td>';
+  h += rg.map((g) => grp(g, 'rpart', line ? '' : `data-floor="${g.key}"`, line ? 'Engine end first' : floorLabel(ctx, g.key))).join('') + '<td class="gap rpart"></td>';
+  if (mot) h += `<th scope="colgroup" colspan="${n}" class="grp mpart"><span>Motive</span></th><td class="gap mpart"></td>`;
+  h += '<td class="kpart"></td></tr><tr class="names"><td class="corner"><span class="sr">Suspect</span></td>';
   h += WO.map((w) => `<th scope="col" class="c wpart" data-col="w${w}" title="${esc(ctx.weapons[w].name)}">${weaponIcon(ctx.weapons[w])}<span>${shortName(ctx.weapons[w])}</span></th>`).join('') + '<td class="gap"></td>';
-  h += RO.map((r) => `<th scope="col" class="c rpart" data-col="r${r}" title="${esc(ctx.rooms[r].name)}"><span>${shortName(ctx.rooms[r])}</span></th>`).join('');
-  h += '<td class="gap rpart"></td><th scope="col" class="c kpart" data-col="k"><span>Did it?</span></th></tr></thead><tbody>';
+  h += RO.map((r) => `<th scope="col" class="c rpart${ctx.rooms[r].light === 'dark' ? ' dark' : ''}" data-col="r${r}" title="${esc(ctx.rooms[r].name)}">${roomIcon(ctx.rooms[r])}<span>${shortName(ctx.rooms[r])}</span></th>`).join('') + '<td class="gap rpart"></td>';
+  if (mot) h += ctx.motives.map((m, i) => `<th scope="col" class="c mpart" data-col="m${i}" title="${esc(m.name)}">${motiveIcon(m)}<span>${MOTIVE_SHORT[m.id] || esc(m.name)}</span></th>`).join('') + '<td class="gap mpart"></td>';
+  h += '<th scope="col" class="c kpart" data-col="k"><svg class="ki" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M14.5 14.5L20 20" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>Did it?</span></th></tr></thead><tbody>';
   ctx.suspects.forEach((S, s) => {
     let c = 0;
     h += `<tr class="srow"><th scope="row" data-row="s${s}">${face(S, 26)}<span class="who">${esc(S.short)}</span></th>`;
     h += WO.map((w) => cellHTML('sw', s, w, `${S.short} with the ${ctx.weapons[w].name}`, s, c++, 'wpart', `w${w}`)).join('') + '<td class="gap"></td>';
     h += RO.map((r) => cellHTML('sr', s, r, `${S.short} in the ${ctx.rooms[r].name}`, s, c++, 'rpart', `r${r}`)).join('') + '<td class="gap rpart"></td>';
+    if (mot) h += ctx.motives.map((m, i) => cellHTML('sm', s, i, `${S.short}, motive ${m.name.toLowerCase()}`, s, c++, 'mpart', `m${i}`)).join('') + '<td class="gap mpart"></td>';
     h += cellHTML('k', s, 0, `${S.short} did it`, s, c++, 'kpart', 'k') + '</tr>';
   });
   // what was where: a row per room under the weapons
-  h += `<tr class="rsep"><td colspan="${2 * n + 4}"><span>${line ? 'Which weapon was in which carriage' : 'Which weapon was in which room'}</span></td></tr>`;
+  const span = mot ? 3 * n + 4 : 2 * n + 3;
+  h += `<tr class="rsep"><td colspan="${span + 1}"><span>${line ? 'Which weapon was in which carriage' : 'Which weapon was in which room'}</span></td></tr>`;
   RO.forEach((r, k) => {
     let c = 0;
-    h += `<tr class="rrow"><th scope="row" data-row="r${r}"><span class="who">${esc(ctx.rooms[r].name)}</span></th>`;
+    h += `<tr class="rrow"><th scope="row" data-row="r${r}">${roomIcon(ctx.rooms[r])}<span class="who">${esc(ctx.rooms[r].name)}</span></th>`;
     h += WO.map((w) => cellHTML('wr', w, r, `The ${ctx.weapons[w].name} in the ${ctx.rooms[r].name}`, n + 1 + k, c++, 'wpart', `w${w}`)).join('');
-    h += `<td class="gap"></td><td class="void rpart" colspan="${n + 2}"></td></tr>`;
+    h += `<td class="gap"></td><td class="void rpart" colspan="${span - n - 1}"></td></tr>`;
   });
   el.innerHTML = h + '</tbody>';
 }
@@ -93,7 +99,9 @@ function paintAll() {
   document.querySelectorAll('.cell').forEach((el) => {
     const b = el.dataset.b, i = +el.dataset.i, j = +el.dataset.j, p = !!pencil && pencil.has(b + i + '-' + j);
     const v = p ? userMark(b, i, j) : markOf(d, b, i, j);
-    if (+el.dataset.v === v && (el.dataset.p === '1') === p) return;
+    const was = +el.dataset.v;
+    if (was === v && (el.dataset.p === '1') === p) return;
+    el.classList.toggle('fresh', was >= 0 && v > 0); // the pen draws a mark that has just appeared
     el.dataset.v = v;
     el.dataset.p = p ? '1' : '0';
     el.classList.toggle('pencil', p);
@@ -109,7 +117,7 @@ function paintAll() {
 }
 // once the case is closed, the killer's three squares are ringed in ink: did it, the weapon, the room
 function paintAnswer() {
-  const s = G.puzzle.solution, want = G.solved && G.mode !== 'tutorial' ? [['k', s.killer, 0], ['sw', s.killer, s.weapon], ['sr', s.killer, s.room], ['wr', s.weapon, s.room]] : [];
+  const s = G.puzzle.solution, want = G.solved && G.mode !== 'tutorial' ? [['k', s.killer, 0], ['sw', s.killer, s.weapon], ['sr', s.killer, s.room], ['wr', s.weapon, s.room]].concat(s.motive === null ? [] : [['sm', s.killer, s.motive]]) : [];
   document.querySelectorAll('#grid .cell.answer').forEach((el) => { el.classList.remove('answer'); const r = el.parentNode.querySelector('.ring'); if (r) r.remove(); });
   for (const [b, i, j] of want) {
     const el = document.querySelector(`#grid .cell[data-b="${b}"][data-i="${i}"][data-j="${j}"]`);
@@ -151,7 +159,7 @@ function undo() {
 function clearAll() {
   if (G.solved) return;
   const s = [], n = G.puzzle.n;
-  for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (G.marks[b][i][j]) s.push([b, i, j, G.marks[b][i][j]]);
+  for (const b of BLOCKS) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (G.marks[b][i][j]) s.push([b, i, j, G.marks[b][i][j]]);
   for (let i = 0; i < n; i++) if (G.marks.k[i]) s.push(['k', i, 0, G.marks.k[i]]);
   for (let i = 0; i < n; i++) if (G.say[i]) s.push(['say', i, 0, G.say[i]]);
   if (!s.length) return;

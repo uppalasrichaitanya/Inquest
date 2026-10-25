@@ -15,7 +15,7 @@ const WORDS = __dirname + '/clue-wording.txt';
 const shapes = {}, seen = {};
 for (const w of Object.keys(E.WORLDS)) {
   const pick = [0, 1, 2, 3, 4];
-  const ctx = E.buildCtx(E.WORLDS[w], pick, pick, pick);
+  const ctx = E.buildCtx(E.WORLDS[w], pick, pick, pick, pick); // with motives, so every clue type turns up
   for (const c of E.enumerateClues(ctx)) {
     const say = E.TESTIMONY_TYPES.includes(c.type);
     if (!shapes[c.type]) shapes[c.type] = { note: E.clueVariants(c, ctx, null).length, say: say ? E.clueVariants(c, ctx, 4).length : 0 };

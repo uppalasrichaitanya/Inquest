@@ -2,7 +2,7 @@
 
 A daily murder mystery. Every suspect makes a statement, and only the killer lies.
 
-Each case has a victim, an occasion and a handful of suspects, each with a portrait, three traits (height, hand, hair) and one statement. The evidence is always true; so is every statement except the killer's. Find the lie, and you have the killer. The notebook is a classic logic grid that can be filled in completely, and the map shows people and weapons as you place them. Inspector Mallory opens each case with a line and closes it with another. The verdict gives the motive and the lie that gave the killer away.
+Each case has a victim, an occasion and a handful of suspects, each with a portrait, four traits (height, hand, hair, eyes) and one statement. Weapons have a kind, a weight and a material; rooms have a floor and are lit or dark. On Sundays every suspect also has a motive, and you name it too. The evidence is always true; so is every statement except the killer's. Find the lie, and you have the killer. The notebook is a classic logic grid that can be filled in completely, and the map shows people and weapons as you place them. Inspector Mallory opens each case with a line and closes it with another. The verdict gives the motive and the lie that gave the killer away.
 
 The whole game is one file, `dist/index.html`, with no server and no accounts. It needs the internet only for its font (Google Fonts). Case No. 1 is 15 October 2026, and everyone gets the same case each day, on their own calendar.
 
@@ -49,4 +49,4 @@ Folders: `src/` the puzzle engine, `ui/` the interface, `bank/` the 800 checked 
 Notes for editing:
 - Clue wording lives in `src/25-text.js`. Banked cases store a variant index, so keep three wordings per clue type, for evidence and for testimony alike. Keep the logic plain and up front; a joke may ride on the end but must never change what the clue means. Testimony is spoken in the first person when a suspect talks about themselves.
 - Suspects, their traits, looks and motives, and each setting's victims and occasions live in `src/10-worlds-manor.js` and `src/11-worlds-train.js` (the manor, the train and the liner). Portraits and weapon icons are drawn in `ui/12-art.js`.
-- The week rises like a crossword: Monday three suspects, Tuesday and Wednesday four, Thursday to Saturday four with fewer gifts, Sunday the Mastermind with five (`dailyFor` in `ui/10-state.js`). Only today's case, closed on its day, counts towards the streak.
+- The week rises like a crossword: Monday three suspects, Tuesday and Wednesday four, Thursday to Saturday four with fewer gifts, Sunday the Mastermind: four suspects with a motive each (`dailyFor` in `ui/10-state.js`). Only today's case, closed on its day, counts towards the streak.

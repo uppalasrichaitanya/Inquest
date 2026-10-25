@@ -15,9 +15,9 @@ function buildPlan() {
   const el = document.getElementById('plan');
   if (!el) return;
   const ctx = G.puzzle.ctx, w = ctx.world, line = isLine(ctx);
-  const key = line
+  const key = (line
     ? 'Carriages are <i>next to</i> each other when they are coupled together. A sealed carriage in between keeps them apart.'
-    : 'Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included.';
+    : 'Rooms are <i>next to</i> each other where a doorway or a stair joins them, upstairs and down included.') + ' Shaded rooms are dark. People and weapons appear here as you place them.';
   el.innerHTML = `<div class="nb-head"><h2>${esc(w.name)}</h2><p class="howmark">${key}</p></div>
     <div class="house" id="house">${line ? trainSVG(ctx) : houseSVG(ctx)}</div>`;
 }
@@ -41,9 +41,12 @@ function houseSVG(ctx) {
       g += `<rect class="ghost" x="${b.x + 3}" y="${b.y + 3}" width="${b.w - 6}" height="${b.h - 6}" rx="4"/><text class="ghost-name" x="${b.x + 10}" y="${b.y + 22}" style="font-size:${fs - 1}px">${svgText(room.name)}</text>`;
       return;
     }
-    g += `<g class="room" data-room="${r}">
+    const is = narrow ? 20 : 30;
+    g += `<g class="room${room.light === 'dark' ? ' dark' : ''}" data-room="${r}">
       <rect class="floorspace" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="url(#pt-${room.pattern})"/>
+      <rect class="shade" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}"/>
       <rect class="lit" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}"/>
+      <svg class="ricon" x="${b.x + b.w - is - (narrow ? 5 : 9)}" y="${b.y + (narrow ? 5 : 8)}" width="${is}" height="${is}" viewBox="0 0 24 24" fill="currentColor">${ROOM_ICONS[room.id] || ''}</svg>
       ${roomLabel(room, b.x + (narrow ? 6 : 10), b.y + (narrow ? 17 : 23), fs, b.w - 14)}
       <g class="occupants" data-occ="${r}" transform="translate(${b.x + (narrow ? 5 : 9)} ${b.y + b.h - (narrow ? 34 : 44)})"></g></g>`;
   });
@@ -80,8 +83,9 @@ function trainSVG(ctx) {
       g += `<rect class="ghost" x="3" y="${y + 3}" width="${W - 6}" height="${h - 6}" rx="8"/><text class="ghost-name" x="14" y="${y + h / 2 + 5}">${svgText(room.name)}, sealed</text>`;
       return;
     }
-    g += `<g class="room" data-room="${r}">
-      <rect class="floorspace" x="0" y="${y}" width="${W}" height="${h}" rx="8" fill="url(#pt-${room.pattern})"/><rect class="lit" x="0" y="${y}" width="${W}" height="${h}" rx="8"/>
+    g += `<g class="room${room.light === 'dark' ? ' dark' : ''}" data-room="${r}">
+      <rect class="floorspace" x="0" y="${y}" width="${W}" height="${h}" rx="8" fill="url(#pt-${room.pattern})"/><rect class="shade" x="0" y="${y}" width="${W}" height="${h}" rx="8"/><rect class="lit" x="0" y="${y}" width="${W}" height="${h}" rx="8"/>
+      <svg class="ricon" x="${W - (narrow ? 34 : 44)}" y="${y + (h - (narrow ? 22 : 28)) / 2}" width="${narrow ? 22 : 28}" height="${narrow ? 22 : 28}" viewBox="0 0 24 24" fill="currentColor">${ROOM_ICONS[room.id] || ''}</svg>
       <rect class="wall" x="0" y="${y}" width="${W}" height="${h}" rx="8"/>
       <text class="room-name" x="14" y="${y + h / 2 + 5}" style="font-size:${narrow ? 13 : 15}px">${svgText(room.name)}</text>
       <g class="occupants" data-occ="${r}" transform="translate(${narrow ? 128 : 220} ${y + (h - 30) / 2})"></g></g>`;

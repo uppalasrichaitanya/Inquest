@@ -7,6 +7,10 @@
   "note": 3,
   "say": 3
  },
+ "attrInRoom": {
+  "note": 3,
+  "say": 0
+ },
  "diffFloor": {
   "note": 3,
   "say": 3
@@ -23,7 +27,19 @@
   "note": 3,
   "say": 3
  },
+ "eitherMotive": {
+  "note": 3,
+  "say": 3
+ },
  "has": {
+  "note": 3,
+  "say": 3
+ },
+ "hasMotive": {
+  "note": 3,
+  "say": 3
+ },
+ "holdsAttr": {
   "note": 3,
   "say": 3
  },
@@ -35,6 +51,26 @@
   "note": 3,
   "say": 3
  },
+ "inLight": {
+  "note": 3,
+  "say": 3
+ },
+ "motiveNotRoom": {
+  "note": 3,
+  "say": 0
+ },
+ "motiveNotWeapon": {
+  "note": 3,
+  "say": 0
+ },
+ "motiveRoom": {
+  "note": 3,
+  "say": 0
+ },
+ "motiveWeapon": {
+  "note": 3,
+  "say": 0
+ },
  "murderAdjRoom": {
   "note": 3,
   "say": 3
@@ -42,6 +78,10 @@
  "murderAheadOf": {
   "note": 3,
   "say": 0
+ },
+ "murderAttr": {
+  "note": 3,
+  "say": 3
  },
  "murderBehind": {
   "note": 3,
@@ -55,6 +95,14 @@
   "note": 3,
   "say": 3
  },
+ "murderLight": {
+  "note": 3,
+  "say": 3
+ },
+ "murderMotive": {
+  "note": 3,
+  "say": 3
+ },
  "murderNextTo": {
   "note": 3,
   "say": 0
@@ -64,6 +112,10 @@
   "say": 3
  },
  "murderNotFloor": {
+  "note": 3,
+  "say": 3
+ },
+ "murderNotMotive": {
   "note": 3,
   "say": 3
  },
@@ -111,6 +163,10 @@
   "note": 3,
   "say": 3
  },
+ "notMotive": {
+  "note": 3,
+  "say": 3
+ },
  "notTypeInRoom": {
   "note": 3,
   "say": 0
@@ -136,6 +192,10 @@
   "say": 0
  },
  "weaponIn": {
+  "note": 3,
+  "say": 0
+ },
+ "weaponLight": {
   "note": 3,
   "say": 0
  },

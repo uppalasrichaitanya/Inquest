@@ -13,7 +13,7 @@ function dayNumber(d) {
   return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - LAUNCH) / 864e5) + 1;
 }
 // ---- the daily rhythm. Everyone gets the same case each day, and the week has a shape, like a crossword:
-// Monday three suspects, Tuesday to Saturday four (Thursday on, with fewer gifts), Sunday the Mastermind with five.
+// Monday three suspects, Tuesday to Saturday four (Thursday on, with fewer gifts), Sunday four with a motive each.
 // Each kind of day takes the next case of its tier in bank order, so nothing repeats until a bank wraps round.
 const WEEK_TIER = ['mastermind', 'constable', 'detective', 'detective', 'inspector', 'inspector', 'inspector']; // by getDay(): Sunday first
 const TIER_LEVEL = { constable: 1, detective: 2, inspector: 3, mastermind: 4 };
@@ -21,7 +21,7 @@ const DAY_FEEL = {
   constable: 'The gentlest day: three suspects, and a lie that shows.',
   detective: 'Four suspects. Every statement earns its place.',
   inspector: 'Four suspects, fewer gifts. Expect to test a theory.',
-  mastermind: 'Five suspects, and nothing given away.',
+  mastermind: 'Four suspects, four motives: find out why, as well as who.',
 };
 const DAY_GROUP = { constable: 'Mondays', detective: 'Tuesdays and Wednesdays', inspector: 'Thursdays to Saturdays', mastermind: 'Sundays' };
 const todayN = () => Math.max(1, dayNumber());
@@ -63,11 +63,12 @@ const NUM_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', '
 const dayDots = (tier) => `<span class="level" aria-hidden="true">${'<i class="on"></i>'.repeat(TIER_LEVEL[tier])}${'<i></i>'.repeat(4 - TIER_LEVEL[tier])}</span>`;
 const shortName = (x) => x.short || x.name;
 const unitOf = (ctx) => (ctx.world.layoutKind === 'line' ? 'carriage' : 'room');
-// the traits as the card prints them
+// the traits as the card prints them, each with a small picture
 const traitChips = (s) => TRAIT_KEYS.map((k) => {
   const v = s.traits[k];
   if (k === 'hair') return `<li><i class="swatch" style="background:${HAIR_COLOUR[v]}"></i>${cap(v)} hair</li>`;
-  return `<li>${cap(TRAITS[k].values[v])}</li>`;
+  if (k === 'eyes') return `<li><i class="swatch eye" style="background:${EYE_COLOUR[v]}"></i>${cap(v)} eyes</li>`;
+  return `<li>${factIcon(k)}${cap(TRAITS[k].values[v])}</li>`;
 }).join('');
 
 // ---- the pen: every mark is drawn by hand, slightly differently for each square, and the same way every time
@@ -93,7 +94,7 @@ function penMark(v, key, size) {
     }
     d = 'M' + pts.join(' L');
   }
-  return `<svg class="pen" viewBox="0 0 ${size} ${size}" aria-hidden="true"><path d="${d}" fill="none" stroke="${faint ? 'var(--pen-faint)' : 'var(--pen)'}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg class="pen" viewBox="0 0 ${size} ${size}" aria-hidden="true"><path d="${d}" pathLength="1" fill="none" stroke="${faint ? 'var(--pen-faint)' : 'var(--pen)'}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 // a ring round an answer square, drawn when the case is closed
 function penRing(key) {
@@ -124,8 +125,9 @@ function refreshThemeButton() { document.querySelectorAll('[data-act="theme"]').
 
 // Turns {s:i} {w:i} {r:i} in a clue into highlightable spans.
 function tokens(text, ctx) {
-  return esc(text).replace(/\{([swr]):(\d+)\}/g, (_, k, i) => {
+  return esc(text).replace(/\{([swrmM]):(\d+)\}/g, (_, k, i) => {
     i = +i;
+    if (k === 'm' || k === 'M') { const n = ctx.motives[i].name; return `<span class="tk m" data-ent="m${i}">${esc(k === 'm' ? n.toLowerCase() : n)}</span>`; }
     if (k === 's') return `<span class="tk s" data-ent="s${i}" style="--h:${ctx.suspects[i].hue}">${esc(ctx.suspects[i].short)}</span>`;
     if (k === 'w') return `<span class="tk w" data-ent="w${i}">${esc(ctx.weapons[i].name)}</span>`;
     return `<span class="tk r" data-ent="r${i}">${esc(ctx.rooms[i].name)}</span>`;
@@ -141,7 +143,8 @@ function newGame(spec, mode, day) {
   const key = caseKey(spec);
   const saved = mode === 'tutorial' ? {} : LS.get(key, null) || {};
   const n = puzzle.n;
-  const marks = saved.marks || { sw: zeros(n), sr: zeros(n), wr: zeros(n), k: new Array(n).fill(0) };
+  const marks = saved.marks || { sw: zeros(n), sr: zeros(n), wr: zeros(n), sm: zeros(n), k: new Array(n).fill(0) };
+  if (!marks.sm) marks.sm = zeros(n);
   G = {
     spec, puzzle, key, mode, marks,
     day: day || null, // the case number, for a day's case (today's is mode 'daily', an earlier one 'archive')
@@ -154,7 +157,7 @@ function newGame(spec, mode, day) {
     tab: 'sw', // on a phone the notebook shows one block at a time: weapons (sw), rooms (sr) or weapon-and-room (wr)
     pane: 'clues', // on a phone the case is in three panes: the clues, the notebook, the map
     cur: 0, // the statement in hand
-    pick: { killer: null, weapon: null, room: null },
+    pick: { killer: null, weapon: null, room: null, motive: null },
     undo: [], // steps of [b, i, j, mark before], for Undo (this visit only)
     csp: null,
   };
@@ -168,8 +171,9 @@ function persist() {
 // a circle crosses out the rest of its row and column; two circles that share a person or a weapon give the
 // third square of the triangle (who, what, where); a statement marked as a lie circles its speaker under
 // "Did it?", and one marked as true crosses them out.
+const BLOCKS = ['sw', 'sr', 'wr', 'sm']; // who-what, who-where, what-where, who-why (all zeros without motives)
 function derive(marks, n, say) {
-  const d = { sw: marks.sw.map((r) => r.slice()), sr: marks.sr.map((r) => r.slice()), wr: marks.wr.map((r) => r.slice()), k: marks.k.slice() };
+  const d = { sw: marks.sw.map((r) => r.slice()), sr: marks.sr.map((r) => r.slice()), wr: marks.wr.map((r) => r.slice()), sm: marks.sm.map((r) => r.slice()), k: marks.k.slice() };
   const yes = (v) => v === 2 || v === 4, no = (v) => v === 1 || v === 3;
   if (say) say.forEach((v, s) => { if (d.k[s] === 0 && v) d.k[s] = v === 2 ? 4 : 3; });
   let changed = true, guard = 0;
@@ -179,7 +183,7 @@ function derive(marks, n, say) {
     const killer = d.k.findIndex(yes);
     if (killer >= 0) for (let i = 0; i < n; i++) if (i !== killer && d.k[i] === 0) { d.k[i] = 3; changed = true; }
     if (killer < 0 && d.k.filter(no).length === n - 1) { const i = d.k.findIndex((v) => v === 0); if (i >= 0) { d.k[i] = 4; changed = true; } }
-    for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (yes(d[b][i][j])) {
+    for (const b of BLOCKS) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (yes(d[b][i][j])) {
       for (let k = 0; k < n; k++) { if (k !== j) set(b, i, k, 3); if (k !== i) set(b, k, j, 3); }
     }
     for (let s = 0; s < n; s++) for (let w = 0; w < n; w++) for (let r = 0; r < n; r++) {
@@ -195,7 +199,7 @@ function derive(marks, n, say) {
       if (yes(c) && no(b)) set('sw', s, w, 3);
     }
     // a row or column with one open square left and no circle: that square is the one
-    for (const b of ['sw', 'sr', 'wr']) for (let i = 0; i < n; i++) {
+    for (const b of BLOCKS) for (let i = 0; i < n; i++) {
       const row = d[b][i];
       if (!row.some(yes) && row.filter((v) => v === 0).length === 1) set(b, i, row.indexOf(0), 4);
       const col = d[b].map((r) => r[i]);

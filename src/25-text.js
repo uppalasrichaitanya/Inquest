@@ -11,12 +11,18 @@ function clueVariants(c, ctx, sp) {
   const a = c.args;
   const line = ctx.world.layoutKind === 'line';
   const unit = line ? 'carriage' : 'room';
-  const S = (i) => `{s:${i}}`, W = (i) => `{w:${i}}`, R = (i) => `{r:${i}}`;
+  const S = (i) => `{s:${i}}`, W = (i) => `{w:${i}}`, R = (i) => `{r:${i}}`, M = (i) => `{m:${i}}`;
   const T = (t) => WEAPON_TYPES[t];
+  // weapon attributes and light, as phrases: "something heavy", "made of glass", "a dark room"
+  const A = a.k === 'weight' ? `something ${a.v}` : a.k === 'material' ? `something made of ${a.v}` : '';
+  const Aadj = a.k === 'weight' ? a.v : a.k === 'material' ? `made of ${a.v}` : '';
+  const L = a.v === 'dark' ? `a dark ${unit}` : a.v === 'lit' ? `a ${unit} with the lamps lit` : '';
+  const Lword = a.v === 'dark' ? 'dark' : 'well lit';
   const floorWord = (f) => ctx.world.floors[f];
   const join = line ? 'a coupling' : 'a door or a stair';
   const away = line ? 'coupled to it' : 'a door or a stair away';
-  const cap = (s) => (s[0] === '{' ? s : s[0].toUpperCase() + s.slice(1));
+  // a token at the start of a sentence is marked {M:i} (capital) so the renderer capitalises the motive's name
+  const cap = (s) => (s.startsWith('{m:') ? '{M:' + s.slice(3) : s[0] === '{' ? s : s[0].toUpperCase() + s.slice(1));
   const three = (voice, v0, v1, v2) => [[voice, v0], [voice, v1], [voice, v2]];
   const say = sp !== undefined && sp !== null;
   if (say) {
@@ -98,11 +104,29 @@ function clueVariants(c, ctx, sp) {
           `The ${R(a.r)}, and every room a door or a stair from it? Nothing happened there.`);
       case 'murderTrait': return t(`The killer was ${traitWord(a.k, a.v)}. I caught a glimpse.`, `Whoever did it was ${traitWord(a.k, a.v)}. I'd swear to that.`,
         `I only caught a glimpse, but the killer was ${traitWord(a.k, a.v)}.`);
+      case 'holdsAttr': return self
+        ? t(`My weapon was ${A}, if you must know.`, `I had ${A}. What of it?`, `I'll admit to carrying ${A}.`)
+        : t(`${S(a.s)} had ${A}.`, `${S(a.s)}'s weapon was ${A}. I noticed.`, `${S(a.s)} was carrying ${A}, and making a poor job of hiding it.`);
+      case 'inLight': return self
+        ? t(`I was in ${L}.`, `Wherever I was, it was ${Lword}.`, a.v === 'dark' ? `I was in ${L}. I couldn't see my own hand.` : `I was in ${L}, and I could see perfectly well.`)
+        : t(`${S(a.s)} was in ${L}.`, `Wherever ${S(a.s)} was, it was ${Lword}.`, a.v === 'dark' ? `${S(a.s)} was in ${L}. I heard the stumbling.` : `${S(a.s)} was in ${L}. I could see plainly through the door.`);
+      case 'murderAttr': return t(`The killer used ${A}. I'm sure of it.`, `It was done with ${A}. I saw.`, `Mark my words: the murder weapon was ${Aadj}.`);
+      case 'murderLight': return t(`The body was in ${L}.`, `It happened in ${L}. I'm sure.`, a.v === 'dark' ? `It happened in the dark, in ${L}. Typical.` : `It happened in ${L}, if you can believe it.`);
+      case 'hasMotive': return self
+        ? t(`If I had a motive, it was ${M(a.m)}. I'm not ashamed.`, `My reason? It would be ${M(a.m)}, I suppose.`, `It was ${M(a.m)}, if you must know. That's my motive.`)
+        : t(`${S(a.s)}'s motive was ${M(a.m)}.`, `If ${S(a.s)} had a reason, it was ${M(a.m)}.`, `${S(a.s)}'s reason? ${cap(M(a.m))}, obviously.`);
+      case 'notMotive': return self
+        ? t(`My motive was not ${M(a.m)}.`, `Whatever my reasons, ${M(a.m)} wasn't one of them.`, `Me? Driven by ${M(a.m)}? Hardly.`)
+        : t(`${S(a.s)}'s motive was not ${M(a.m)}.`, `Whatever drove ${S(a.s)}, it wasn't ${M(a.m)}.`, `${S(a.s)}, driven by ${M(a.m)}? Hardly.`);
+      case 'eitherMotive': return t(`Either ${either(a.a, a.b, 'I')} had ${M(a.m)} as a motive.`, `${cap(M(a.m))} was the motive of ${either(a.a, a.b, 'me')}.`,
+        `Look for ${M(a.m)}, and you'll find ${either(a.a, a.b, 'me')}.`);
+      case 'murderMotive': return t(`The killer's motive was ${M(a.m)}, I'd bet on it.`, `It was ${M(a.m)}. It's always ${M(a.m)}.`, `Whoever did it, the reason was ${M(a.m)}.`);
+      case 'murderNotMotive': return t(`The motive wasn't ${M(a.m)}.`, `Whatever the reason, it wasn't ${M(a.m)}.`, `Nobody here would kill for ${M(a.m)}. Not this time.`);
     }
     throw new Error('no testimony for clue type ' + c.type);
   }
   const n = (v0, v1, v2) => three('note', v0, v1, v2);
-  const hair = HAIR_WORD[a.v], tw = a.k ? traitWord(a.k, a.v) : '';
+  const hair = HAIR_WORD[a.v], tw = TRAITS[a.k] ? traitWord(a.k, a.v) : '';
   switch (c.type) {
     case 'has': return n(`${S(a.s)} had the ${W(a.w)}. The prints leave no doubt.`, `The ${W(a.w)} is covered in ${S(a.s)}'s fingerprints, and nobody else's. ${S(a.s)} had it.`,
       `${S(a.s)} had the ${W(a.w)}. A witness saw it and fainted, which is how we know.`);
@@ -151,12 +175,16 @@ function clueVariants(c, ctx, sp) {
       `Whoever was in the ${R(a.r)} had ${T(a.t).held}. The marks on the furniture say so.`);
     case 'notTypeInRoom': return n(`The person in the ${R(a.r)} wasn't carrying ${T(a.t).label}.`, `Whoever was in the ${R(a.r)} didn't have ${T(a.t).any}.`,
       `Whatever the person in the ${R(a.r)} carried, it wasn't ${T(a.t).label}.`);
-    case 'traitWeapon': return a.k === 'hair'
+    case 'traitWeapon': return a.k === 'eyes'
+      ? n(`Whoever had the ${W(a.w)} is ${tw}: a witness saw the eyes.`, `The ${W(a.w)} was held by someone ${tw}.`, `A witness remembers the ${W(a.w)}, and a pair of ${a.v} eyes above it. Whoever had it is ${tw}.`)
+      : a.k === 'hair'
       ? n(`A ${hair} hair was caught on the ${W(a.w)}. Whoever had it is ${tw}.`, `Whoever had the ${W(a.w)} is ${tw}: there's a ${hair} hair stuck to it.`, `The ${W(a.w)} was held by someone ${tw}, judging by the hair on the handle.`)
       : a.k === 'hand'
         ? n(`The ${W(a.w)} was held in the ${a.v} hand. Whoever had it is ${tw}.`, `Whoever had the ${W(a.w)} is ${tw}: look at the grip.`, `The ${W(a.w)} was worn smooth on the ${a.v} side. Whoever had it is ${tw}.`)
         : n(`A witness saw a ${a.v} figure with the ${W(a.w)}. Whoever had it is ${a.v}.`, `Whoever had the ${W(a.w)} is ${a.v}. The witness was very definite.`, `The ${W(a.w)} was in the hands of someone ${a.v}.`);
-    case 'traitRoom': return a.k === 'hair'
+    case 'traitRoom': return a.k === 'eyes'
+      ? n(`Whoever was in the ${R(a.r)} is ${tw}. The maid noticed.`, `Someone ${tw} was in the ${R(a.r)}.`, `A pair of ${a.v} eyes was seen peering out of the ${R(a.r)}. Whoever was there is ${tw}.`)
+      : a.k === 'hair'
       ? n(`A ${hair} hair was found in the ${R(a.r)}. Whoever was there is ${tw}.`, `Whoever was in the ${R(a.r)} is ${tw}: there's a ${hair} hair on the cushion.`, `The ${R(a.r)} was visited by someone ${tw}. The hairbrush left behind is full of it.`)
       : a.k === 'hand'
         ? n(`The door of the ${R(a.r)} was opened with the ${a.v} hand. Whoever was there is ${tw}.`, `Whoever was in the ${R(a.r)} is ${tw}: see the smudge on the door.`, `Someone ${tw} was in the ${R(a.r)}. The cup on the table had its handle turned to the ${a.v}.`)
@@ -195,11 +223,29 @@ function clueVariants(c, ctx, sp) {
         `The scene was not the ${R(a.r)}, and not next to it.`);
     case 'murderFloor': return n(`The body was found ${floorWord(a.f)}.`, `It happened ${floorWord(a.f)}.`, `The scene of the crime was ${floorWord(a.f)}.`);
     case 'murderNotFloor': return n(`The body was not found ${floorWord(a.f)}.`, `It didn't happen ${floorWord(a.f)}.`, `Whatever happened, it was not ${floorWord(a.f)}.`);
-    case 'murderTrait': return a.k === 'hair'
+    case 'murderTrait': return a.k === 'eyes'
+      ? n(`The killer is ${tw}. The victim's last word was “${a.v}”.`, `A witness saw ${a.v} eyes in the dark. The killer is ${tw}.`, `The killer is ${tw}, says the only witness.`)
+      : a.k === 'hair'
       ? n(`A ${hair} hair was found on the body. The killer is ${tw}.`, `The killer is ${tw}: there's a ${hair} hair on the victim's collar.`, `The victim was clutching a single ${hair} hair. The killer is ${tw}.`)
       : a.k === 'hand'
         ? n(`The coroner says the killer is ${tw}.`, `The killer is ${tw}, says the coroner, who is never wrong about these things.`, `Everything points one way: the killer is ${tw}.`)
         : n(`A witness saw a ${a.v} figure hurry from the scene. The killer is ${a.v}.`, `The killer is ${a.v}. A witness saw the figure leave.`, `Whoever did it was ${a.v}, according to the only witness who was sober.`);
+    case 'holdsAttr': return n(`${S(a.s)}'s weapon was ${A}.`, `${S(a.s)} was carrying ${A}. It showed.`, `A search of ${S(a.s)}'s luggage settles it: ${S(a.s)}'s weapon was ${A}.`);
+    case 'attrInRoom': return n(`Whoever was in the ${R(a.r)} had ${A}.`, `The person in the ${R(a.r)} was carrying ${A}.`, `The weapon in the ${R(a.r)} was ${Aadj}: the marks on the floor say so.`);
+    case 'murderAttr': return n(`The murder weapon was ${Aadj}.`, `The coroner says the murder weapon was ${Aadj}.`, `Whatever the killer used, it was ${Aadj}.`);
+    case 'inLight': return n(`${S(a.s)} was in ${L}.`, `Wherever ${S(a.s)} was, it was ${Lword}.`,
+      a.v === 'dark' ? `${S(a.s)} was in ${L}: there are cobwebs on the cuffs to prove it.` : `${S(a.s)} was in ${L}: there's candle wax on the sleeve.`);
+    case 'weaponLight': return n(`The ${W(a.w)} was in ${L}.`, `Whoever had the ${W(a.w)} was in ${L}.`, `The ${W(a.w)} spent the evening in ${L}.`);
+    case 'murderLight': return n(`The body was found in ${L}.`, `It happened in ${L}.`, a.v === 'dark' ? `It happened in the dark: the body was in ${L}.` : `It happened in ${L}, in plain view of nobody.`);
+    case 'hasMotive': return n(`${S(a.s)}'s motive was ${M(a.m)}.`, `If ${S(a.s)} had a reason, it was ${M(a.m)}.`, `${S(a.s)} had a motive: ${M(a.m)}. Doesn't everyone?`);
+    case 'notMotive': return n(`${S(a.s)}'s motive was not ${M(a.m)}.`, `Whatever drove ${S(a.s)}, it wasn't ${M(a.m)}.`, `Rule out ${M(a.m)} for ${S(a.s)}.`);
+    case 'eitherMotive': return n(`${cap(M(a.m))} was the motive of ${S(a.a)} or of ${S(a.b)}.`, `Either ${S(a.a)} or ${S(a.b)} had ${M(a.m)} as a motive.`, `Look for ${M(a.m)}, and you'll find ${S(a.a)} or ${S(a.b)}.`);
+    case 'motiveWeapon': return n(`Whoever had ${M(a.m)} as a motive had the ${W(a.w)}.`, `The ${W(a.w)} belonged to whoever's motive was ${M(a.m)}.`, `Find the motive ${M(a.m)} and you find the ${W(a.w)}: they go together.`);
+    case 'motiveNotWeapon': return n(`Whoever's motive was ${M(a.m)} didn't have the ${W(a.w)}.`, `The ${W(a.w)} and ${M(a.m)} don't go together.`, `Whoever had ${M(a.m)} as a motive, it wasn't the ${W(a.w)} they carried.`);
+    case 'motiveRoom': return n(`Whoever had ${M(a.m)} as a motive was in the ${R(a.r)}.`, `The ${R(a.r)} held whoever's motive was ${M(a.m)}.`, `Find the motive ${M(a.m)} and you find the ${R(a.r)}: they go together.`);
+    case 'motiveNotRoom': return n(`Whoever's motive was ${M(a.m)} wasn't in the ${R(a.r)}.`, `The ${R(a.r)} and ${M(a.m)} don't go together.`, `Whoever had ${M(a.m)} as a motive, it wasn't the ${R(a.r)} they were in.`);
+    case 'murderMotive': return n(`The killer's motive was ${M(a.m)}.`, `Mallory is sure of the why: ${M(a.m)}.`, `The motive was ${M(a.m)}. It usually is.`);
+    case 'murderNotMotive': return n(`The motive was not ${M(a.m)}.`, `Rule out ${M(a.m)} as the motive.`, `Whatever the killer's reason, it wasn't ${M(a.m)}.`);
   }
   throw new Error('no text for clue type ' + c.type);
 }
@@ -264,8 +310,10 @@ function pickStory(rng, world) {
 
 // Plain-text rendering (tests, share text). The UI renders tokens itself.
 function plainText(str, ctx) {
-  return str.replace(/\{([swr]):(\d+)\}/g, (_, k, i) => {
+  return str.replace(/\{([swrmM]):(\d+)\}/g, (_, k, i) => {
     i = +i;
+    if (k === 'm') return ctx.motives[i].name.toLowerCase();
+    if (k === 'M') return ctx.motives[i].name;
     return k === 's' ? ctx.suspects[i].short : k === 'w' ? ctx.weapons[i].name : ctx.rooms[i].name;
   });
 }

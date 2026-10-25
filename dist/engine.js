@@ -90,8 +90,30 @@ const TRAITS = {
   height: { label: 'Height', values: { tall: 'tall', short: 'short' } },
   hand: { label: 'Hand', values: { left: 'left-handed', right: 'right-handed' } },
   hair: { label: 'Hair', values: { dark: 'dark-haired', fair: 'fair-haired', red: 'red-haired', grey: 'grey-haired' } },
+  eyes: { label: 'Eyes', values: { blue: 'blue-eyed', brown: 'brown-eyed', green: 'green-eyed', grey: 'grey-eyed' } },
 };
-const TRAIT_KEYS = ['height', 'hand', 'hair'];
+const TRAIT_KEYS = ['height', 'hand', 'hair', 'eyes'];
+// what the weapon cards print, and the evidence can point at: how heavy, and what it's made of
+const WEAPON_ATTRS = {
+  weight: { label: 'Weight', values: { heavy: 'heavy', light: 'light' } },
+  material: { label: 'Material', values: { metal: 'metal', glass: 'glass', wood: 'wood', fabric: 'fabric', china: 'china' } },
+};
+const WEAPON_ATTR_KEYS = ['weight', 'material'];
+// rooms are lit or dark (the storm, the tunnel, the fog): the room cards and the map show which
+const LIGHT_WORD = { lit: 'lamps lit', dark: 'in darkness' };
+
+// Motives, for the cases that ask why as well as who (Sundays). Each suspect had a different one.
+// `did` finishes the verdict's sentence: "{killer} {did}." with {v} the victim.
+const MOTIVES = [
+  { id: 'money', name: 'Money', did: 'did it for the money: {v} was worth far more dead than alive' },
+  { id: 'revenge', name: 'Revenge', did: 'did it for revenge, for something {v} did years ago and never once regretted' },
+  { id: 'love', name: 'Love', did: 'did it for love, which is the worst reason of all' },
+  { id: 'jealousy', name: 'Jealousy', did: 'did it out of jealousy: {v} had everything, and flaunted it' },
+  { id: 'blackmail', name: 'Blackmail', did: 'did it to stop the blackmail: {v} had the letters, and had started to read them aloud' },
+  { id: 'ambition', name: 'Ambition', did: 'did it out of ambition: {v} was the only thing standing in the way' },
+  { id: 'inheritance', name: 'Inheritance', did: 'did it for the inheritance, and had already measured the curtains' },
+  { id: 'fear', name: 'Fear', did: 'did it out of fear: {v} knew a secret that would have ruined everything' },
+];
 
 WORLDS.manor = {
   id: 'manor',
@@ -129,47 +151,47 @@ WORLDS.manor = {
     'At half past eleven the lights went out. At twenty to twelve, {v} was dead, and everyone had an alibi but one.',
   ],
   rooms: [
-    { id: 'bedroom', name: 'Master Bedroom', short: 'Bed&shy;room', pattern: 'carpet', rect: { x: 0, y: 0, w: 5, h: 1 } },
-    { id: 'study', name: 'Study', short: 'Study', pattern: 'rug', rect: { x: 5, y: 0, w: 4, h: 1 } },
-    { id: 'kitchen', name: 'Kitchen', short: 'Kitchen', pattern: 'checker', rect: { x: 0, y: 1, w: 2, h: 1 } },
-    { id: 'dining', name: 'Dining Hall', short: 'Dining Hall', pattern: 'parquet', rect: { x: 2, y: 1, w: 3, h: 1 } },
-    { id: 'library', name: 'Library', short: 'Library', pattern: 'planks', rect: { x: 5, y: 1, w: 2, h: 1 } },
-    { id: 'conservatory', name: 'Conservatory', short: 'Conser&shy;vatory', pattern: 'leaves', rect: { x: 7, y: 1, w: 2, h: 1 } },
-    { id: 'cellar', name: 'Wine Cellar', short: 'Wine Cellar', pattern: 'stone', rect: { x: 0, y: 2, w: 2, h: 1 } },
+    { id: 'bedroom', name: 'Master Bedroom', short: 'Bed&shy;room', pattern: 'carpet', light: 'dark', rect: { x: 0, y: 0, w: 5, h: 1 } },
+    { id: 'study', name: 'Study', short: 'Study', pattern: 'rug', light: 'lit', rect: { x: 5, y: 0, w: 4, h: 1 } },
+    { id: 'kitchen', name: 'Kitchen', short: 'Kitchen', pattern: 'checker', light: 'lit', rect: { x: 0, y: 1, w: 2, h: 1 } },
+    { id: 'dining', name: 'Dining Hall', short: 'Dining Hall', pattern: 'parquet', light: 'lit', rect: { x: 2, y: 1, w: 3, h: 1 } },
+    { id: 'library', name: 'Library', short: 'Library', pattern: 'planks', light: 'dark', rect: { x: 5, y: 1, w: 2, h: 1 } },
+    { id: 'conservatory', name: 'Conservatory', short: 'Conser&shy;vatory', pattern: 'leaves', light: 'dark', rect: { x: 7, y: 1, w: 2, h: 1 } },
+    { id: 'cellar', name: 'Wine Cellar', short: 'Wine Cellar', pattern: 'stone', light: 'dark', rect: { x: 0, y: 2, w: 2, h: 1 } },
   ],
   weapons: [
-    { id: 'dagger', name: 'Moroccan Dagger', short: 'Dagger', type: 'blade', note: 'taken from the trophy wall' },
-    { id: 'opener', name: 'Silver Letter Opener', short: 'Letter opener', type: 'blade', note: 'monogrammed A.B.' },
-    { id: 'candlestick', name: 'Brass Candlestick', short: 'Candle&shy;stick', type: 'blunt', note: 'one of a pair, now a single' },
-    { id: 'poker', name: 'Fire Poker', short: 'Poker', type: 'blunt', note: 'still warm' },
-    { id: 'port', name: 'Decanter of Port', short: 'Port', type: 'poison', note: 'the stopper is missing' },
-    { id: 'cord', name: 'Curtain Cord', short: 'Curtain cord', type: 'cord', note: 'cut cleanly from the drapes' },
-    { id: 'revolver', name: 'Service Revolver', short: 'Revol&shy;ver', type: 'firearm', note: 'one chamber empty' },
+    { id: 'dagger', name: 'Moroccan Dagger', short: 'Dagger', type: 'blade', weight: 'light', material: 'metal', note: 'taken from the trophy wall' },
+    { id: 'opener', name: 'Silver Letter Opener', short: 'Letter opener', type: 'blade', weight: 'light', material: 'metal', note: 'monogrammed A.B.' },
+    { id: 'candlestick', name: 'Brass Candlestick', short: 'Candle&shy;stick', type: 'blunt', weight: 'heavy', material: 'metal', note: 'one of a pair, now a single' },
+    { id: 'poker', name: 'Fire Poker', short: 'Poker', type: 'blunt', weight: 'heavy', material: 'metal', note: 'still warm' },
+    { id: 'port', name: 'Decanter of Port', short: 'Port', type: 'poison', weight: 'heavy', material: 'glass', note: 'the stopper is missing' },
+    { id: 'cord', name: 'Curtain Cord', short: 'Curtain cord', type: 'cord', weight: 'light', material: 'fabric', note: 'cut cleanly from the drapes' },
+    { id: 'revolver', name: 'Service Revolver', short: 'Revol&shy;ver', type: 'firearm', weight: 'heavy', material: 'metal', note: 'one chamber empty' },
   ],
   suspects: [
     { id: 'vane', name: 'Lady Ottoline Vane', short: 'Lady Vane', role: 'the widow’s sister, in mourning since 1911 for reasons nobody can recall', hue: 340,
-      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#EBC9AE', hair: 'bun', acc: ['veil', 'pearls'] },
+      traits: { height: 'tall', hand: 'right', hair: 'dark', eyes: 'grey' }, look: { skin: '#EBC9AE', hair: 'bun', acc: ['veil', 'pearls'] },
       motive: 'had been promised the house for twenty years, and had just learned that {v} meant to turn it into a hotel' },
     { id: 'pell', name: 'Dr. Rufus Pell', short: 'Dr. Pell', role: 'family physician, whose bedside manner frightens the healthy', hue: 200,
-      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E3B48F', hair: 'bald', acc: ['glasses', 'moustache'] },
+      traits: { height: 'short', hand: 'right', hair: 'grey', eyes: 'brown' }, look: { skin: '#E3B48F', hair: 'bald', acc: ['glasses', 'moustache'] },
       motive: 'had signed a death certificate years ago that {v} knew to be wildly optimistic' },
     { id: 'crisp', name: 'Major Barnaby Crisp', short: 'Major Crisp', role: 'retired officer, in debt to half the county and at war with the other half', hue: 28,
-      traits: { height: 'tall', hand: 'left', hair: 'grey' }, look: { skin: '#D99F7E', hair: 'short', acc: ['moustache', 'medal'] },
+      traits: { height: 'tall', hand: 'left', hair: 'grey', eyes: 'blue' }, look: { skin: '#D99F7E', hair: 'short', acc: ['moustache', 'medal'] },
       motive: 'owed {v} a small fortune, and {v} had started asking for it back, loudly, at dinner' },
     { id: 'fenn', name: 'Miss Odalys Fenn', short: 'Miss Fenn', role: 'private secretary; knows every secret and charges for most of them', hue: 160,
-      traits: { height: 'short', hand: 'left', hair: 'dark' }, look: { skin: '#B98563', hair: 'bob', acc: ['glasses'] },
+      traits: { height: 'short', hand: 'left', hair: 'dark', eyes: 'brown' }, look: { skin: '#B98563', hair: 'bob', acc: ['glasses'] },
       motive: 'had been forging {v}’s signature for a year, and had recently got rather good at it' },
     { id: 'thorne', name: 'Reverend Silas Thorne', short: 'Rev. Thorne', role: 'parish vicar, with a sermon for every occasion and a bookmaker for the rest', hue: 265,
-      traits: { height: 'tall', hand: 'right', hair: 'fair' }, look: { skin: '#F0D2BC', hair: 'slick', acc: ['collar'] },
+      traits: { height: 'tall', hand: 'right', hair: 'fair', eyes: 'blue' }, look: { skin: '#F0D2BC', hair: 'slick', acc: ['collar'] },
       motive: 'had spent the church roof fund at Epsom, and {v} held the betting slips' },
     { id: 'marrow', name: 'Mrs. Edith Marrow', short: 'Mrs. Marrow', role: 'housekeeper of thirty years; has seen everything and dusted most of it', hue: 95,
-      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E8BFA0', hair: 'curly', acc: ['brooch'] },
+      traits: { height: 'short', hand: 'right', hair: 'grey', eyes: 'green' }, look: { skin: '#E8BFA0', hair: 'curly', acc: ['brooch'] },
       motive: 'had been dismissed by {v} that very morning, after thirty years, over a soufflé' },
     { id: 'dray', name: 'Cassius Dray', short: 'Mr. Dray', role: 'art dealer with a suspiciously fresh Vermeer', hue: 48,
-      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#C99272', hair: 'slick', acc: ['monocle', 'bowtie'] },
+      traits: { height: 'tall', hand: 'right', hair: 'dark', eyes: 'green' }, look: { skin: '#C99272', hair: 'slick', acc: ['monocle', 'bowtie'] },
       motive: 'had sold {v} a Vermeer that was still wet, and {v} had noticed the smell' },
     { id: 'lark', name: 'Imogen Lark', short: 'Miss Lark', role: 'niece and aviator; arrived by motorcycle and left a dent in the lawn', hue: 5,
-      traits: { height: 'short', hand: 'left', hair: 'red' }, look: { skin: '#F2CDB3', hair: 'long', acc: ['goggles'] },
+      traits: { height: 'short', hand: 'left', hair: 'red', eyes: 'blue' }, look: { skin: '#F2CDB3', hair: 'long', acc: ['goggles'] },
       motive: 'needed {v}’s money to fly the Atlantic, and had been told to take the boat like everyone else' },
   ],
 };
@@ -209,47 +231,47 @@ WORLDS.train = {
   ],
   // listed front (engine end) to back
   rooms: [
-    { id: 'mail', name: 'Mail Car', short: 'Mail', pattern: 'planks', rect: { x: 0, y: 0, w: 1, h: 1 } },
-    { id: 'dining', name: 'Dining Car', short: 'Dining', pattern: 'parquet', rect: { x: 1, y: 0, w: 1, h: 1 } },
-    { id: 'smoking', name: 'Smoking Lounge', short: 'Smoking', pattern: 'rug', rect: { x: 2, y: 0, w: 1, h: 1 } },
-    { id: 'sleeper', name: 'Sleeper Car', short: 'Sleeper', pattern: 'carpet', rect: { x: 3, y: 0, w: 1, h: 1 } },
-    { id: 'bar', name: 'Bar Car', short: 'Bar', pattern: 'checker', rect: { x: 4, y: 0, w: 1, h: 1 } },
-    { id: 'observation', name: 'Observation Car', short: 'Obser&shy;vation', pattern: 'leaves', rect: { x: 5, y: 0, w: 1, h: 1 } },
-    { id: 'luggage', name: 'Luggage Van', short: 'Luggage', pattern: 'stone', rect: { x: 6, y: 0, w: 1, h: 1 } },
+    { id: 'mail', name: 'Mail Car', short: 'Mail', pattern: 'planks', light: 'dark', rect: { x: 0, y: 0, w: 1, h: 1 } },
+    { id: 'dining', name: 'Dining Car', short: 'Dining', pattern: 'parquet', light: 'lit', rect: { x: 1, y: 0, w: 1, h: 1 } },
+    { id: 'smoking', name: 'Smoking Lounge', short: 'Smoking', pattern: 'rug', light: 'lit', rect: { x: 2, y: 0, w: 1, h: 1 } },
+    { id: 'sleeper', name: 'Sleeper Car', short: 'Sleeper', pattern: 'carpet', light: 'dark', rect: { x: 3, y: 0, w: 1, h: 1 } },
+    { id: 'bar', name: 'Bar Car', short: 'Bar', pattern: 'checker', light: 'lit', rect: { x: 4, y: 0, w: 1, h: 1 } },
+    { id: 'observation', name: 'Observation Car', short: 'Obser&shy;vation', pattern: 'leaves', light: 'dark', rect: { x: 5, y: 0, w: 1, h: 1 } },
+    { id: 'luggage', name: 'Luggage Van', short: 'Luggage', pattern: 'stone', light: 'dark', rect: { x: 6, y: 0, w: 1, h: 1 } },
   ],
   weapons: [
-    { id: 'hatpin', name: 'Jewelled Hat Pin', short: 'Hat pin', type: 'blade', note: 'longer than it looks' },
-    { id: 'icepick', name: 'Ice Pick', short: 'Ice pick', type: 'blade', note: 'from behind the bar' },
-    { id: 'bottle', name: 'Champagne Bottle', short: 'Bottle', type: 'blunt', note: 'unopened, and heavier for it' },
-    { id: 'lantern', name: 'Brass Signal Lantern', short: 'Lantern', type: 'blunt', note: 'dented on one side' },
-    { id: 'cocoa', name: 'Cup of Laced Cocoa', short: 'Cocoa', type: 'poison', note: 'half finished' },
-    { id: 'scarf', name: 'Silk Scarf', short: 'Scarf', type: 'cord', note: 'embroidered with a crest' },
-    { id: 'pistol', name: 'Pocket Pistol', short: 'Pistol', type: 'firearm', note: 'pearl handled' },
+    { id: 'hatpin', name: 'Jewelled Hat Pin', short: 'Hat pin', type: 'blade', weight: 'light', material: 'metal', note: 'longer than it looks' },
+    { id: 'icepick', name: 'Ice Pick', short: 'Ice pick', type: 'blade', weight: 'light', material: 'metal', note: 'from behind the bar' },
+    { id: 'bottle', name: 'Champagne Bottle', short: 'Bottle', type: 'blunt', weight: 'heavy', material: 'glass', note: 'unopened, and heavier for it' },
+    { id: 'lantern', name: 'Brass Signal Lantern', short: 'Lantern', type: 'blunt', weight: 'heavy', material: 'metal', note: 'dented on one side' },
+    { id: 'cocoa', name: 'Cup of Laced Cocoa', short: 'Cocoa', type: 'poison', weight: 'light', material: 'china', note: 'half finished' },
+    { id: 'scarf', name: 'Silk Scarf', short: 'Scarf', type: 'cord', weight: 'light', material: 'fabric', note: 'embroidered with a crest' },
+    { id: 'pistol', name: 'Pocket Pistol', short: 'Pistol', type: 'firearm', weight: 'light', material: 'metal', note: 'pearl handled' },
   ],
   suspects: [
     { id: 'valcourt', name: 'Madame Zora Valcourt', short: 'Mme Valcourt', role: 'opera singer, travelling with three hatboxes and one grudge', hue: 330,
-      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#D9A684', hair: 'long', acc: ['feather', 'earrings'] },
+      traits: { height: 'tall', hand: 'right', hair: 'dark', eyes: 'brown' }, look: { skin: '#D9A684', hair: 'long', acc: ['feather', 'earrings'] },
       motive: 'had been replaced in next season’s Tosca on the say-so of {v}, by a soprano half the age' },
     { id: 'orlov', name: 'Count Mikhail Orlov', short: 'Count Orlov', role: 'exiled aristocrat with a borrowed title and a borrowed overcoat', hue: 220,
-      traits: { height: 'tall', hand: 'left', hair: 'fair' }, look: { skin: '#F0D3C0', hair: 'slick', acc: ['beard', 'medal'] },
+      traits: { height: 'tall', hand: 'left', hair: 'fair', eyes: 'blue' }, look: { skin: '#F0D3C0', hair: 'slick', acc: ['beard', 'medal'] },
       motive: 'was no count at all, and {v} had the birth certificate from Croydon to prove it' },
     { id: 'brandt', name: 'Professor Hugo Brandt', short: 'Prof. Brandt', role: 'archaeologist, guarding a locked crate that occasionally hums', hue: 35,
-      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E5B897', hair: 'bald', acc: ['glasses', 'beard'] },
+      traits: { height: 'short', hand: 'right', hair: 'grey', eyes: 'grey' }, look: { skin: '#E5B897', hair: 'bald', acc: ['glasses', 'beard'] },
       motive: 'had smuggled the crate out of Egypt, and {v} had threatened to tell the museum, and possibly the mummy' },
     { id: 'ashgrove', name: 'Miss Winifred Ashgrove', short: 'Miss Ashgrove', role: 'travel writer who notices everything and exaggerates the rest', hue: 150,
-      traits: { height: 'short', hand: 'left', hair: 'fair' }, look: { skin: '#F3D6C2', hair: 'bob', acc: ['cloche'] },
+      traits: { height: 'short', hand: 'left', hair: 'fair', eyes: 'green' }, look: { skin: '#F3D6C2', hair: 'bob', acc: ['cloche'] },
       motive: 'had written a book about {v}, and {v} had paid a great deal to keep it unpublished, which only made it better' },
     { id: 'quill', name: 'Mr. Jasper Quill', short: 'Mr. Quill', role: 'diamond broker with nervous hands and very full pockets', hue: 275,
-      traits: { height: 'short', hand: 'right', hair: 'dark' }, look: { skin: '#C08A68', hair: 'short', acc: ['bowler', 'moustache'] },
+      traits: { height: 'short', hand: 'right', hair: 'dark', eyes: 'brown' }, look: { skin: '#C08A68', hair: 'short', acc: ['bowler', 'moustache'] },
       motive: 'had sold {v} a diamond made of paste, and the jeweller in Vienna was expecting it' },
     { id: 'crane', name: 'Lady Philippa Crane', short: 'Lady Crane', role: 'heiress: bored, well informed, and armed with opinions', hue: 10,
-      traits: { height: 'tall', hand: 'right', hair: 'red' }, look: { skin: '#F4D2BE', hair: 'curly', acc: ['pearls'] },
+      traits: { height: 'tall', hand: 'right', hair: 'red', eyes: 'green' }, look: { skin: '#F4D2BE', hair: 'curly', acc: ['pearls'] },
       motive: 'was engaged to {v}’s son, and {v} had sworn the wedding would happen over a dead body, which turned out to be accurate' },
     { id: 'reyes', name: 'Dr. Tomas Reyes', short: 'Dr. Reyes', role: 'surgeon on the way to a conference, with a suspiciously large bag', hue: 185,
-      traits: { height: 'tall', hand: 'right', hair: 'dark' }, look: { skin: '#B07B57', hair: 'short', acc: ['moustache'] },
+      traits: { height: 'tall', hand: 'right', hair: 'dark', eyes: 'brown' }, look: { skin: '#B07B57', hair: 'short', acc: ['moustache'] },
       motive: 'had lost a patient on the table in Lisbon, and {v} knew it was a game of cards that had distracted the surgeon' },
     { id: 'hale', name: 'Captain Edmund Hale', short: 'Capt. Hale', role: 'retired naval officer and lifelong insomniac', hue: 75,
-      traits: { height: 'short', hand: 'left', hair: 'grey' }, look: { skin: '#DDA788', hair: 'short', acc: ['captcap', 'beard'] },
+      traits: { height: 'short', hand: 'left', hair: 'grey', eyes: 'blue' }, look: { skin: '#DDA788', hair: 'short', acc: ['captcap', 'beard'] },
       motive: 'had run a ship aground in 1919, and {v} had the logbook that was supposed to have gone down with it' },
   ],
 };
@@ -287,47 +309,47 @@ WORLDS.liner = {
     'The band played on, which was a mercy, because {v} had stopped playing for good.',
   ],
   rooms: [
-    { id: 'bridge', name: 'Wheelhouse', short: 'Wheel&shy;house', pattern: 'planks', rect: { x: 0, y: 0, w: 4, h: 1 } },
-    { id: 'lido', name: 'Palm Court', short: 'Palm Court', pattern: 'leaves', rect: { x: 4, y: 0, w: 4, h: 1 } },
-    { id: 'saloon', name: 'Grand Saloon', short: 'Saloon', pattern: 'parquet', rect: { x: 0, y: 1, w: 3, h: 1 } },
-    { id: 'writing', name: 'Writing Room', short: 'Writing Room', pattern: 'rug', rect: { x: 3, y: 1, w: 2, h: 1 } },
-    { id: 'purser', name: 'Purser’s Office', short: 'Purser’s Office', pattern: 'carpet', rect: { x: 5, y: 1, w: 3, h: 1 } },
-    { id: 'engine', name: 'Engine Room', short: 'Engine Room', pattern: 'checker', rect: { x: 0, y: 2, w: 4, h: 1 } },
-    { id: 'hold', name: 'Cargo Hold', short: 'Hold', pattern: 'stone', rect: { x: 4, y: 2, w: 4, h: 1 } },
+    { id: 'bridge', name: 'Wheelhouse', short: 'Wheel&shy;house', pattern: 'planks', light: 'dark', rect: { x: 0, y: 0, w: 4, h: 1 } },
+    { id: 'lido', name: 'Palm Court', short: 'Palm Court', pattern: 'leaves', light: 'lit', rect: { x: 4, y: 0, w: 4, h: 1 } },
+    { id: 'saloon', name: 'Grand Saloon', short: 'Saloon', pattern: 'parquet', light: 'lit', rect: { x: 0, y: 1, w: 3, h: 1 } },
+    { id: 'writing', name: 'Writing Room', short: 'Writing Room', pattern: 'rug', light: 'lit', rect: { x: 3, y: 1, w: 2, h: 1 } },
+    { id: 'purser', name: 'Purser’s Office', short: 'Purser’s Office', pattern: 'carpet', light: 'dark', rect: { x: 5, y: 1, w: 3, h: 1 } },
+    { id: 'engine', name: 'Engine Room', short: 'Engine Room', pattern: 'checker', light: 'lit', rect: { x: 0, y: 2, w: 4, h: 1 } },
+    { id: 'hold', name: 'Cargo Hold', short: 'Hold', pattern: 'stone', light: 'dark', rect: { x: 4, y: 2, w: 4, h: 1 } },
   ],
   weapons: [
-    { id: 'harpoon', name: 'Whaling Harpoon', short: 'Harpoon', type: 'blade', note: 'a souvenir from the smoking room wall' },
-    { id: 'fishknife', name: 'Silver Fish Knife', short: 'Fish knife', type: 'blade', note: 'from the captain’s table' },
-    { id: 'sextant', name: 'Brass Sextant', short: 'Sextant', type: 'blunt', note: 'its mirror cracked' },
-    { id: 'pin', name: 'Belaying Pin', short: 'Belaying pin', type: 'blunt', note: 'solid oak' },
-    { id: 'gin', name: 'Poisoned Gin Fizz', short: 'Gin fizz', type: 'poison', note: 'smells faintly of almonds' },
-    { id: 'rope', name: 'Mooring Rope', short: 'Rope', type: 'cord', note: 'tarred and salty' },
-    { id: 'flare', name: 'Flare Pistol', short: 'Flare pistol', type: 'firearm', note: 'one cartridge fired' },
+    { id: 'harpoon', name: 'Whaling Harpoon', short: 'Harpoon', type: 'blade', weight: 'heavy', material: 'wood', note: 'a souvenir from the smoking room wall' },
+    { id: 'fishknife', name: 'Silver Fish Knife', short: 'Fish knife', type: 'blade', weight: 'light', material: 'metal', note: 'from the captain’s table' },
+    { id: 'sextant', name: 'Brass Sextant', short: 'Sextant', type: 'blunt', weight: 'heavy', material: 'metal', note: 'its mirror cracked' },
+    { id: 'pin', name: 'Belaying Pin', short: 'Belaying pin', type: 'blunt', weight: 'heavy', material: 'wood', note: 'solid oak' },
+    { id: 'gin', name: 'Poisoned Gin Fizz', short: 'Gin fizz', type: 'poison', weight: 'light', material: 'glass', note: 'smells faintly of almonds' },
+    { id: 'rope', name: 'Mooring Rope', short: 'Rope', type: 'cord', weight: 'heavy', material: 'fabric', note: 'tarred and salty' },
+    { id: 'flare', name: 'Flare Pistol', short: 'Flare pistol', type: 'firearm', weight: 'heavy', material: 'metal', note: 'one cartridge fired' },
   ],
   suspects: [
     { id: 'moreau', name: 'Miss Delphine Moreau', short: 'Miss Moreau', role: 'cabaret star, sailing to Broadway with forty costumes and no luggage allowance', hue: 320,
-      traits: { height: 'tall', hand: 'left', hair: 'fair' }, look: { skin: '#F1D0BA', hair: 'bob', acc: ['feather', 'earrings'] },
+      traits: { height: 'tall', hand: 'left', hair: 'fair', eyes: 'blue' }, look: { skin: '#F1D0BA', hair: 'bob', acc: ['feather', 'earrings'] },
       motive: 'had a contract on Broadway that {v} had promised to tear up, in front of the press' },
     { id: 'fitch', name: 'Sir Reginald Fitch', short: 'Sir Reginald', role: 'shipping magnate who owns a share of the ship and mentions it constantly', hue: 210,
-      traits: { height: 'short', hand: 'right', hair: 'grey' }, look: { skin: '#E8B996', hair: 'bald', acc: ['tophat', 'moustache'] },
+      traits: { height: 'short', hand: 'right', hair: 'grey', eyes: 'grey' }, look: { skin: '#E8B996', hair: 'bald', acc: ['tophat', 'moustache'] },
       motive: 'had saved money on the Aurelia’s lifeboats, and {v} had counted them' },
     { id: 'teague', name: 'Miss Ivy Teague', short: 'Miss Teague', role: 'ship’s nurse, with an excellent memory and a very cold stethoscope', hue: 120,
-      traits: { height: 'short', hand: 'right', hair: 'red' }, look: { skin: '#F4D5C0', hair: 'bun', acc: ['nursecap'] },
+      traits: { height: 'short', hand: 'right', hair: 'red', eyes: 'green' }, look: { skin: '#F4D5C0', hair: 'bun', acc: ['nursecap'] },
       motive: 'had nursed {v}’s late wife, and had never once believed it was a fever' },
     { id: 'kraus', name: 'Dr. Anselm Kraus', short: 'Dr. Kraus', role: 'stage hypnotist, booked for the crossing; looks into your eyes far too long', hue: 270,
-      traits: { height: 'tall', hand: 'left', hair: 'dark' }, look: { skin: '#E2B898', hair: 'slick', acc: ['monocle', 'beard'] },
+      traits: { height: 'tall', hand: 'left', hair: 'dark', eyes: 'brown' }, look: { skin: '#E2B898', hair: 'slick', acc: ['monocle', 'beard'] },
       motive: 'had hypnotised {v} into signing a cheque, and {v} had woken up halfway through the zeros' },
     { id: 'ventura', name: 'Signor Paolo Ventura', short: 'Signor Ventura', role: 'bandleader of the Aurelia Seven, who are five', hue: 30,
-      traits: { height: 'short', hand: 'right', hair: 'dark' }, look: { skin: '#C7916C', hair: 'curly', acc: ['bowtie', 'moustache'] },
+      traits: { height: 'short', hand: 'right', hair: 'dark', eyes: 'brown' }, look: { skin: '#C7916C', hair: 'curly', acc: ['bowtie', 'moustache'] },
       motive: 'had gambled away the band’s wages, and {v} held the markers and both missing saxophonists' },
     { id: 'holloway', name: 'Lady Beatrix Holloway', short: 'Lady Holloway', role: 'crime novelist, taking notes, and taking far too much interest', hue: 0,
-      traits: { height: 'tall', hand: 'right', hair: 'grey' }, look: { skin: '#EFCDB6', hair: 'bun', acc: ['glasses', 'pearls'] },
+      traits: { height: 'tall', hand: 'right', hair: 'grey', eyes: 'grey' }, look: { skin: '#EFCDB6', hair: 'bun', acc: ['glasses', 'pearls'] },
       motive: 'had lifted the plot of a bestseller from {v}, who wanted the royalties and the film rights' },
     { id: 'pike', name: 'Mr. Oswin Pike', short: 'Mr. Pike', role: 'the ship’s purser, keeper of the safe and of everyone’s business', hue: 190,
-      traits: { height: 'tall', hand: 'right', hair: 'fair' }, look: { skin: '#F0CBB0', hair: 'short', acc: ['captcap'] },
+      traits: { height: 'tall', hand: 'right', hair: 'fair', eyes: 'blue' }, look: { skin: '#F0CBB0', hair: 'short', acc: ['captcap'] },
       motive: 'had been quietly emptying the passengers’ jewel cases, and {v} had kept a list' },
     { id: 'ashby', name: 'Miss Clementine Ashby', short: 'Miss Ashby', role: 'tennis champion, travelling incognito in very large sunglasses', hue: 55,
-      traits: { height: 'short', hand: 'left', hair: 'dark' }, look: { skin: '#A8714F', hair: 'long', acc: ['headband'] },
+      traits: { height: 'short', hand: 'left', hair: 'dark', eyes: 'green' }, look: { skin: '#A8714F', hair: 'long', acc: ['headband'] },
       motive: 'had thrown the Wimbledon final for money, and {v} was the one who paid' },
   ],
 };
@@ -352,7 +374,7 @@ function rectsAdjacent(a, b) {
   return horiz || vert;
 }
 
-function buildCtx(world, suspectPick, weaponPick, roomPick) {
+function buildCtx(world, suspectPick, weaponPick, roomPick, motivePick) {
   const n = suspectPick.length;
   const rooms = roomPick.map((i) => world.rooms[i]);
   const adj = rooms.map((a) => rooms.map((b) => a !== b && rectsAdjacent(a.rect, b.rect)));
@@ -366,7 +388,10 @@ function buildCtx(world, suspectPick, weaponPick, roomPick) {
     rooms, adj, floor, pos,
     types: weaponPick.map((i) => world.weapons[i].type),
     traits: suspects.map((s) => s.traits),
-    roomIdx: roomPick, suspectIdx: suspectPick, weaponIdx: weaponPick,
+    wattr: Object.fromEntries(WEAPON_ATTR_KEYS.map((k) => [k, weaponPick.map((i) => world.weapons[i][k])])),
+    light: rooms.map((r) => r.light),
+    motives: motivePick ? motivePick.map((i) => MOTIVES[i]) : null,
+    roomIdx: roomPick, suspectIdx: suspectPick, weaponIdx: weaponPick, motiveIdx: motivePick || null,
   };
 }
 
@@ -377,7 +402,7 @@ function C(type, kind, family, args, test) {
 }
 
 function enumerateClues(ctx) {
-  const { n, adj, floor, pos, types, traits, world } = ctx;
+  const { n, adj, floor, pos, types, traits, world, wattr, light } = ctx;
   const S = [...Array(n).keys()];
   const out = [];
   const typeSet = [...new Set(types)];
@@ -439,6 +464,41 @@ function enumerateClues(ctx) {
     for (const r of S) out.push(C('traitRoom', 'R', 'trait', { r, k, v }, (pw, pwi, pr, pri) => traits[pri[r]][k] === v));
   }
 
+  // ---- weapon attributes (weight, material) and lit or dark rooms: read them off the weapon and room cards
+  for (const k of WEAPON_ATTR_KEYS) for (const v of [...new Set(wattr[k])]) {
+    if (new Set(wattr[k]).size < 2) break;
+    for (const s of S) out.push(C('holdsAttr', 'W', 'link', { s, k, v }, (pw) => wattr[k][pw[s]] === v));
+    for (const r of S) out.push(C('attrInRoom', 'X', 'link', { r, k, v }, (pw, pwi, pr, pri) => wattr[k][pw[pri[r]]] === v));
+    out.push(C('murderAttr', 'M', 'murder', { k, v }, (pw) => maskOf((m) => wattr[k][pw[m]] === v)));
+  }
+  if (new Set(light).size > 1) for (const v of [...new Set(light)]) {
+    for (const s of S) out.push(C('inLight', 'R', 'link', { s, v }, (pw, pwi, pr) => light[pr[s]] === v));
+    for (const w of S) out.push(C('weaponLight', 'X', 'link', { w, v }, (pw, pwi, pr) => light[pr[pwi[w]]] === v));
+    out.push(C('murderLight', 'M', 'murder', { v }, (pw, pwi, pr) => maskOf((m) => light[pr[m]] === v)));
+  }
+  // ---- motives (only in cases that have them): each suspect had a different one
+  if (ctx.motives) {
+    for (const s of S) for (const m of S) {
+      out.push(C('hasMotive', 'P', 'direct', { s, m }, (pw, pwi, pr, pri, pm) => pm[s] === m));
+      out.push(C('notMotive', 'P', 'neg', { s, m }, (pw, pwi, pr, pri, pm) => pm[s] !== m));
+    }
+    for (const m of S) for (const a of S) for (const b of S) if (a < b) {
+      out.push(C('eitherMotive', 'P', 'rel', { m, a, b }, (pw, pwi, pr, pri, pm, pmi) => pmi[m] === a || pmi[m] === b));
+    }
+    for (const m of S) {
+      for (const w of S) {
+        out.push(C('motiveWeapon', 'X', 'link', { m, w }, (pw, pwi, pr, pri, pm, pmi) => pw[pmi[m]] === w));
+        out.push(C('motiveNotWeapon', 'X', 'neg', { m, w }, (pw, pwi, pr, pri, pm, pmi) => pw[pmi[m]] !== w));
+      }
+      for (const r of S) {
+        out.push(C('motiveRoom', 'X', 'link', { m, r }, (pw, pwi, pr, pri, pm, pmi) => pr[pmi[m]] === r));
+        out.push(C('motiveNotRoom', 'X', 'neg', { m, r }, (pw, pwi, pr, pri, pm, pmi) => pr[pmi[m]] !== r));
+      }
+      out.push(C('murderMotive', 'M', 'murder', { m }, (pw, pwi, pr, pri, pm) => maskOf((x) => pm[x] === m)));
+      out.push(C('murderNotMotive', 'M', 'murder', { m }, (pw, pwi, pr, pri, pm) => maskOf((x) => pm[x] !== m)));
+    }
+  }
+
   // ---- murder clues: each returns the set of suspects who could still be the killer
   for (const t of typeSet) {
     out.push(C('murderType', 'M', 'murder', { t }, (pw) => maskOf((m) => types[pw[m]] === t)));
@@ -473,24 +533,27 @@ function enumerateClues(ctx) {
 // (so it can also be negated), can be testimony. Everything else is evidence, which is always true.
 const TESTIMONY_TYPES = ['has', 'notHas', 'in', 'notIn', 'eitherHas', 'eitherIn', 'holdsType', 'notHoldsType', 'sameType', 'diffType',
   'adjacent', 'notAdjacent', 'sameFloor', 'diffFloor', 'ahead', 'murderNotSuspect', 'murderType', 'murderNotType', 'murderNotWeapon',
-  'murderNotRoom', 'murderFloor', 'murderNotFloor', 'murderAdjRoom', 'murderNotAdjRoom', 'murderTrait'];
+  'murderNotRoom', 'murderFloor', 'murderNotFloor', 'murderAdjRoom', 'murderNotAdjRoom', 'murderTrait',
+  'holdsAttr', 'inLight', 'murderAttr', 'murderLight', 'hasMotive', 'notMotive', 'eitherMotive', 'murderMotive', 'murderNotMotive'];
 
 // A statement by `sp`, as a murder clue: in each arrangement, the killers it allows are those for whom it is
 // consistent (the statement is true and sp is not the killer, or it is false and sp is).
 function testimony(c, sp, n) {
   const FULL = (1 << n) - 1, me = 1 << sp, base = c.test, M = c.kind === 'M';
-  const test = (pw, pwi, pr, pri) => ((M ? base(pw, pwi, pr, pri) : base(pw, pwi, pr, pri) ? FULL : 0) ^ me) & FULL;
+  const test = (pw, pwi, pr, pri, pm, pmi) => ((M ? base(pw, pwi, pr, pri, pm, pmi) : base(pw, pwi, pr, pri, pm, pmi) ? FULL : 0) ^ me) & FULL;
   return { type: c.type, kind: 'M', baseKind: c.kind, family: c.family, args: c.args, speaker: sp, test, base: c };
 }
+// the inverse of a permutation (who holds weapon w, who is in room r, whose motive is m)
+const invert = (p) => { if (!p) return null; const q = new Array(p.length); p.forEach((x, i) => { q[x] = i; }); return q; };
 // Is the statement itself true in this arrangement (ignoring who said it)?
-function statementTrue(c, truth, pwi, pri) {
-  const b = c.base || c, v = b.test(truth.pw, pwi, truth.pr, pri);
+function statementTrue(c, truth) {
+  const b = c.base || c, v = b.test(truth.pw, invert(truth.pw), truth.pr, invert(truth.pr), truth.pm || null, invert(truth.pm));
   return b.kind === 'M' ? (v & (1 << truth.m)) !== 0 : v;
 }
 
 // Does the clue hold for the hidden truth {pw, pr, m}?
-function clueHolds(clue, truth, pwi, pri) {
-  const v = clue.test(truth.pw, pwi, truth.pr, pri);
+function clueHolds(clue, truth) {
+  const v = clue.test(truth.pw, invert(truth.pw), truth.pr, invert(truth.pr), truth.pm || null, invert(truth.pm));
   return clue.kind === 'M' ? (v & (1 << truth.m)) !== 0 : v;
 }
 
@@ -508,12 +571,18 @@ function clueVariants(c, ctx, sp) {
   const a = c.args;
   const line = ctx.world.layoutKind === 'line';
   const unit = line ? 'carriage' : 'room';
-  const S = (i) => `{s:${i}}`, W = (i) => `{w:${i}}`, R = (i) => `{r:${i}}`;
+  const S = (i) => `{s:${i}}`, W = (i) => `{w:${i}}`, R = (i) => `{r:${i}}`, M = (i) => `{m:${i}}`;
   const T = (t) => WEAPON_TYPES[t];
+  // weapon attributes and light, as phrases: "something heavy", "made of glass", "a dark room"
+  const A = a.k === 'weight' ? `something ${a.v}` : a.k === 'material' ? `something made of ${a.v}` : '';
+  const Aadj = a.k === 'weight' ? a.v : a.k === 'material' ? `made of ${a.v}` : '';
+  const L = a.v === 'dark' ? `a dark ${unit}` : a.v === 'lit' ? `a ${unit} with the lamps lit` : '';
+  const Lword = a.v === 'dark' ? 'dark' : 'well lit';
   const floorWord = (f) => ctx.world.floors[f];
   const join = line ? 'a coupling' : 'a door or a stair';
   const away = line ? 'coupled to it' : 'a door or a stair away';
-  const cap = (s) => (s[0] === '{' ? s : s[0].toUpperCase() + s.slice(1));
+  // a token at the start of a sentence is marked {M:i} (capital) so the renderer capitalises the motive's name
+  const cap = (s) => (s.startsWith('{m:') ? '{M:' + s.slice(3) : s[0] === '{' ? s : s[0].toUpperCase() + s.slice(1));
   const three = (voice, v0, v1, v2) => [[voice, v0], [voice, v1], [voice, v2]];
   const say = sp !== undefined && sp !== null;
   if (say) {
@@ -595,11 +664,29 @@ function clueVariants(c, ctx, sp) {
           `The ${R(a.r)}, and every room a door or a stair from it? Nothing happened there.`);
       case 'murderTrait': return t(`The killer was ${traitWord(a.k, a.v)}. I caught a glimpse.`, `Whoever did it was ${traitWord(a.k, a.v)}. I'd swear to that.`,
         `I only caught a glimpse, but the killer was ${traitWord(a.k, a.v)}.`);
+      case 'holdsAttr': return self
+        ? t(`My weapon was ${A}, if you must know.`, `I had ${A}. What of it?`, `I'll admit to carrying ${A}.`)
+        : t(`${S(a.s)} had ${A}.`, `${S(a.s)}'s weapon was ${A}. I noticed.`, `${S(a.s)} was carrying ${A}, and making a poor job of hiding it.`);
+      case 'inLight': return self
+        ? t(`I was in ${L}.`, `Wherever I was, it was ${Lword}.`, a.v === 'dark' ? `I was in ${L}. I couldn't see my own hand.` : `I was in ${L}, and I could see perfectly well.`)
+        : t(`${S(a.s)} was in ${L}.`, `Wherever ${S(a.s)} was, it was ${Lword}.`, a.v === 'dark' ? `${S(a.s)} was in ${L}. I heard the stumbling.` : `${S(a.s)} was in ${L}. I could see plainly through the door.`);
+      case 'murderAttr': return t(`The killer used ${A}. I'm sure of it.`, `It was done with ${A}. I saw.`, `Mark my words: the murder weapon was ${Aadj}.`);
+      case 'murderLight': return t(`The body was in ${L}.`, `It happened in ${L}. I'm sure.`, a.v === 'dark' ? `It happened in the dark, in ${L}. Typical.` : `It happened in ${L}, if you can believe it.`);
+      case 'hasMotive': return self
+        ? t(`If I had a motive, it was ${M(a.m)}. I'm not ashamed.`, `My reason? It would be ${M(a.m)}, I suppose.`, `It was ${M(a.m)}, if you must know. That's my motive.`)
+        : t(`${S(a.s)}'s motive was ${M(a.m)}.`, `If ${S(a.s)} had a reason, it was ${M(a.m)}.`, `${S(a.s)}'s reason? ${cap(M(a.m))}, obviously.`);
+      case 'notMotive': return self
+        ? t(`My motive was not ${M(a.m)}.`, `Whatever my reasons, ${M(a.m)} wasn't one of them.`, `Me? Driven by ${M(a.m)}? Hardly.`)
+        : t(`${S(a.s)}'s motive was not ${M(a.m)}.`, `Whatever drove ${S(a.s)}, it wasn't ${M(a.m)}.`, `${S(a.s)}, driven by ${M(a.m)}? Hardly.`);
+      case 'eitherMotive': return t(`Either ${either(a.a, a.b, 'I')} had ${M(a.m)} as a motive.`, `${cap(M(a.m))} was the motive of ${either(a.a, a.b, 'me')}.`,
+        `Look for ${M(a.m)}, and you'll find ${either(a.a, a.b, 'me')}.`);
+      case 'murderMotive': return t(`The killer's motive was ${M(a.m)}, I'd bet on it.`, `It was ${M(a.m)}. It's always ${M(a.m)}.`, `Whoever did it, the reason was ${M(a.m)}.`);
+      case 'murderNotMotive': return t(`The motive wasn't ${M(a.m)}.`, `Whatever the reason, it wasn't ${M(a.m)}.`, `Nobody here would kill for ${M(a.m)}. Not this time.`);
     }
     throw new Error('no testimony for clue type ' + c.type);
   }
   const n = (v0, v1, v2) => three('note', v0, v1, v2);
-  const hair = HAIR_WORD[a.v], tw = a.k ? traitWord(a.k, a.v) : '';
+  const hair = HAIR_WORD[a.v], tw = TRAITS[a.k] ? traitWord(a.k, a.v) : '';
   switch (c.type) {
     case 'has': return n(`${S(a.s)} had the ${W(a.w)}. The prints leave no doubt.`, `The ${W(a.w)} is covered in ${S(a.s)}'s fingerprints, and nobody else's. ${S(a.s)} had it.`,
       `${S(a.s)} had the ${W(a.w)}. A witness saw it and fainted, which is how we know.`);
@@ -648,12 +735,16 @@ function clueVariants(c, ctx, sp) {
       `Whoever was in the ${R(a.r)} had ${T(a.t).held}. The marks on the furniture say so.`);
     case 'notTypeInRoom': return n(`The person in the ${R(a.r)} wasn't carrying ${T(a.t).label}.`, `Whoever was in the ${R(a.r)} didn't have ${T(a.t).any}.`,
       `Whatever the person in the ${R(a.r)} carried, it wasn't ${T(a.t).label}.`);
-    case 'traitWeapon': return a.k === 'hair'
+    case 'traitWeapon': return a.k === 'eyes'
+      ? n(`Whoever had the ${W(a.w)} is ${tw}: a witness saw the eyes.`, `The ${W(a.w)} was held by someone ${tw}.`, `A witness remembers the ${W(a.w)}, and a pair of ${a.v} eyes above it. Whoever had it is ${tw}.`)
+      : a.k === 'hair'
       ? n(`A ${hair} hair was caught on the ${W(a.w)}. Whoever had it is ${tw}.`, `Whoever had the ${W(a.w)} is ${tw}: there's a ${hair} hair stuck to it.`, `The ${W(a.w)} was held by someone ${tw}, judging by the hair on the handle.`)
       : a.k === 'hand'
         ? n(`The ${W(a.w)} was held in the ${a.v} hand. Whoever had it is ${tw}.`, `Whoever had the ${W(a.w)} is ${tw}: look at the grip.`, `The ${W(a.w)} was worn smooth on the ${a.v} side. Whoever had it is ${tw}.`)
         : n(`A witness saw a ${a.v} figure with the ${W(a.w)}. Whoever had it is ${a.v}.`, `Whoever had the ${W(a.w)} is ${a.v}. The witness was very definite.`, `The ${W(a.w)} was in the hands of someone ${a.v}.`);
-    case 'traitRoom': return a.k === 'hair'
+    case 'traitRoom': return a.k === 'eyes'
+      ? n(`Whoever was in the ${R(a.r)} is ${tw}. The maid noticed.`, `Someone ${tw} was in the ${R(a.r)}.`, `A pair of ${a.v} eyes was seen peering out of the ${R(a.r)}. Whoever was there is ${tw}.`)
+      : a.k === 'hair'
       ? n(`A ${hair} hair was found in the ${R(a.r)}. Whoever was there is ${tw}.`, `Whoever was in the ${R(a.r)} is ${tw}: there's a ${hair} hair on the cushion.`, `The ${R(a.r)} was visited by someone ${tw}. The hairbrush left behind is full of it.`)
       : a.k === 'hand'
         ? n(`The door of the ${R(a.r)} was opened with the ${a.v} hand. Whoever was there is ${tw}.`, `Whoever was in the ${R(a.r)} is ${tw}: see the smudge on the door.`, `Someone ${tw} was in the ${R(a.r)}. The cup on the table had its handle turned to the ${a.v}.`)
@@ -692,11 +783,29 @@ function clueVariants(c, ctx, sp) {
         `The scene was not the ${R(a.r)}, and not next to it.`);
     case 'murderFloor': return n(`The body was found ${floorWord(a.f)}.`, `It happened ${floorWord(a.f)}.`, `The scene of the crime was ${floorWord(a.f)}.`);
     case 'murderNotFloor': return n(`The body was not found ${floorWord(a.f)}.`, `It didn't happen ${floorWord(a.f)}.`, `Whatever happened, it was not ${floorWord(a.f)}.`);
-    case 'murderTrait': return a.k === 'hair'
+    case 'murderTrait': return a.k === 'eyes'
+      ? n(`The killer is ${tw}. The victim's last word was “${a.v}”.`, `A witness saw ${a.v} eyes in the dark. The killer is ${tw}.`, `The killer is ${tw}, says the only witness.`)
+      : a.k === 'hair'
       ? n(`A ${hair} hair was found on the body. The killer is ${tw}.`, `The killer is ${tw}: there's a ${hair} hair on the victim's collar.`, `The victim was clutching a single ${hair} hair. The killer is ${tw}.`)
       : a.k === 'hand'
         ? n(`The coroner says the killer is ${tw}.`, `The killer is ${tw}, says the coroner, who is never wrong about these things.`, `Everything points one way: the killer is ${tw}.`)
         : n(`A witness saw a ${a.v} figure hurry from the scene. The killer is ${a.v}.`, `The killer is ${a.v}. A witness saw the figure leave.`, `Whoever did it was ${a.v}, according to the only witness who was sober.`);
+    case 'holdsAttr': return n(`${S(a.s)}'s weapon was ${A}.`, `${S(a.s)} was carrying ${A}. It showed.`, `A search of ${S(a.s)}'s luggage settles it: ${S(a.s)}'s weapon was ${A}.`);
+    case 'attrInRoom': return n(`Whoever was in the ${R(a.r)} had ${A}.`, `The person in the ${R(a.r)} was carrying ${A}.`, `The weapon in the ${R(a.r)} was ${Aadj}: the marks on the floor say so.`);
+    case 'murderAttr': return n(`The murder weapon was ${Aadj}.`, `The coroner says the murder weapon was ${Aadj}.`, `Whatever the killer used, it was ${Aadj}.`);
+    case 'inLight': return n(`${S(a.s)} was in ${L}.`, `Wherever ${S(a.s)} was, it was ${Lword}.`,
+      a.v === 'dark' ? `${S(a.s)} was in ${L}: there are cobwebs on the cuffs to prove it.` : `${S(a.s)} was in ${L}: there's candle wax on the sleeve.`);
+    case 'weaponLight': return n(`The ${W(a.w)} was in ${L}.`, `Whoever had the ${W(a.w)} was in ${L}.`, `The ${W(a.w)} spent the evening in ${L}.`);
+    case 'murderLight': return n(`The body was found in ${L}.`, `It happened in ${L}.`, a.v === 'dark' ? `It happened in the dark: the body was in ${L}.` : `It happened in ${L}, in plain view of nobody.`);
+    case 'hasMotive': return n(`${S(a.s)}'s motive was ${M(a.m)}.`, `If ${S(a.s)} had a reason, it was ${M(a.m)}.`, `${S(a.s)} had a motive: ${M(a.m)}. Doesn't everyone?`);
+    case 'notMotive': return n(`${S(a.s)}'s motive was not ${M(a.m)}.`, `Whatever drove ${S(a.s)}, it wasn't ${M(a.m)}.`, `Rule out ${M(a.m)} for ${S(a.s)}.`);
+    case 'eitherMotive': return n(`${cap(M(a.m))} was the motive of ${S(a.a)} or of ${S(a.b)}.`, `Either ${S(a.a)} or ${S(a.b)} had ${M(a.m)} as a motive.`, `Look for ${M(a.m)}, and you'll find ${S(a.a)} or ${S(a.b)}.`);
+    case 'motiveWeapon': return n(`Whoever had ${M(a.m)} as a motive had the ${W(a.w)}.`, `The ${W(a.w)} belonged to whoever's motive was ${M(a.m)}.`, `Find the motive ${M(a.m)} and you find the ${W(a.w)}: they go together.`);
+    case 'motiveNotWeapon': return n(`Whoever's motive was ${M(a.m)} didn't have the ${W(a.w)}.`, `The ${W(a.w)} and ${M(a.m)} don't go together.`, `Whoever had ${M(a.m)} as a motive, it wasn't the ${W(a.w)} they carried.`);
+    case 'motiveRoom': return n(`Whoever had ${M(a.m)} as a motive was in the ${R(a.r)}.`, `The ${R(a.r)} held whoever's motive was ${M(a.m)}.`, `Find the motive ${M(a.m)} and you find the ${R(a.r)}: they go together.`);
+    case 'motiveNotRoom': return n(`Whoever's motive was ${M(a.m)} wasn't in the ${R(a.r)}.`, `The ${R(a.r)} and ${M(a.m)} don't go together.`, `Whoever had ${M(a.m)} as a motive, it wasn't the ${R(a.r)} they were in.`);
+    case 'murderMotive': return n(`The killer's motive was ${M(a.m)}.`, `Mallory is sure of the why: ${M(a.m)}.`, `The motive was ${M(a.m)}. It usually is.`);
+    case 'murderNotMotive': return n(`The motive was not ${M(a.m)}.`, `Rule out ${M(a.m)} as the motive.`, `Whatever the killer's reason, it wasn't ${M(a.m)}.`);
   }
   throw new Error('no text for clue type ' + c.type);
 }
@@ -761,148 +870,134 @@ function pickStory(rng, world) {
 
 // Plain-text rendering (tests, share text). The UI renders tokens itself.
 function plainText(str, ctx) {
-  return str.replace(/\{([swr]):(\d+)\}/g, (_, k, i) => {
+  return str.replace(/\{([swrmM]):(\d+)\}/g, (_, k, i) => {
     i = +i;
+    if (k === 'm') return ctx.motives[i].name.toLowerCase();
+    if (k === 'M') return ctx.motives[i].name;
     return k === 's' ? ctx.suspects[i].short : k === 'w' ? ctx.weapons[i].name : ctx.rooms[i].name;
   });
 }
 
 // ---- 30-solver.js
-// Exhaustive logic solver. Weapon-only and room-only clues are applied to the permutation lists
-// first, so the expensive cross product only runs over what survives. A world is a whole story: every
-// suspect's weapon and room, and the killer. A puzzle is fair only if exactly one world survives, so the
-// whole notebook can be filled in, not just the answer. `answers` lists the distinct (killer, weapon, room).
-function solveCount(ctx, clues, limit) {
-  const { n } = ctx;
-  const { perms, inv } = permutations(n);
-  const FULL = (1 << n) - 1;
-  const wClues = clues.filter((c) => c.kind === 'W');
-  const rClues = clues.filter((c) => c.kind === 'R');
-  const xClues = clues.filter((c) => c.kind === 'X');
-  const mClues = clues.filter((c) => c.kind === 'M');
+// Exhaustive logic solver. A world is a whole story: every suspect's weapon (a permutation), room (another) and,
+// in cases with motives, motive (a third), plus the killer. Weapon-only, room-only and motive-only clues are
+// applied to the permutation lists first, so the expensive cross product only runs over what survives. A puzzle
+// is fair only if exactly one world survives, so the whole notebook can be filled in, not just the answer.
+// Every clue test takes (pw, pwi, pr, pri, pm, pmi); pm and pmi are null in a case without motives.
 
-  const LA = [];
-  for (let a = 0; a < perms.length; a++) {
-    let ok = true;
-    for (const c of wClues) if (!c.test(perms[a], inv[a], null, null)) { ok = false; break; }
-    if (ok) LA.push(a);
+// the motive arrangements to walk: all of them, or a single "none" when the case has no motives
+function motivePerms(ctx) {
+  return ctx.motives ? permutations(ctx.n) : { perms: [null], inv: [null] };
+}
+// the arrangements that pass every one-dimensional clue of a kind (W weapons, R rooms, P motives)
+function passing(ctx, clues, kind) {
+  const { perms, inv } = kind === 'P' ? motivePerms(ctx) : permutations(ctx.n);
+  const cs = clues.filter((c) => c.kind === kind), out = [];
+  for (let i = 0; i < perms.length; i++) {
+    const p = perms[i], q = inv[i];
+    if (cs.every((c) => (kind === 'W' ? c.test(p, q) : kind === 'R' ? c.test(null, null, p, q) : c.test(null, null, null, null, p, q)))) out.push(i);
   }
-  const LB = [];
-  for (let b = 0; b < perms.length; b++) {
-    let ok = true;
-    for (const c of rClues) if (!c.test(null, null, perms[b], inv[b])) { ok = false; break; }
-    if (ok) LB.push(b);
-  }
-
-  const seen = new Uint8Array(n * n * n);
-  const answers = [], worlds = [];
-  const lim = limit === undefined ? Infinity : limit;
-  for (let ia = 0; ia < LA.length; ia++) {
-    const pw = perms[LA[ia]], pwi = inv[LA[ia]];
-    for (let ib = 0; ib < LB.length; ib++) {
-      const pr = perms[LB[ib]], pri = inv[LB[ib]];
-      let ok = true;
-      for (let k = 0; k < xClues.length; k++) {
-        if (!xClues[k].test(pw, pwi, pr, pri)) { ok = false; break; }
-      }
-      if (!ok) continue;
-      let mask = FULL;
-      for (let k = 0; k < mClues.length && mask; k++) mask &= mClues[k].test(pw, pwi, pr, pri);
-      if (!mask) continue;
-      for (let m = 0; m < n; m++) {
-        if (!(mask & (1 << m))) continue;
-        worlds.push({ pw, pr, m });
-        const key = (m * n + pw[m]) * n + pr[m];
-        if (!seen[key]) { seen[key] = 1; answers.push({ killer: m, weapon: pw[m], room: pr[m] }); }
-        if (worlds.length > lim) return { count: worlds.length, worlds, answers, capped: true };
-      }
-    }
-  }
-  return { count: worlds.length, worlds, answers, capped: false };
+  return out;
 }
 
-// Every full arrangement that fits the clues (used for hints and for checking player grids).
-// Returns the marginal "possible" matrices: which suspect/weapon/room cells survive in at least
-// one consistent world.
-function marginals(ctx, clues) {
-  const { n } = ctx;
-  const { perms, inv } = permutations(n);
+// Walk every world that fits the clues, calling visit(pw, pwi, pr, pri, pm, pmi, killerMask); stop when it returns true.
+function eachWorld(ctx, clues, visit) {
+  const { n } = ctx, { perms, inv } = permutations(n), MP = motivePerms(ctx);
   const FULL = (1 << n) - 1;
-  const wClues = clues.filter((c) => c.kind === 'W');
-  const rClues = clues.filter((c) => c.kind === 'R');
-  const xClues = clues.filter((c) => c.kind === 'X');
-  const mClues = clues.filter((c) => c.kind === 'M');
-  const sw = Array.from({ length: n }, () => new Uint8Array(n));
-  const sr = Array.from({ length: n }, () => new Uint8Array(n));
-  const wr = Array.from({ length: n }, () => new Uint8Array(n));
-  const killer = new Uint8Array(n);
-  let worlds = 0;
-  const LA = [], LB = [];
-  for (let a = 0; a < perms.length; a++) if (wClues.every((c) => c.test(perms[a], inv[a], null, null))) LA.push(a);
-  for (let b = 0; b < perms.length; b++) if (rClues.every((c) => c.test(null, null, perms[b], inv[b]))) LB.push(b);
+  const xClues = clues.filter((c) => c.kind === 'X'), mClues = clues.filter((c) => c.kind === 'M');
+  const LA = passing(ctx, clues, 'W'), LB = passing(ctx, clues, 'R'), LC = passing(ctx, clues, 'P');
   for (const a of LA) {
     const pw = perms[a], pwi = inv[a];
     for (const b of LB) {
       const pr = perms[b], pri = inv[b];
-      if (!xClues.every((c) => c.test(pw, pwi, pr, pri))) continue;
-      let mask = FULL;
-      for (const c of mClues) mask &= c.test(pw, pwi, pr, pri);
-      if (!mask) continue;
-      worlds++;
-      for (let s = 0; s < n; s++) { sw[s][pw[s]] = 1; sr[s][pr[s]] = 1; wr[pw[s]][pr[s]] = 1; }
-      for (let m = 0; m < n; m++) if (mask & (1 << m)) killer[m] = 1;
+      for (const c of LC) {
+        const pm = MP.perms[c], pmi = MP.inv[c];
+        let ok = true;
+        for (let k = 0; k < xClues.length; k++) if (!xClues[k].test(pw, pwi, pr, pri, pm, pmi)) { ok = false; break; }
+        if (!ok) continue;
+        let mask = FULL;
+        for (let k = 0; k < mClues.length && mask; k++) mask &= mClues[k].test(pw, pwi, pr, pri, pm, pmi);
+        if (mask && visit(pw, pwi, pr, pri, pm, pmi, mask)) return;
+      }
     }
   }
-  return { sw, sr, wr, killer, worlds };
+}
+
+function solveCount(ctx, clues, limit) {
+  const { n } = ctx;
+  const seen = new Uint8Array(n * n * n);
+  const answers = [], worlds = [];
+  const lim = limit === undefined ? Infinity : limit;
+  let capped = false;
+  eachWorld(ctx, clues, (pw, pwi, pr, pri, pm, pmi, mask) => {
+    for (let m = 0; m < n; m++) {
+      if (!(mask & (1 << m))) continue;
+      worlds.push({ pw, pr, pm, m });
+      const key = (m * n + pw[m]) * n + pr[m];
+      if (!seen[key]) { seen[key] = 1; answers.push({ killer: m, weapon: pw[m], room: pr[m], motive: pm ? pm[m] : null }); }
+      if (worlds.length > lim) { capped = true; return true; }
+    }
+    return false;
+  });
+  return { count: worlds.length, worlds, answers, capped };
+}
+
+// Every full arrangement that fits the clues (used for hints and for checking player grids).
+// Returns the marginal "possible" matrices: which cells survive in at least one consistent world.
+function marginals(ctx, clues) {
+  const { n } = ctx;
+  const mat = () => Array.from({ length: n }, () => new Uint8Array(n));
+  const sw = mat(), sr = mat(), wr = mat(), sm = mat();
+  const killer = new Uint8Array(n);
+  let worlds = 0;
+  eachWorld(ctx, clues, (pw, pwi, pr, pri, pm, pmi, mask) => {
+    worlds++;
+    for (let s = 0; s < n; s++) { sw[s][pw[s]] = 1; sr[s][pr[s]] = 1; wr[pw[s]][pr[s]] = 1; if (pm) sm[s][pm[s]] = 1; }
+    for (let m = 0; m < n; m++) if (mask & (1 << m)) killer[m] = 1;
+    return false;
+  });
+  return { sw, sr, wr, sm, killer, worlds };
 }
 
 // ---- 32-survivors.js
-// Incremental candidate set used while building a case: every (weapon arrangement, room arrangement)
-// pair that still fits the clues so far, with a bitmask of who could be the killer in each.
+// Incremental candidate set used while building a case: every (weapon arrangement, room arrangement, motive
+// arrangement) triple that still fits the clues so far, with a bitmask of who could be the killer in each.
 // Adding a clue only ever shrinks the set, so building costs little more than one full scan.
 function newSurvivors(ctx) {
-  const n = ctx.n, N = permutations(n).perms.length, FULL = (1 << n) - 1;
-  const size = N * N;
-  const A = new Uint16Array(size), B = new Uint16Array(size), M = new Uint8Array(size).fill(FULL);
+  const n = ctx.n, N = permutations(n).perms.length, NC = motivePerms(ctx).perms.length, FULL = (1 << n) - 1;
+  const size = N * N * NC;
+  const A = new Uint16Array(size), B = new Uint16Array(size), Cc = new Uint16Array(size), M = new Uint8Array(size).fill(FULL);
   let k = 0;
-  for (let a = 0; a < N; a++) for (let b = 0; b < N; b++) { A[k] = a; B[k] = b; k++; }
-  return { A, B, M, size };
+  for (let a = 0; a < N; a++) for (let b = 0; b < N; b++) for (let c = 0; c < NC; c++) { A[k] = a; B[k] = b; Cc[k] = c; k++; }
+  return { A, B, C: Cc, M, size };
 }
 
 // Applies `clue` to `src`, writing survivors into `dst`. Returns dst.
 function narrow(ctx, src, clue, dst) {
-  const { perms, inv } = permutations(ctx.n);
-  const N = perms.length;
+  const { perms, inv } = permutations(ctx.n), MP = motivePerms(ctx);
   let out = 0;
-  if (clue.kind === 'W' || clue.kind === 'R') {
-    const pass = new Uint8Array(N);
-    for (let p = 0; p < N; p++) {
-      pass[p] = clue.kind === 'W' ? (clue.test(perms[p], inv[p], null, null) ? 1 : 0) : (clue.test(null, null, perms[p], inv[p]) ? 1 : 0);
+  const keep = (i, m) => { dst.A[out] = src.A[i]; dst.B[out] = src.B[i]; dst.C[out] = src.C[i]; dst.M[out] = m; out++; };
+  if (clue.kind === 'W' || clue.kind === 'R' || clue.kind === 'P') {
+    const list = clue.kind === 'P' ? MP : { perms, inv };
+    const pass = new Uint8Array(list.perms.length);
+    for (let p = 0; p < list.perms.length; p++) {
+      const x = list.perms[p], y = list.inv[p];
+      pass[p] = (clue.kind === 'W' ? clue.test(x, y) : clue.kind === 'R' ? clue.test(null, null, x, y) : clue.test(null, null, null, null, x, y)) ? 1 : 0;
     }
-    const key = clue.kind === 'W' ? src.A : src.B;
-    for (let i = 0; i < src.size; i++) {
-      if (!pass[key[i]]) continue;
-      dst.A[out] = src.A[i]; dst.B[out] = src.B[i]; dst.M[out] = src.M[i]; out++;
-    }
-  } else if (clue.kind === 'X') {
-    for (let i = 0; i < src.size; i++) {
-      const a = src.A[i], b = src.B[i];
-      if (!clue.test(perms[a], inv[a], perms[b], inv[b])) continue;
-      dst.A[out] = a; dst.B[out] = b; dst.M[out] = src.M[i]; out++;
-    }
+    const key = clue.kind === 'W' ? src.A : clue.kind === 'R' ? src.B : src.C;
+    for (let i = 0; i < src.size; i++) if (pass[key[i]]) keep(i, src.M[i]);
   } else {
     for (let i = 0; i < src.size; i++) {
-      const a = src.A[i], b = src.B[i];
-      const m = src.M[i] & clue.test(perms[a], inv[a], perms[b], inv[b]);
-      if (!m) continue;
-      dst.A[out] = a; dst.B[out] = b; dst.M[out] = m; out++;
+      const a = src.A[i], b = src.B[i], c = src.C[i];
+      const v = clue.test(perms[a], inv[a], perms[b], inv[b], MP.perms[c], MP.inv[c]);
+      if (clue.kind === 'X') { if (v) keep(i, src.M[i]); } else { const m = src.M[i] & v; if (m) keep(i, m); }
     }
   }
   dst.size = out;
   return dst;
 }
 
-// How many whole worlds (weapons, rooms and killer) survive?
+// How many whole worlds (weapons, rooms, motives and killer) survive?
 function countSurvivingWorlds(ctx, set) {
   let count = 0;
   for (let i = 0; i < set.size; i++) count += popcount(set.M[i]);
@@ -915,12 +1010,17 @@ function countSurvivingWorlds(ctx, set) {
 // is a candidate being crossed out. Where plain elimination stalls, it tries one "what if?" at a
 // time (depth 1), or a what-if inside a what-if (depth 2). That depth is how hard the case feels.
 //
-// Variables: 0..n-1 weapon of suspect s | n..2n-1 room of suspect s | 2n killer | 2n+1 murder weapon | 2n+2 murder room
+// Variables: 0..n-1 weapon of suspect s | n..2n-1 room of suspect s | (with motives) 2n..3n-1 motive of suspect s |
+// then the killer, the murder weapon, the murder room and (with motives) the killer's motive. varsOf() names them.
+function varsOf(ctx) {
+  const n = ctx.n, mot = !!ctx.motives, K = mot ? 3 * n : 2 * n;
+  return { n, PW: (s) => s, PR: (s) => n + s, PM: (s) => 2 * n + s, K, MW: K + 1, MR: K + 2, MM: mot ? K + 3 : -1, nv: K + (mot ? 4 : 3), mot };
+}
 
 // The constraints a clue puts on the variables: a list of { vars, pred }.
 function clueCons(ctx, type, a) {
-  const n = ctx.n, { adj, floor, pos, types, traits } = ctx;
-  const PW = (s) => s, PR = (s) => n + s, K = 2 * n, MW = 2 * n + 1, MR = 2 * n + 2;
+  const n = ctx.n, { adj, floor, pos, types, traits, wattr, light } = ctx;
+  const { PW, PR, PM, K, MW, MR, MM } = varsOf(ctx);
   const out = [];
   const add = (vars, pred) => out.push({ vars, pred });
   const each = (f) => { for (let s = 0; s < n; s++) f(s); };
@@ -962,14 +1062,28 @@ function clueCons(ctx, type, a) {
     case 'murderFloor': add([MR], (x) => floor[x] === a.f); break;
     case 'murderNotFloor': add([MR], (x) => floor[x] !== a.f); break;
     case 'murderTrait': add([K], (x) => traits[x][a.k] === a.v); break;
+    case 'holdsAttr': add([PW(a.s)], (x) => wattr[a.k][x] === a.v); break;
+    case 'attrInRoom': each((s) => add([PW(s), PR(s)], (x, y) => y !== a.r || wattr[a.k][x] === a.v)); break;
+    case 'murderAttr': add([MW], (x) => wattr[a.k][x] === a.v); break;
+    case 'inLight': add([PR(a.s)], (x) => light[x] === a.v); break;
+    case 'weaponLight': each((s) => add([PW(s), PR(s)], (x, y) => x !== a.w || light[y] === a.v)); break;
+    case 'murderLight': add([MR], (x) => light[x] === a.v); break;
+    case 'hasMotive': add([PM(a.s)], (x) => x === a.m); break;
+    case 'notMotive': add([PM(a.s)], (x) => x !== a.m); break;
+    case 'eitherMotive': add([PM(a.a), PM(a.b)], (x, y) => x === a.m || y === a.m); break;
+    case 'motiveWeapon': each((s) => add([PM(s), PW(s)], (x, y) => (x === a.m) === (y === a.w))); break;
+    case 'motiveNotWeapon': each((s) => add([PM(s), PW(s)], (x, y) => !(x === a.m && y === a.w))); break;
+    case 'motiveRoom': each((s) => add([PM(s), PR(s)], (x, y) => (x === a.m) === (y === a.r))); break;
+    case 'motiveNotRoom': each((s) => add([PM(s), PR(s)], (x, y) => !(x === a.m && y === a.r))); break;
+    case 'murderMotive': add([MM], (x) => x === a.m); break;
+    case 'murderNotMotive': add([MM], (x) => x !== a.m); break;
     default: throw new Error('human solver: unknown clue ' + type);
   }
   return out;
 }
 
 function buildCSP(ctx, clues) {
-  const n = ctx.n;
-  const PW = (s) => s, PR = (s) => n + s, K = 2 * n, MW = 2 * n + 1, MR = 2 * n + 2;
+  const V = varsOf(ctx), { n, PW, PR, PM, K, MW, MR, MM } = V;
   const cons = [];
   const each = (f) => { for (let s = 0; s < n; s++) f(s); };
   clues.forEach((c, ci) => {
@@ -981,13 +1095,15 @@ function buildCSP(ctx, clues) {
     if (vars.includes(K)) cons.push({ clue: ci, vars: [K], pred: (k) => (k === sp) !== pred(k) });
     else cons.push({ clue: ci, vars: [K, ...vars], pred: (k, x, y) => (k === sp) !== pred(x, y) });
   });
-  // the killer is whoever holds the murder weapon and stands in the murder room
+  // the killer is whoever holds the murder weapon, stands in the murder room and (with motives) had the motive
   each((s) => {
     cons.push({ clue: -1, vars: [K, PW(s), MW], pred: (k, w, mw) => (k === s) === (w === mw) });
     cons.push({ clue: -1, vars: [K, PR(s), MR], pred: (k, r, mr) => (k === s) === (r === mr) });
+    if (V.mot) cons.push({ clue: -1, vars: [K, PM(s), MM], pred: (k, m, mm) => (k === s) === (m === mm) });
   });
   const groups = [[...Array(n).keys()].map(PW), [...Array(n).keys()].map(PR)];
-  return { n, cons, groups, nv: 2 * n + 3, K, MW, MR, PW, PR };
+  if (V.mot) groups.push([...Array(n).keys()].map(PM));
+  return Object.assign({ cons, groups }, V);
 }
 
 const popcount = (x) => { let c = 0; while (x) { x &= x - 1; c++; } return c; };
@@ -1112,7 +1228,8 @@ const TIERS = {
     id: 'detective', name: 'Detective', blurb: 'Four suspects. Patient reasoning.',
     n: 4, ev: [2, 6], maxDirect: 1, minTypes: 3,
     weights: { direct: 0.5, neg: 1.0, link: 1.2, rel: 0.9, murder: 1.4, trait: 1.4 },
-    avoid: ['murderFarFrom', 'murderNotAdjRoom', 'weaponNear', 'murderAheadOf', 'murderBehind'],
+    // easy days keep "next to" for the evidence and keep it plain
+    avoid: ['murderFarFrom', 'murderNotAdjRoom', 'murderNextTo', 'weaponNear', 'murderAheadOf', 'murderBehind', 'notAdjacent', 'murderAdjRoom'],
     accept: (h) => h.depth === 1 && h.probes <= 30, stars: 2,
   },
   inspector: {
@@ -1121,11 +1238,12 @@ const TIERS = {
     weights: { direct: 0, neg: 1.0, link: 1.3, rel: 1.3, murder: 1.4, trait: 1.3 },
     accept: (h) => h.depth === 1 && h.probes >= 15 && h.probes <= 70 && h.open > 1, stars: 3,
   },
+  // Sundays ask why as well: four suspects, and a motive each
   mastermind: {
-    id: 'mastermind', name: 'Mastermind', blurb: 'Five suspects. Nothing given away.',
-    n: 5, ev: [3, 9], maxDirect: 0, minTypes: 4,
-    weights: { direct: 0, neg: 0.8, link: 1.4, rel: 1.6, murder: 1.4, trait: 1.2 },
-    accept: (h) => h.open > 1 && (h.depth === 2 || (h.depth === 1 && h.probes >= 30)), stars: 4,
+    id: 'mastermind', name: 'Mastermind', blurb: 'Four suspects, four motives. Nothing given away.',
+    n: 4, motives: true, ev: [3, 10], maxDirect: 0, minTypes: 4,
+    weights: { direct: 0, neg: 0.9, link: 1.4, rel: 1.4, murder: 1.4, trait: 1.2 },
+    accept: (h) => h.open > 1 && (h.depth === 2 || (h.depth === 1 && h.probes >= 25)), stars: 4,
   },
 };
 
@@ -1135,6 +1253,7 @@ const SAY_WEIGHT = {
   has: 1.0, notHas: 1.0, in: 1.2, notIn: 1.0, eitherHas: 0.6, eitherIn: 0.6, holdsType: 0.9, notHoldsType: 0.9, sameType: 0.6, diffType: 0.5,
   adjacent: 0.6, notAdjacent: 0.5, sameFloor: 0.6, diffFloor: 0.5, ahead: 0.7, murderNotSuspect: 0.6, murderType: 0.7, murderNotType: 0.6,
   murderNotWeapon: 0.6, murderNotRoom: 0.7, murderFloor: 0.6, murderNotFloor: 0.5, murderAdjRoom: 0.4, murderNotAdjRoom: 0.3, murderTrait: 0.7,
+  holdsAttr: 0.8, inLight: 0.8, murderAttr: 0.7, murderLight: 0.7, hasMotive: 0.9, notMotive: 0.9, eitherMotive: 0.6, murderMotive: 0.7, murderNotMotive: 0.6,
 };
 
 function pickN(rng, count, n) {
@@ -1160,20 +1279,21 @@ function attempt(rng, tier, worldId) {
   const n = tier.n;
   let ctx, tries = 0;
   do {
-    ctx = buildCtx(world, pickN(rng, world.suspects.length, n), pickN(rng, world.weapons.length, n), pickN(rng, world.rooms.length, n));
+    ctx = buildCtx(world, pickN(rng, world.suspects.length, n), pickN(rng, world.weapons.length, n), pickN(rng, world.rooms.length, n),
+      tier.motives ? pickN(rng, MOTIVES.length, n) : null);
   } while (!validPicks(world, ctx) && ++tries < 200);
 
-  const { perms, inv } = permutations(n);
+  const { perms, inv } = permutations(n), MP = motivePerms(ctx);
   const pw = perms[rng.int(perms.length)], pr = perms[rng.int(perms.length)];
-  const pwi = inv[perms.indexOf(pw)], pri = inv[perms.indexOf(pr)];
   const truth = { pw, pr, m: rng.int(n) };
+  if (ctx.motives) truth.pm = perms[rng.int(perms.length)];
   const avoid = (c) => tier.avoid && tier.avoid.includes(c.type);
   const all = enumerateClues(ctx);
   // a statement that is true (or false) whatever happened gives itself away: nobody says one
   const informative = (c) => {
     let yes = false, no = false;
-    for (let a = 0; a < perms.length; a++) for (let b = 0; b < perms.length; b++) {
-      const v = c.test(perms[a], inv[a], perms[b], inv[b]);
+    for (let a = 0; a < perms.length; a++) for (let b = 0; b < perms.length; b++) for (let k = 0; k < MP.perms.length; k++) {
+      const v = c.test(perms[a], inv[a], perms[b], inv[b], MP.perms[k], MP.inv[k]);
       if (c.kind === 'M') { if (v) yes = true; if (v !== (1 << n) - 1) no = true; } else if (v) yes = true; else no = true;
       if (yes && no) return true;
     }
@@ -1186,7 +1306,7 @@ function attempt(rng, tier, worldId) {
   for (let sp = 0; sp < n; sp++) {
     const liar = sp === truth.m;
     const cands = all.filter((c) => TESTIMONY_TYPES.includes(c.type) && !avoid(c) && !usedKey.has(c.type + JSON.stringify(c.args))
-      && !(c.type === 'murderNotSuspect' && c.args.s === sp) && statementTrue(c, truth, pwi, pri) !== liar
+      && !(c.type === 'murderNotSuspect' && c.args.s === sp) && statementTrue(c, truth) !== liar
       && !(c.family === 'direct' && !liar && directSaid >= 1) && informative(c));
     if (!cands.length) return null;
     const perType = {};
@@ -1202,7 +1322,7 @@ function attempt(rng, tier, worldId) {
   }
 
   // ---- evidence: always true. Draw until exactly one world is left, then squeeze out what isn't needed.
-  const pool = all.filter((c) => clueHolds(c, truth, pwi, pri) && !avoid(c));
+  const pool = all.filter((c) => clueHolds(c, truth) && !avoid(c));
   const perType = {};
   pool.forEach((c) => { perType[c.type] = (perType[c.type] || 0) + 1; });
   const alive = pool.map(() => true);
@@ -1273,7 +1393,7 @@ function generatePuzzle(seed, tierId, opts) {
     return Object.assign(c, { voice: variants[vi][0], text: variants[vi][1], vi, speaker: sp === undefined ? null : sp });
   };
   const clues = varyWording(says.map((t) => word(t, t.speaker)).concat(rng.shuffle(chosen).map((c) => word(Object.assign({}, c)))));
-  const solution = { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m] };
+  const solution = { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m], motive: truth.pm ? truth.pm[truth.m] : null };
   const rating = Math.max(1, Math.min(5, tier.stars + (human.probes >= 45 ? 1 : 0) - (human.depth === 0 ? 1 : 0)));
   return {
     seed: String(seed), tier: tierId, tierName: tier.name, worldId, n: ctx.n, ctx, clues,
@@ -1291,7 +1411,7 @@ function exportPuzzle(p) {
   const { ctx } = p;
   return {
     s: p.seed, t: p.tier, w: p.worldId, ti: p.title, r: p.rating, h: [p.human.depth, p.human.probes], y: p.story,
-    S: ctx.suspectIdx, W: ctx.weaponIdx, R: ctx.roomIdx,
+    S: ctx.suspectIdx, W: ctx.weaponIdx, R: ctx.roomIdx, ...(ctx.motives ? { M: ctx.motiveIdx, pm: p.truth.pm } : {}),
     pw: p.truth.pw, pr: p.truth.pr, m: p.truth.m,
     c: p.clues.map((c) => [c.type, c.args, c.vi, c.speaker]),
   };
@@ -1299,7 +1419,7 @@ function exportPuzzle(p) {
 
 function importPuzzle(spec) {
   const world = WORLDS[spec.w];
-  const ctx = buildCtx(world, spec.S, spec.W, spec.R);
+  const ctx = buildCtx(world, spec.S, spec.W, spec.R, spec.M || null);
   const pool = enumerateClues(ctx);
   const key = (type, args) => type + JSON.stringify(args);
   const byKey = new Map(pool.map((c) => [key(c.type, c.args), c]));
@@ -1313,10 +1433,11 @@ function importPuzzle(spec) {
     return Object.assign({}, base, { voice: v[0], speaker: say ? speaker : null, text: v[1], vi });
   }));
   const truth = { pw: spec.pw, pr: spec.pr, m: spec.m };
+  if (spec.pm) truth.pm = spec.pm;
   const tier = TIERS[spec.t];
   return {
     seed: spec.s, tier: spec.t, tierName: tier.name, worldId: spec.w, n: ctx.n, ctx, clues,
-    solution: { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m] },
+    solution: { killer: truth.m, weapon: truth.pw[truth.m], room: truth.pr[truth.m], motive: truth.pm ? truth.pm[truth.m] : null },
     truth, rating: spec.r, human: { depth: spec.h[0], probes: spec.h[1] }, title: spec.ti, strict: true,
     story: spec.y || [0, 0, 0],
   };
@@ -1415,7 +1536,7 @@ function titleBanned(worldId) {
 // the first banned word in a title, or null
 function titleClash(worldId, title) {
   const ban = titleBanned(worldId);
-  return titleWords(title).find((w) => ban.has(w) || ban.has(w + 's') || ban.has(w.replace(/e?s$/, ''))) || null;
+  return titleWords(title).find((w) => ban.has(w) || ban.has(w + 's') || ban.has(w.replace(/s$/, '')) || ban.has(w.replace(/e?s$/, ''))) || null;
 }
 // every allowed title for a setting, in a fixed shuffled order so neighbouring days read differently
 const TITLE_POOLS = {};
@@ -1432,9 +1553,9 @@ function titlePool(worldId) {
 // ---- 99-exports.js
 function checkAccusation(puzzle, acc) {
   const s = puzzle.solution;
-  return { killer: acc.killer === s.killer, weapon: acc.weapon === s.weapon, room: acc.room === s.room };
+  return { killer: acc.killer === s.killer, weapon: acc.weapon === s.weapon, room: acc.room === s.room, motive: s.motive === null || acc.motive === s.motive };
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { TUTORIAL, TRAITS, TRAIT_KEYS, TESTIMONY_TYPES, testimony, statementTrue, caseStory, clueHolds, countSurvivingWorlds, generatePuzzle, exportPuzzle, importPuzzle, checkAccusation, solveCount, marginals, humanDifficulty, buildCSP, propagate, TIERS, WORLDS, WEAPON_TYPES, plainText, permutations, makeRng, enumerateClues, buildCtx, clueVariants, titlePool, titleClash, titleBanned, varyWording };
+  module.exports = { TUTORIAL, MOTIVES, WEAPON_ATTRS, eachWorld, motivePerms, TRAITS, TRAIT_KEYS, TESTIMONY_TYPES, testimony, statementTrue, caseStory, clueHolds, countSurvivingWorlds, generatePuzzle, exportPuzzle, importPuzzle, checkAccusation, solveCount, marginals, humanDifficulty, buildCSP, propagate, TIERS, WORLDS, WEAPON_TYPES, plainText, permutations, makeRng, enumerateClues, buildCtx, clueVariants, titlePool, titleClash, titleBanned, varyWording };
 }
