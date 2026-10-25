@@ -1,150 +1,150 @@
 {
  "adjacent": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "ahead": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "diffFloor": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "diffType": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "eitherHas": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "eitherIn": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "has": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "holdsType": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "in": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderAdjRoom": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderAheadOf": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "murderBehind": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "murderFarFrom": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "murderFloor": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderNextTo": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "murderNotAdjRoom": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderNotFloor": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderNotRoom": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderNotSuspect": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderNotType": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderNotWeapon": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderSameFloor": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "murderTrait": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "murderType": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "notAdjacent": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "notHas": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "notHoldsType": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "notIn": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "notTypeInRoom": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "sameFloor": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "sameType": {
-  "note": 1,
-  "say": 2
+  "note": 3,
+  "say": 3
  },
  "traitRoom": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "traitWeapon": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "typeInRoom": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "weaponIn": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "weaponNear": {
-  "note": 1,
+  "note": 3,
   "say": 0
  },
  "weaponNotIn": {
-  "note": 1,
+  "note": 3,
   "say": 0
  }
 }

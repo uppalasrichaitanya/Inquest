@@ -6,6 +6,9 @@ const WIDE = matchMedia('(min-width: 1100px)');
 const PHONE = matchMedia('(max-width: 760px)');
 const SEAL = '<svg class="seal" viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="8.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 20L27 27" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="13.5" cy="13.5" r="3.2" fill="#D9452F"/></svg>';
 
+// Inspector Mallory, who opens each case, gives the hints and closes the file
+const MALLORY = { name: 'Inspector Mallory', hue: 210, traits: { hair: 'grey' }, look: { skin: '#E3B896', hair: 'short', acc: ['bowler', 'moustache'] } };
+const malloryLine = (text, cls) => `<p class="${cls}">${face(MALLORY, 40)}<span><b>Inspector Mallory</b> ${esc(text)}</span></p>`;
 const isSay = (c) => c.speaker !== null && c.speaker !== undefined;
 // evidence is numbered in the order it is listed; testimony goes by who said it
 function evidenceNo(i) { return G.puzzle.clues.slice(0, i + 1).filter((c) => !isSay(c)).length; }
@@ -77,6 +80,7 @@ function caseHeadHTML() {
         <p class="scene">${esc(story.occasion)} ${esc(story.found)}</p>
         <p class="victim"><span class="kicker">The victim</span> ${esc(story.victim.name)}, ${esc(story.victim.desc)}.</p>
       </div>
+      ${malloryLine(story.mallory, 'mallory-line')}
       <p class="rule"><b>${cap(NUM_WORD[P.n])} ${w.guests}, ${NUM_WORD[P.n]} weapons, ${NUM_WORD[P.n]} ${unitOf(ctx)}s.</b> Each had one weapon and was in one ${unitOf(ctx)}. The evidence is true. Everyone tells the truth, <em>except the killer</em>.</p>
     </div></header>`;
 }

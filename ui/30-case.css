@@ -12,6 +12,10 @@
 .story .scene { margin: 0; font: 400 19px/1.5 var(--serif); font-variation-settings: 'opsz' 24; max-width: 36em; }
 .story .victim { margin: 0; color: var(--on-green-muted); font-size: 15.5px; align-self: end; }
 .story .victim .kicker { display: block; margin-bottom: 4px; color: var(--gold); }
+.mallory-line { display: flex; align-items: center; gap: 12px; margin: 18px 0 0; max-width: 46em; font: italic 400 16.5px/1.45 var(--serif); color: var(--on-green); }
+.mallory-line b { font: 700 12px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; font-style: normal; color: var(--gold); margin-right: 6px; }
+.signoff { display: flex; align-items: center; gap: 12px; margin: 0 0 14px !important; padding: 12px 14px; border-radius: 12px; background: var(--wash); text-align: left; font: italic 400 16.5px/1.4 var(--serif); }
+.signoff b { display: block; font: 700 11.5px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; font-style: normal; color: var(--green); }
 .case-head .rule { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .16); color: var(--on-green-muted); font-size: 15.5px; max-width: 58em; }
 .case-head .rule b { color: var(--on-green); }
 .case-head .rule em { color: var(--gold); font-style: normal; font-weight: 600; }
@@ -176,7 +180,7 @@
   .dock button[aria-pressed='true'] { background: var(--bg); color: var(--ink); opacity: 1; }
   .story { grid-template-columns: 1fr; }
   /* working in the notebook or on the map, the story folds away so the squares are in view */
-  body:not([data-pane='clues']) .case-head .story, body:not([data-pane='clues']) .case-head .rule, body:not([data-pane='clues']) .case-head .warm-head { display: none; }
+  body:not([data-pane='clues']) .case-head .story, body:not([data-pane='clues']) .case-head .mallory-line, body:not([data-pane='clues']) .case-head .rule, body:not([data-pane='clues']) .case-head .warm-head { display: none; }
   body:not([data-pane='clues']) .case-head h1 { font-size: 28px; }
 }
 @media (max-width: 760px) {

@@ -5,7 +5,7 @@
 //   rooms: Study (upstairs), Library (ground floor), Wine Cellar (cellar)
 //   truth: Pell has the Revolver in the Cellar, Crisp has the Port in the Library (the killer), Lark has the Candlestick in the Study
 const TUTORIAL = {
-  s: 'tutorial', t: 'constable', w: 'manor', ti: 'A Lesson at Blackwood', r: 1, h: [0, 0], y: [0, 3, 0],
+  s: 'tutorial', t: 'constable', w: 'manor', ti: 'A Lesson at Blackwood', r: 1, h: [0, 0], y: [0, 3, 0, 6],
   S: [1, 2, 7], W: [2, 4, 6], R: [1, 4, 6],
   pw: [2, 1, 0], pr: [2, 1, 0], m: 1,
   c: [

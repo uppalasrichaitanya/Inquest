@@ -138,6 +138,7 @@ function openVerdict() {
     <h2 class="tale">It was ${esc(K.name)}, in the ${esc(ctx.rooms[s.room].name)}, with the ${esc(ctx.weapons[s.weapon].name)}.</h2>
     <p class="motive">Why? ${esc(K.short)} ${esc(motive)}.</p>
     <blockquote class="thelie"><span class="kicker">The lie</span><span class="txt">“${tokens(lie.text, ctx)}”</span></blockquote>
+    ${malloryLine(story.close, 'signoff')}
     <p class="went">${went}</p>
     <details class="how"><summary>Where everyone was</summary>
       <table><thead><tr><td></td><td>Was in</td><td>Held</td></tr></thead><tbody>${rows}</tbody></table>
@@ -248,7 +249,7 @@ function hintNames(h) {
 function openHint() {
   const h = nextHint();
   hintNow = h;
-  const head = `<div class="mallory">${face({ hue: 210, traits: { hair: 'grey' }, look: { skin: '#E3B896', hair: 'short', acc: ['bowler', 'moustache'] } }, 56)}<div><p class="kicker">A word from</p><h2>Inspector Mallory</h2></div></div>`;
+  const head = `<div class="mallory">${face(MALLORY, 56)}<div><p class="kicker">A word from</p><h2>Inspector Mallory</h2></div></div>`;
   if (h.type === 'ready') {
     openModal(`${head}<div class="hintbox">Your notes already settle it. There is nothing left to find, so make your accusation.</div><div class="actions"><button class="btn red" data-act="accuse">Accuse</button><button class="btn ghost" data-act="close">Keep looking</button></div>`, 'hint');
     return;
