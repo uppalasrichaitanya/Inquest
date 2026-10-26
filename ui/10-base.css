@@ -48,7 +48,13 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; scrollbar-color: var(--rule) var(--bg); }
+/* quiet scrollbars, in the page's own colours */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+* { scrollbar-color: var(--rule) transparent; }
 html, body { margin: 0; }
 button, .cell { -webkit-tap-highlight-color: transparent; }
 body {

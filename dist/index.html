@@ -69,7 +69,13 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; scrollbar-color: var(--rule) var(--bg); }
+/* quiet scrollbars, in the page's own colours */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+* { scrollbar-color: var(--rule) transparent; }
 html, body { margin: 0; }
 button, .cell { -webkit-tap-highlight-color: transparent; }
 body {
@@ -262,7 +268,9 @@ button.day:hover { transform: translateY(-1px); }
 .case.motives { grid-template-columns: minmax(0, 440px) minmax(0, 1fr); }
 .col-clues { grid-area: clues; }
 .col-scene { grid-area: scene; }
-.col-work { grid-area: work; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; position: sticky; top: 76px; min-width: 0; }
+.col-work { grid-area: work; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; position: sticky; top: 76px; min-width: 0;
+  /* pinned beside the clues; on a short screen it scrolls on its own rather than hiding its bottom edge */
+  max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-bottom: 4px; }
 .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 34px 0 14px; }
 .sec-head.lead { margin-top: 0; }
 .sec-head.lead h2 { color: var(--on-green); }
@@ -415,17 +423,17 @@ button.day:hover { transform: translateY(-1px); }
 .plan-svg .pin-ring { fill: none; stroke: var(--card); stroke-width: 2; }
 .plan-svg .pin-w circle { fill: var(--card); stroke: var(--green); stroke-width: 1.5; }
 .plan-svg .pin-w { color: var(--green); }
-.plan-svg .occupants > g { animation: pop .3s cubic-bezier(.2, 1.6, .4, 1) both; }
+.plan-svg .occupants > g.new { animation: pop .3s cubic-bezier(.2, 1.6, .4, 1) both; }
 @keyframes pop { from { opacity: 0; transform: scale(.4); transform-box: fill-box; transform-origin: center; } }
 
 /* the statement in hand, pinned above the notebook */
-.strip { padding: 12px 16px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border-top: 4px solid var(--gold); }
-.strip .nav { display: flex; align-items: center; gap: 8px; }
+.strip { box-sizing: border-box; min-height: 136px; padding: 12px 16px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border-top: 4px solid var(--gold); }
+.strip .nav { display: flex; align-items: center; gap: 8px; height: 36px; }
 .strip .who { display: flex; align-items: center; gap: 8px; margin-right: auto; font-size: 14px; color: var(--muted); }
 .strip .who b { color: var(--ink); }
 .strip .arrow { width: 38px; height: 34px; border: 0; border-radius: 999px; background: var(--wash); font-size: 22px; line-height: 1; }
 .strip .arrow:hover { background: var(--gold-wash); }
-.strip .txt { margin: 8px 0 0; font-size: 16px; line-height: 1.45; }
+.strip .txt { margin: 8px 0 0; font-size: 16px; line-height: 1.45; min-height: 52px; } /* room for two lines, so the notebook below doesn't jump */
 .strip .txt.said { font: italic 400 17.5px/1.45 var(--serif); }
 .strip .wnote { margin-top: 10px; }
 .col-work > .strip .wnote { display: none; }
@@ -440,7 +448,10 @@ button.day:hover { transform: translateY(-1px); }
   .case[data-pane='scene'] .col-clues, .case[data-pane='scene'] .col-work { display: none; }
   .case[data-pane='scene'] .col-scene > .sec-head:first-child { margin-top: 0; }
   .case[data-pane='scene'] .col-scene > .sec-head:first-child h2 { color: var(--on-green); }
+  .col-work { max-height: none; overflow: visible; }
   .strip { position: sticky; top: 60px; z-index: 15; }
+  .strip .txt { min-height: 78px; } /* three lines on a phone */
+  .strip { min-height: 164px; }
   .col-work > .strip .wnote { display: block; }
   .notebook .wnote { display: none; }
   .tabs { display: flex; gap: 3px; padding: 3px; border-radius: 999px; background: var(--wash); overflow-x: auto; }
@@ -490,9 +501,11 @@ button.day:hover { transform: translateY(-1px); }
 }
 
 /* ---- dialogs: a card that rises from the bottom on a phone and sits in the middle on a wide screen */
-.scrim { position: fixed; inset: 0; z-index: 50; background: var(--scrim); display: grid; place-items: center; padding: 20px; overflow-y: auto; animation: fade .18s ease; }
+.scrim { position: fixed; inset: 0; z-index: 50; background: var(--scrim); display: grid; place-items: center; padding: 20px; overflow: hidden; overscroll-behavior: contain; animation: fade .18s ease; }
+/* while a dialog is open the page behind it stays put */
+html.modal-open, html.modal-open body { overflow: hidden; }
 @keyframes fade { from { opacity: 0; } }
-.sheetbox { position: relative; width: min(600px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; padding: 30px 32px 28px; background: var(--card); border-radius: 18px; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .5); animation: rise .22s ease; }
+.sheetbox { position: relative; width: min(600px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 30px 32px 28px; background: var(--card); border-radius: 18px; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .5); animation: rise .22s ease; }
 @keyframes rise { from { transform: translateY(14px); opacity: 0; } }
 .sheetbox h2 { margin: 6px 0 12px; font: 600 30px/1.1 var(--serif); letter-spacing: -.01em; }
 .sheetbox p { margin: 0 0 14px; }
@@ -575,7 +588,7 @@ table.verdict thead td { font: 700 11px/1 var(--sans); letter-spacing: .1em; tex
 
 @media (max-width: 760px) {
   .scrim { padding: 0; place-items: end stretch; }
-  .sheetbox { width: 100%; max-height: 92vh; padding: 26px 18px calc(22px + env(safe-area-inset-bottom, 0px)); border-radius: 20px 20px 0 0; }
+  .sheetbox { width: 100%; max-height: 92dvh; padding: 26px 18px calc(22px + env(safe-area-inset-bottom, 0px)); border-radius: 20px 20px 0 0; }
   .sheetbox h2 { font-size: 26px; }
   .verdict .tale { font-size: 23px; }
   .rules3 li { grid-template-columns: 1fr; gap: 8px; }
@@ -2889,11 +2902,30 @@ function renderStrip() {
     <p class="txt${say ? ' said' : ''}">${tokens(c.text, ctx)}</p>${G.mode === 'tutorial' ? `<p class="wnote" aria-live="polite">${WARM.note}</p>` : ''}`;
 }
 
+// Pick the statement in hand. The cards stay where they are (rebuilding them would replay their stamps and
+// jolt the page): only the highlight moves, the warm-up's hint follows it, and the pinned copy changes.
 function selectStatement(i) {
   G.cur = i;
-  renderClues();
+  markCurrent();
+  renderStrip();
   autoTab();
   applyFocus();
+}
+function markCurrent() {
+  document.querySelectorAll('.suspect, .ev').forEach((el) => {
+    const ci = el.classList.contains('ev') ? +el.dataset.i : G.puzzle.clues.findIndex((c) => c.speaker === +el.dataset.s);
+    const on = ci === G.cur;
+    el.classList.toggle('on', on);
+    el.querySelectorAll('[aria-current]').forEach((b) => b.setAttribute('aria-current', String(on)));
+    const t = el.querySelector('.try');
+    if (t && !on) t.remove();
+    if (on && !t && G.mode === 'tutorial') (el.querySelector('.body') || el.querySelector('.evtext')).insertAdjacentHTML('beforeend', tryLine(ci));
+  });
+}
+// redraw one card in place (after a statement is marked, or a piece of evidence ticked)
+function redrawCard(sel, html) {
+  const el = document.querySelector(sel);
+  if (el) el.outerHTML = html;
 }
 function stepStatement(d) {
   const len = G.puzzle.clues.length;
@@ -2903,14 +2935,14 @@ function toggleUsed(i) {
   const on = !G.struck.includes(i);
   G.struck = on ? G.struck.concat(i) : G.struck.filter((x) => x !== i);
   persist();
-  renderClues();
+  redrawCard(`.ev[data-i="${i}"]`, evidenceHTML(G.puzzle.clues[i], i, G.puzzle.ctx));
   applyFocus();
 }
 // believe a statement, or call it a lie (pressing the same again clears it)
 function setSay(s, v) {
   G.say[s] = G.say[s] === v ? 0 : v;
   persist();
-  renderClues();
+  redrawCard(`.suspect[data-s="${s}"]`, suspectHTML(G.puzzle.ctx.suspects[s], s, G.puzzle.ctx));
   paintAll();
   applyFocus();
   if (G.mode === 'tutorial') warmSay(s, G.say[s]);
@@ -3278,6 +3310,8 @@ function trainSVG(ctx) {
   return `<svg class="plan-svg train${narrow ? ' narrow' : ''}" viewBox="-3 -3 ${W + 6} ${H + 6}" role="img" aria-label="${esc(w.name)}, from the engine back">${g}</svg>`;
 }
 
+// only what has just arrived in a room pops in; what was already there stays still
+const placed = (p, key) => ((p.dataset.had || '').split(' ').includes(key) ? '' : ' class="new"');
 // who and what is in each room, as the notebook has it so far: faces for people, icons for weapons
 function paintMap(d) {
   const ctx = G.puzzle.ctx, yes = (v) => v === 2 || v === 4, narrow = PHONE.matches, sz = narrow ? 26 : 32, gap = 4;
@@ -3288,14 +3322,15 @@ function paintMap(d) {
     let x = 0, out = '';
     for (const s of who) {
       const S = ctx.suspects[s];
-      out += `<g transform="translate(${x} 0)"><title>${esc(S.name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}" style="fill:hsl(${S.hue} 42% var(--face-l))"/><svg x="0" y="0" width="${sz}" height="${sz}" viewBox="7 3 50 50"><clipPath id="clip${r}-${s}"><circle cx="32" cy="28" r="25"/></clipPath><g clip-path="url(#clip${r}-${s})">${portraitSVG(S).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g></svg><circle class="pin-ring" cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2 - .5}"/></g>`;
+      out += `<g transform="translate(${x} 0)"${placed(p, 's' + s)}><title>${esc(S.name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}" style="fill:hsl(${S.hue} 42% var(--face-l))"/><svg x="0" y="0" width="${sz}" height="${sz}" viewBox="7 3 50 50"><clipPath id="clip${r}-${s}"><circle cx="32" cy="28" r="25"/></clipPath><g clip-path="url(#clip${r}-${s})">${portraitSVG(S).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g></svg><circle class="pin-ring" cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2 - .5}"/></g>`;
       x += sz + gap;
     }
     for (const w of what) {
-      out += `<g transform="translate(${x} 0)" class="pin-w"><title>${esc(ctx.weapons[w].name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}"/><svg x="${sz * 0.18}" y="${sz * 0.18}" width="${sz * 0.64}" height="${sz * 0.64}" viewBox="0 0 24 24" fill="currentColor">${WEAPON_ICONS[ctx.weapons[w].id]}</svg></g>`;
+      out += `<g transform="translate(${x} 0)" class="pin-w${placed(p, 'w' + w) ? ' new' : ''}"><title>${esc(ctx.weapons[w].name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}"/><svg x="${sz * 0.18}" y="${sz * 0.18}" width="${sz * 0.64}" height="${sz * 0.64}" viewBox="0 0 24 24" fill="currentColor">${WEAPON_ICONS[ctx.weapons[w].id]}</svg></g>`;
       x += sz + gap;
     }
-    p.innerHTML = out;
+    if (p.innerHTML !== out) p.innerHTML = out;
+    p.dataset.had = [...who.map((s) => 's' + s), ...what.map((w) => 'w' + w)].join(' ');
   });
   // the scene of the crime, once the case is closed
   const s = G.puzzle.solution;
@@ -3308,6 +3343,7 @@ function openModal(html, cls) {
   modalReturn = document.activeElement;
   const s = document.createElement('div');
   s.className = 'scrim'; s.id = 'scrim';
+  document.documentElement.classList.add('modal-open');
   s.innerHTML = `<div class="sheetbox paper ${cls || ''}" role="dialog" aria-modal="true"><button class="x" data-act="close" aria-label="Close">&times;</button>${html}</div>`;
   document.body.appendChild(s);
   const f = s.querySelector('.opt, .btn, button:not(.x)');
@@ -3318,7 +3354,8 @@ function openModal(html, cls) {
 function closeModal() {
   const s = document.getElementById('scrim');
   if (s) s.remove();
-  if (modalReturn && modalReturn.focus && document.contains(modalReturn)) modalReturn.focus();
+  document.documentElement.classList.remove('modal-open');
+  if (modalReturn && modalReturn.focus && document.contains(modalReturn)) modalReturn.focus({ preventScroll: true }); // closing never scrolls the page
   modalReturn = null;
 }
 let toastTimer = null;

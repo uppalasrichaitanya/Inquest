@@ -4,6 +4,7 @@ function openModal(html, cls) {
   modalReturn = document.activeElement;
   const s = document.createElement('div');
   s.className = 'scrim'; s.id = 'scrim';
+  document.documentElement.classList.add('modal-open');
   s.innerHTML = `<div class="sheetbox paper ${cls || ''}" role="dialog" aria-modal="true"><button class="x" data-act="close" aria-label="Close">&times;</button>${html}</div>`;
   document.body.appendChild(s);
   const f = s.querySelector('.opt, .btn, button:not(.x)');
@@ -14,7 +15,8 @@ function openModal(html, cls) {
 function closeModal() {
   const s = document.getElementById('scrim');
   if (s) s.remove();
-  if (modalReturn && modalReturn.focus && document.contains(modalReturn)) modalReturn.focus();
+  document.documentElement.classList.remove('modal-open');
+  if (modalReturn && modalReturn.focus && document.contains(modalReturn)) modalReturn.focus({ preventScroll: true }); // closing never scrolls the page
   modalReturn = null;
 }
 let toastTimer = null;

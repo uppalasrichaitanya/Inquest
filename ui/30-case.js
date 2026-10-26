@@ -198,11 +198,30 @@ function renderStrip() {
     <p class="txt${say ? ' said' : ''}">${tokens(c.text, ctx)}</p>${G.mode === 'tutorial' ? `<p class="wnote" aria-live="polite">${WARM.note}</p>` : ''}`;
 }
 
+// Pick the statement in hand. The cards stay where they are (rebuilding them would replay their stamps and
+// jolt the page): only the highlight moves, the warm-up's hint follows it, and the pinned copy changes.
 function selectStatement(i) {
   G.cur = i;
-  renderClues();
+  markCurrent();
+  renderStrip();
   autoTab();
   applyFocus();
+}
+function markCurrent() {
+  document.querySelectorAll('.suspect, .ev').forEach((el) => {
+    const ci = el.classList.contains('ev') ? +el.dataset.i : G.puzzle.clues.findIndex((c) => c.speaker === +el.dataset.s);
+    const on = ci === G.cur;
+    el.classList.toggle('on', on);
+    el.querySelectorAll('[aria-current]').forEach((b) => b.setAttribute('aria-current', String(on)));
+    const t = el.querySelector('.try');
+    if (t && !on) t.remove();
+    if (on && !t && G.mode === 'tutorial') (el.querySelector('.body') || el.querySelector('.evtext')).insertAdjacentHTML('beforeend', tryLine(ci));
+  });
+}
+// redraw one card in place (after a statement is marked, or a piece of evidence ticked)
+function redrawCard(sel, html) {
+  const el = document.querySelector(sel);
+  if (el) el.outerHTML = html;
 }
 function stepStatement(d) {
   const len = G.puzzle.clues.length;
@@ -212,14 +231,14 @@ function toggleUsed(i) {
   const on = !G.struck.includes(i);
   G.struck = on ? G.struck.concat(i) : G.struck.filter((x) => x !== i);
   persist();
-  renderClues();
+  redrawCard(`.ev[data-i="${i}"]`, evidenceHTML(G.puzzle.clues[i], i, G.puzzle.ctx));
   applyFocus();
 }
 // believe a statement, or call it a lie (pressing the same again clears it)
 function setSay(s, v) {
   G.say[s] = G.say[s] === v ? 0 : v;
   persist();
-  renderClues();
+  redrawCard(`.suspect[data-s="${s}"]`, suspectHTML(G.puzzle.ctx.suspects[s], s, G.puzzle.ctx));
   paintAll();
   applyFocus();
   if (G.mode === 'tutorial') warmSay(s, G.say[s]);

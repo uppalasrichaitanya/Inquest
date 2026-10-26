@@ -94,6 +94,8 @@ function trainSVG(ctx) {
   return `<svg class="plan-svg train${narrow ? ' narrow' : ''}" viewBox="-3 -3 ${W + 6} ${H + 6}" role="img" aria-label="${esc(w.name)}, from the engine back">${g}</svg>`;
 }
 
+// only what has just arrived in a room pops in; what was already there stays still
+const placed = (p, key) => ((p.dataset.had || '').split(' ').includes(key) ? '' : ' class="new"');
 // who and what is in each room, as the notebook has it so far: faces for people, icons for weapons
 function paintMap(d) {
   const ctx = G.puzzle.ctx, yes = (v) => v === 2 || v === 4, narrow = PHONE.matches, sz = narrow ? 26 : 32, gap = 4;
@@ -104,14 +106,15 @@ function paintMap(d) {
     let x = 0, out = '';
     for (const s of who) {
       const S = ctx.suspects[s];
-      out += `<g transform="translate(${x} 0)"><title>${esc(S.name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}" style="fill:hsl(${S.hue} 42% var(--face-l))"/><svg x="0" y="0" width="${sz}" height="${sz}" viewBox="7 3 50 50"><clipPath id="clip${r}-${s}"><circle cx="32" cy="28" r="25"/></clipPath><g clip-path="url(#clip${r}-${s})">${portraitSVG(S).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g></svg><circle class="pin-ring" cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2 - .5}"/></g>`;
+      out += `<g transform="translate(${x} 0)"${placed(p, 's' + s)}><title>${esc(S.name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}" style="fill:hsl(${S.hue} 42% var(--face-l))"/><svg x="0" y="0" width="${sz}" height="${sz}" viewBox="7 3 50 50"><clipPath id="clip${r}-${s}"><circle cx="32" cy="28" r="25"/></clipPath><g clip-path="url(#clip${r}-${s})">${portraitSVG(S).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g></svg><circle class="pin-ring" cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2 - .5}"/></g>`;
       x += sz + gap;
     }
     for (const w of what) {
-      out += `<g transform="translate(${x} 0)" class="pin-w"><title>${esc(ctx.weapons[w].name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}"/><svg x="${sz * 0.18}" y="${sz * 0.18}" width="${sz * 0.64}" height="${sz * 0.64}" viewBox="0 0 24 24" fill="currentColor">${WEAPON_ICONS[ctx.weapons[w].id]}</svg></g>`;
+      out += `<g transform="translate(${x} 0)" class="pin-w${placed(p, 'w' + w) ? ' new' : ''}"><title>${esc(ctx.weapons[w].name)}</title><circle cx="${sz / 2}" cy="${sz / 2}" r="${sz / 2}"/><svg x="${sz * 0.18}" y="${sz * 0.18}" width="${sz * 0.64}" height="${sz * 0.64}" viewBox="0 0 24 24" fill="currentColor">${WEAPON_ICONS[ctx.weapons[w].id]}</svg></g>`;
       x += sz + gap;
     }
-    p.innerHTML = out;
+    if (p.innerHTML !== out) p.innerHTML = out;
+    p.dataset.had = [...who.map((s) => 's' + s), ...what.map((w) => 'w' + w)].join(' ');
   });
   // the scene of the crime, once the case is closed
   const s = G.puzzle.solution;
